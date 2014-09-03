@@ -413,10 +413,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 			self._include_lib64 = True
 
 	def get_library_arg(self, lib):
-		if lib in self._actual_library_names:
-			return "-l:{} ".format( self._actual_library_names[lib] )
-		else:
-			return "-l{} ".format(lib)
+		return "-l:{} ".format( self._actual_library_names[lib] )
 
 	def get_libraries( self, libraries ):
 		"""Returns a string containing all of the passed libraries, formatted to be passed to gcc/g++."""
