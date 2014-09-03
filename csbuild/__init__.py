@@ -71,7 +71,6 @@ import imp
 import re
 import traceback
 
-
 class ProjectType( object ):
 	"""
 	Specifies the type of project to compile
@@ -1763,32 +1762,35 @@ class LinkThread(threading.Thread):
 
 
 	def run( self ):
-		project = self._project
-		project.state = _shared_globals.ProjectState.LINKING
-		ret = performLink(project, self._objs)
+		try:
+			project = self._project
+			project.state = _shared_globals.ProjectState.LINKING
+			ret = performLink(project, self._objs)
 
-		if ret == LinkStatus.Fail:
-			_shared_globals.build_success = False
-			project.state = _shared_globals.ProjectState.LINK_FAILED
-		elif ret == LinkStatus.Success:
+			if ret == LinkStatus.Fail:
+				_shared_globals.build_success = False
+				project.state = _shared_globals.ProjectState.LINK_FAILED
+			elif ret == LinkStatus.Success:
 
-			try:
-				project.activeToolchain.postBuildStep(project)
-			except Exception:
-				traceback.print_exc()
-
-			if project.postBuildStep:
-				log.LOG_BUILD( "Running post-build step for {} ({} {}/{})".format( project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
 				try:
-					project.postBuildStep( project )
+					project.activeToolchain.postBuildStep(project)
 				except Exception:
 					traceback.print_exc()
-			project.state = _shared_globals.ProjectState.FINISHED
-		elif ret == LinkStatus.UpToDate:
-			project.state = _shared_globals.ProjectState.UP_TO_DATE
-		project.endTime = time.time()
-		log.LOG_BUILD( "Finished {} ({} {}/{})".format( project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
-		_shared_globals.link_semaphore.release()
+
+				if project.postBuildStep:
+					log.LOG_BUILD( "Running post-build step for {} ({} {}/{})".format( project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
+					try:
+						project.postBuildStep( project )
+					except Exception:
+						traceback.print_exc()
+				project.state = _shared_globals.ProjectState.FINISHED
+			elif ret == LinkStatus.UpToDate:
+				project.state = _shared_globals.ProjectState.UP_TO_DATE
+			project.endTime = time.time()
+			log.LOG_BUILD( "Finished {} ({} {}/{})".format( project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
+			_shared_globals.link_semaphore.release()
+		except Exception:
+			traceback.print_exc()
 
 
 def linkThreadLoop():
@@ -1796,20 +1798,23 @@ def linkThreadLoop():
 	global linkMutex
 	global linkCond
 
-	global building
-	while True:
-		projectsToLink = []
-		with linkMutex:
-			if not linkQueue:
-				if not building:
-					return
-				linkCond.wait()
-			projectsToLink = linkQueue
-			linkQueue = []
+	try:
+		global building
+		while True:
+			projectsToLink = []
+			with linkMutex:
+				if not linkQueue:
+					if not building:
+						return
+					linkCond.wait()
+				projectsToLink = linkQueue
+				linkQueue = []
 
-		for ( project, objs ) in projectsToLink:
-			_shared_globals.link_semaphore.acquire(True)
-			LinkThread(project, objs).start()
+			for ( project, objs ) in projectsToLink:
+				_shared_globals.link_semaphore.acquire(True)
+				LinkThread(project, objs).start()
+	except Exception:
+		traceback.print_exc()
 
 linkThread = threading.Thread(target=linkThreadLoop)
 
@@ -2660,6 +2665,8 @@ def _run( ):
 		for proj in _shared_globals.projects.keys( ):
 			if proj.rsplit( "@", 1 )[0] in project_build_list:
 				_shared_globals.project_build_list.add( proj )
+	else:
+		_shared_globals.project_build_list = set(_shared_globals.projects.keys())
 
 	for projName in _shared_globals.project_build_list:
 		project = _shared_globals.projects[projName]
