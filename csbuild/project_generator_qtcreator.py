@@ -72,7 +72,7 @@ class project_generator_qtcreator( project_generator.project_generator ):
 		# These values don't matter much as they're likely to be the same (or close enough to the same for our purposes)
 		# across all targets.
 		archDict = projectDict[list(projectDict.keys())[0]]
-		toolchainDict = projectDict[list(archDict.keys())[0]]
+		toolchainDict = archDict[list(archDict.keys())[0]]
 		project = toolchainDict[list(toolchainDict.keys())[0]]
 
 		projectpath = os.path.join( self.rootpath, parentPath, project.name )

@@ -390,6 +390,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 
 		self._actual_library_names = { }
 		self._setup = False
+		self._project_settings = None
 
 
 	def copy(self):
@@ -397,6 +398,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 		gccBase.copyTo(self, ret)
 		ret.strictOrdering = self.strictOrdering
 		ret._actual_library_names = dict(self._actual_library_names)
+		ret._project_settings = self._project_settings
 		return ret
 
 
@@ -406,6 +408,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 
 	def SetupForProject( self, project ):
 		self._include_lib64 = False
+		self._project_settings = project
 
 		# Only include lib64 if we're on a 64-bit platform and we haven't specified whether to build a 64bit or 32bit
 		# binary or if we're explicitly told to build a 64bit binary.
@@ -413,10 +416,15 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 			self._include_lib64 = True
 
 	def get_library_arg(self, lib):
-		if lib in self._actual_library_names:
-			return "-l:{} ".format( self._actual_library_names[lib] )
-		else:
-			return "-l:{} ".format(lib)
+		for depend in self._project_settings.reconciledLinkDepends:
+			dependProj = _shared_globals.projects[depend]
+			if dependProj.type == csbuild.ProjectType.Application:
+				continue
+			dependLibName = dependProj.output_name
+			splitName = os.path.splitext(dependLibName)[0]
+			if ( splitName == lib or splitName == "lib{}".format( lib ) ):
+				return '-l:{} '.format( dependLibName )
+		return "-l:{} ".format( self._actual_library_names[lib] )
 
 	def get_libraries( self, libraries ):
 		"""Returns a string containing all of the passed libraries, formatted to be passed to gcc/g++."""

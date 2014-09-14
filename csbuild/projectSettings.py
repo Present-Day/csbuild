@@ -357,6 +357,7 @@ class projectSettings( object ):
 		"""
 		self.name = ""
 		self.priority = -1
+		self.ignoreDependencyOrdering = False
 		self.key = ""
 		self.workingDirectory = "./"
 		self.linkDepends = []
@@ -762,6 +763,7 @@ class projectSettings( object ):
 		ret.__dict__ = {
 			"name": self.name,
 			"priority" : self.priority,
+			"ignoreDependencyOrdering" : self.ignoreDependencyOrdering,
 			"key": self.key,
 			"workingDirectory": self.workingDirectory,
 			"linkDepends": list( self.linkDepends ),

@@ -514,6 +514,8 @@ def sortProjects( projects_to_sort ):
 
 
 	def insert_depends( project, already_inserted = set( ) ):
+		if project.ignoreDependencyOrdering:
+			return
 		already_inserted.add( project.key )
 		if project not in already_errored_link:
 			already_errored_link[project] = set( )
@@ -555,10 +557,14 @@ def sortProjects( projects_to_sort ):
 		already_inserted.remove( project.key )
 
 
+	dependencyFreeProjects = []
 	for project in sorted(projects_to_sort.values( ), key=lambda proj: proj.priority, reverse=True):
-		insert_depends( project )
+		if project.ignoreDependencyOrdering:
+			dependencyFreeProjects.append(project)
+		else:
+			insert_depends( project )
 
-	return ret
+	return sorted(dependencyFreeProjects, key=lambda proj: proj.priority, reverse=True) + ret
 
 
 def prepare_precompiles( ):

@@ -976,7 +976,7 @@ class Src(object):
 		self.libName = libName
 		self.scope = scope
 
-def project( name, workingDirectory, depends = None, priority = -1 ):
+def project( name, workingDirectory, depends = None, priority = -1, ignoreDependencyOrdering = False ):
 	"""
 	Decorator used to declare a project. linkDepends and srcDepends here will be used to determine project build order.
 
@@ -1043,6 +1043,7 @@ def project( name, workingDirectory, depends = None, priority = -1 ):
 		newProject.func = projectFunction
 
 		newProject.priority = priority
+		newProject.ignoreDependencyOrdering = ignoreDependencyOrdering
 
 		_shared_globals.tempprojects.update( { name: newProject } )
 		projectSettings.currentGroup.tempprojects.update( { name: newProject } )
@@ -1305,8 +1306,8 @@ def build( ):
 	_shared_globals.current_compile = 1
 
 	projects_in_flight = []
-	projects_done = set( )
-	pending_links = []
+	projects_done = set()
+	pending_links = set()
 	pending_builds = _shared_globals.sortedProjects
 	#projects_needing_links = set()
 
@@ -1357,8 +1358,8 @@ def build( ):
 						continue
 
 					okToLink = True
-					if otherProj.linkDepends:
-						for depend in otherProj.linkDepends:
+					if otherProj.reconciledLinkDepends:
+						for depend in otherProj.reconciledLinkDepends:
 							if depend not in projects_done:
 								okToLink = False
 								break
@@ -1371,11 +1372,11 @@ def build( ):
 							"Linking for {} ({} {}/{}) deferred until all dependencies have finished building...".format(
 								otherProj.output_name, otherProj.targetName, otherProj.outputArchitecture, otherProj.activeToolchainName ) )
 						otherProj.state = _shared_globals.ProjectState.WAITING_FOR_LINK
-						pending_links.append( otherProj )
+						pending_links.add( otherProj )
 
 			for otherProj in list( pending_links ):
 				okToLink = True
-				for depend in otherProj.linkDepends:
+				for depend in otherProj.reconciledLinkDepends:
 					if depend not in projects_done:
 						okToLink = False
 						break
@@ -1572,6 +1573,9 @@ def build( ):
 linkMutex = threading.Lock()
 linkCond = threading.Condition(linkMutex)
 linkQueue = []
+currentLinkThreads = set()
+linkThreadMutex = threading.Lock()
+recheckDeferredLinkTasks = False
 
 def link( project, *objs ):
 	"""
@@ -1674,7 +1678,7 @@ def performLink(project, objs):
 						.format(
 							project.library_locs[i] ) )
 					project.built_something = True
-			for dep in project.linkDepends:
+			for dep in project.reconciledLinkDepends:
 				depProj = _shared_globals.projects[dep]
 				if depProj.state != _shared_globals.ProjectState.UP_TO_DATE:
 					log.LOG_LINKER(
@@ -1706,6 +1710,7 @@ def performLink(project, objs):
 	fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = project.obj_dir )
 
 	(output, errors) = fd.communicate( )
+
 	ret = fd.returncode
 	sys.stdout.flush( )
 	sys.stderr.flush( )
@@ -1762,6 +1767,10 @@ class LinkThread(threading.Thread):
 
 
 	def run( self ):
+		global linkThreadMutex
+		global currentLinkThreads
+		global linkCond
+		global recheckDeferredLinkTasks
 		try:
 			project = self._project
 			project.state = _shared_globals.ProjectState.LINKING
@@ -1788,7 +1797,14 @@ class LinkThread(threading.Thread):
 				project.state = _shared_globals.ProjectState.UP_TO_DATE
 			project.endTime = time.time()
 			log.LOG_BUILD( "Finished {} ({} {}/{})".format( project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
+
 			_shared_globals.link_semaphore.release()
+
+			with linkThreadMutex:
+				currentLinkThreads.remove(project.key)
+			with linkMutex:
+				recheckDeferredLinkTasks = True
+				linkCond.notify()
 		except Exception:
 			traceback.print_exc()
 
@@ -1797,22 +1813,55 @@ def linkThreadLoop():
 	global linkQueue
 	global linkMutex
 	global linkCond
+	global currentLinkThreads
+	global linkThreadMutex
+	global recheckDeferredLinkTasks
 
 	try:
 		global building
+		deferredLinks = []
 		while True:
 			projectsToLink = []
 			with linkMutex:
+				if recheckDeferredLinkTasks:
+					if linkQueue:
+						linkQueue += deferredLinks
+					else:
+						linkQueue = deferredLinks
+					deferredLinks = []
+					recheckDeferredLinkTasks = False
 				if not linkQueue:
-					if not building:
+					if not building and not deferredLinks and not currentLinkThreads:
 						return
+					linkQueue = deferredLinks
+					deferredLinks = []
 					linkCond.wait()
 				projectsToLink = linkQueue
 				linkQueue = []
 
+
 			for ( project, objs ) in projectsToLink:
-				_shared_globals.link_semaphore.acquire(True)
-				LinkThread(project, objs).start()
+				okToLink = True
+				with linkThreadMutex:
+					for depend in project.reconciledLinkDepends:
+						if depend in currentLinkThreads:
+							okToLink = False
+							break
+
+						for ( otherProj, otherObjs ) in projectsToLink:
+							if otherProj.key == depend:
+								okToLink = False
+								break
+						if not okToLink:
+							break
+				
+				if okToLink:
+					with linkThreadMutex:
+						currentLinkThreads.add(project.key)
+					_shared_globals.link_semaphore.acquire(True)
+					LinkThread(project, objs).start()
+				else:
+					deferredLinks.append( ( project, objs ) )
 	except Exception:
 		traceback.print_exc()
 
@@ -2310,16 +2359,16 @@ def _run( ):
 		help = "Very quiet. Disables all csb-specific logging.", default = 1 )
 	parser.add_argument( "-j", "--jobs", action = "store", dest = "jobs", type = int, help = "Number of simultaneous build processes" )
 
-	#	parser.add_argument(
-	#		"-l",
-	#		"--linker-jobs",
-	#		action = "store",
-	#		dest = "linker_jobs",
-	#		type = int,
-	#		help = "Max number of simultaneous link processes. (If not specified, same value as -j.)"
-	#		"Note that this pool is shared with build threads, and linker will only get one thread from the pool until compile threads start becoming free."
-	#		"This value only specifies a maximum."
-	#	)
+	parser.add_argument(
+		"-l",
+		"--linker-jobs",
+		action = "store",
+		dest = "linker_jobs",
+		type = int,
+		help = "Max number of simultaneous link processes. (If not specified, same value as -j.)"
+		"Note that this pool is shared with build threads, and linker will only get one thread from the pool until compile threads start becoming free."
+		"This value only specifies a maximum."
+	)
 	parser.add_argument( "-g", "--gui", action = "store_true", dest = "gui", help = "Show GUI while building (experimental)")
 	parser.add_argument( "--auto-close-gui", action = "store_true", help = "Automatically close the gui on build success (will stay open on failure)")
 	parser.add_argument("--profile", action="store_true", help="Collect detailed line-by-line profiling information on compile time. --gui option required to see this information.")
@@ -2459,14 +2508,10 @@ def _run( ):
 		_shared_globals.max_threads = args.jobs
 		_shared_globals.semaphore = threading.BoundedSemaphore( value = _shared_globals.max_threads )
 
-	#if platform.system() == "Windows":
-	#Parallel link doesn't currently work correctly on any platform.
-	_shared_globals.max_linker_threads = 1
-	_shared_globals.link_semaphore = threading.BoundedSemaphore( value = _shared_globals.max_linker_threads )
-	#elif args.linker_jobs:
-	#	_shared_globals.max_linker_threads = max(args.linker_jobs, _shared_globals.max_threads)
-	#	_shared_globals.link_semaphore = threading.BoundedSemaphore( value = _shared_globals.max_linker_threads )
-
+	if args.linker_jobs:
+		_shared_globals.max_linker_threads = max(args.linker_jobs, _shared_globals.max_threads)
+		_shared_globals.link_semaphore = threading.BoundedSemaphore( value = _shared_globals.max_linker_threads )
+	
 	_shared_globals.profile = args.profile
 	_shared_globals.disable_chunks = args.no_chunks
 	_shared_globals.disable_precompile = args.no_precompile or args.profile

@@ -592,13 +592,16 @@ class linker_msvc( MsvcBase, toolchain.linkerBase ):
 			self._project_settings.shared_libraries
 		):
 			found = False
-			for depend in self._project_settings.linkDepends:
-				if (
-					_shared_globals.projects[depend].output_name.startswith( lib ) or
-					_shared_globals.projects[depend].output_name.startswith( "lib{}.".format( lib ) )
-				):
+			for depend in self._project_settings.reconciledLinkDepends:
+				dependProj = _shared_globals.projects[depend]
+				if dependProj.type == csbuild.ProjectType.Application:
+					continue
+				dependLibName = dependProj.output_name
+				splitName = os.path.splitext(dependLibName)[0]
+				if ( splitName == lib or splitName == "lib{}".format( lib ) ):
 					found = True
-					args += '"{}" '.format( os.path.splitext(_shared_globals.projects[depend].output_name)[0] + ".lib" )
+					args += '"{}" '.format( dependLibName )
+					break
 			if not found:
 				args += '"{}" '.format( self._actual_library_names[lib] )
 
