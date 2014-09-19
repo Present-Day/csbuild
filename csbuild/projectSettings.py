@@ -363,7 +363,7 @@ class projectSettings( object ):
 		self.linkDepends = []
 		self.linkDependsIntermediate = []
 		self.linkDependsFinal = []
-		self.reconciledLinkDepends = []
+		self.reconciledLinkDepends = set()
 		self.srcDepends = []
 		self.srcDependsIntermediate = []
 		self.srcDependsFinal = []
@@ -519,6 +519,9 @@ class projectSettings( object ):
 		self.supportedArchitectures = set()
 		self.supportedToolchains = set()
 
+		self.linkMode = csbuild.StaticLinkMode.LinkLibs
+		self.linkModeSet = False
+
 		#GUI support
 		self.state = _shared_globals.ProjectState.PENDING
 		self.startTime = 0
@@ -541,6 +544,8 @@ class projectSettings( object ):
 		self.errorsByFile = {}
 		self.times = {}
 		self.summedTimes = {}
+		self.linkCommand = ""
+		self.compileCommands = {}
 
 		self.linkOutput = ""
 		self.linkErrors = ""
@@ -574,6 +579,8 @@ class projectSettings( object ):
 
 		for dep in self.reconciledLinkDepends:
 			proj = _shared_globals.projects[dep]
+			if proj.type == csbuild.ProjectType.StaticLibrary and self.linkMode == csbuild.StaticLinkMode.LinkIntermediateObjects:
+				continue
 			self.libraries.add(proj.output_name.split(".")[0])
 
 		self.activeToolchain.SetActiveTool("compiler")
@@ -769,7 +776,7 @@ class projectSettings( object ):
 			"linkDepends": list( self.linkDepends ),
 			"linkDependsIntermediate": list( self.linkDependsIntermediate ),
 			"linkDependsFinal": list( self.linkDependsFinal ),
-			"reconciledLinkDepends" : list( self.reconciledLinkDepends ),
+			"reconciledLinkDepends" : set( self.reconciledLinkDepends ),
 			"srcDepends": list( self.srcDepends ),
 			"srcDependsIntermediate": list( self.srcDependsIntermediate ),
 			"srcDependsFinal": list( self.srcDependsFinal ),
@@ -872,6 +879,8 @@ class projectSettings( object ):
 			"extraFiles": list(self.extraFiles),
 			"extraDirs": list(self.extraDirs),
 			"extraObjs": list(self.extraObjs),
+			"linkMode" : self.linkMode,
+			"linkModeSet" : self.linkModeSet,
 			"state" : self.state,
 			"startTime" : self.startTime,
 			"buildEnd" : self.buildEnd,
@@ -906,6 +915,8 @@ class projectSettings( object ):
 			"summedTimes" : self.summedTimes,
 			"supportedArchitectures" : set(self.supportedArchitectures),
 			"supportedToolchains" : set(self.supportedToolchains),
+			"linkCommand" : self.linkCommand,
+			"compileCommands" : dict(self.compileCommands)
 		}
 
 		for name in self.targets:

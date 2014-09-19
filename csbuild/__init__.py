@@ -99,6 +99,10 @@ class ScopeDef( object ):
 	DependentsOnly = Intermediate | Final
 	All = Self | Intermediate | Final
 
+class StaticLinkMode( object ):
+	LinkLibs = 0
+	LinkIntermediateObjects = 1
+
 from csbuild import _utils
 from csbuild import toolchain
 from csbuild import toolchain_msvc
@@ -856,6 +860,24 @@ def DoNotChunk(*files):
 	for pattern in list(files):
 		for filename in glob.glob(pattern):
 			projectSettings.currentProject.chunkExcludes.add(os.path.abspath(filename))
+
+
+def SetStaticLinkMode(mode):
+	"""
+	Determines how static links are handled. With the msvc toolchain, iterative link times of a project with many libraries
+	can be significantly improved by setting this to L{StaticLinkMode.LinkIntermediateObjects}. This will cause the linker to link
+	the .obj files used to make a library directly into the dependent project. Link times for full builds may be slightly slower,
+	but this will allow incremental linking to function when libraries are being changed. (Usually, changing a .lib results
+	in a full link.)
+
+	On most toolchains, this defaults to L{StaticLinkMode.LinkLibs}. In debug mode only for the msvc toolchain, this defaults
+	to L{StaticLinkMode.LinkIntermediateObjects}.
+
+	@type mode: L{StaticLinkMode}
+	@param mode: The link mode to set
+	"""
+	projectSettings.currentProject.linkMode = mode
+	projectSettings.currentProject.linkModeSet = True
 
 
 def SupportedArchitectures(*architectures):
@@ -1695,15 +1717,55 @@ def performLink(project, objs):
 	if not os.access(project.output_dir , os.F_OK):
 		os.makedirs( project.output_dir )
 
-	#Remove the output file so we're not just clobbering it
+	#On unix-based OSes, we need to remove the output file so we're not just clobbering it
 	#If it gets clobbered while running it could cause BAD THINGS (tm)
-	if os.access(output , os.F_OK):
-		os.remove( output )
+	#On windows, however, we want to leave it there so that incremental link can work.
+	if platform.system() != "Windows":
+		if os.access(output , os.F_OK):
+			os.remove( output )
+
+	for dep in project.reconciledLinkDepends:
+		proj = _shared_globals.projects[dep]
+		if proj.type == ProjectType.StaticLibrary and project.linkMode == StaticLinkMode.LinkIntermediateObjects:
+			for chunk in proj.chunks:
+				if not proj.unity:
+					obj = os.path.join(proj.obj_dir, "{}_{}{}".format(
+						_utils.get_chunk_name( proj.output_name, chunk ),
+						proj.targetName,
+						proj.activeToolchain.Compiler().get_obj_ext()
+					))
+				else:
+					obj = os.path.join(proj.obj_dir, "{}_unity_{}{}".format(
+						proj.output_name,
+						proj.targetName,
+						proj.activeToolchain.Compiler().get_obj_ext()
+					))
+				if proj.use_chunks and not _shared_globals.disable_chunks and os.access(obj , os.F_OK):
+					objs.append( obj )
+				else:
+					if type( chunk ) == list:
+						for source in chunk:
+							obj = os.path.join(proj.obj_dir, "{}_{}{}".format( os.path.basename( source ).split( '.' )[0],
+								proj.targetName, proj.activeToolchain.Compiler().get_obj_ext() ) )
+							if os.access(obj , os.F_OK):
+								objs.append( obj )
+							else:
+								log.LOG_ERROR( "Could not find {} for linking. Something went wrong here.".format(obj) )
+								return LinkStatus.Fail
+					else:
+						obj = os.path.join(proj.obj_dir, "{}_{}{}".format( os.path.basename( chunk ).split( '.' )[0],
+							proj.targetName, proj.activeToolchain.Compiler().get_obj_ext() ) )
+						if os.access(obj , os.F_OK):
+							objs.append( obj )
+						else:
+							log.LOG_ERROR( "Could not find {} for linking. Something went wrong here.".format(obj) )
+							return LinkStatus.Fail
+			objs += proj.extraObjs
 
 	cmd = project.activeToolchain.Linker().get_link_command( project, output, objs )
 	if _shared_globals.show_commands:
 		print(cmd)
-
+	project.linkCommand = cmd
 	if platform.system() != "Windows":
 		cmd = shlex.split(cmd)
 
@@ -2039,6 +2101,9 @@ def debug( ):
 	if not projectSettings.currentProject.debug_set:
 		Debug( DebugLevel.EmbeddedSymbols )
 		Toolchain("msvc").Debug( DebugLevel.ExternalSymbols )
+
+	if not projectSettings.currentProject.linkModeSet:
+		Toolchain("msvc").SetStaticLinkMode( StaticLinkMode.LinkIntermediateObjects )
 
 	Define("_DEBUG")
 
@@ -2406,6 +2471,7 @@ def _run( ):
 	parser.add_argument( '--no-chunks', help = "Disable chunking globally, affects all projects",
 		action = "store_true" )
 	parser.add_argument( '--dg', '--dependency-graph', help="Generate dependency graph", action="store_true")
+	parser.add_argument( '--with-libs', help="Include linked libraries in dependency graph", action="store_true" )
 
 	group = parser.add_argument_group( "Solution generation", "Commands to generate a solution" )
 	group.add_argument( '--generate-solution', help = "Generate a solution file for use with the given IDE.",
@@ -2724,7 +2790,7 @@ def _run( ):
 				if dep in intermediates_added:
 					continue
 				intermediates_added.add(dep)
-				project.reconciledLinkDepends.append(dep)
+				project.reconciledLinkDepends.add(dep)
 				proj = _shared_globals.projects[dep]
 				add_finals(proj.linkDependsIntermediate)
 
@@ -2733,7 +2799,7 @@ def _run( ):
 				if dep in finals_added:
 					continue
 				finals_added.add(dep)
-				project.reconciledLinkDepends.append(dep)
+				project.reconciledLinkDepends.add(dep)
 				proj = _shared_globals.projects[dep]
 				add_finals(proj.linkDependsFinal)
 
@@ -2743,7 +2809,7 @@ def _run( ):
 
 		for dep in depends:
 			proj = _shared_globals.projects[dep]
-			project.reconciledLinkDepends.append(dep)
+			project.reconciledLinkDepends.add(dep)
 			if args.dg:
 				add_finals(proj.linkDependsFinal)
 				add_intermediates(proj.linkDependsIntermediate)
@@ -2760,9 +2826,7 @@ def _run( ):
 		if proj not in already_errored_link:
 			already_errored_link[proj] = set( )
 			already_errored_source[proj] = set( )
-		for index in range( len( proj.reconciledLinkDepends ) ):
-			depend = proj.reconciledLinkDepends[index]
-
+		for depend in proj.reconciledLinkDepends:
 			if depend in already_inserted:
 				log.LOG_WARN(
 					"Circular dependencies detected: {0} and {1} in linkDepends".format( depend.rsplit( "@", 1 )[0],
@@ -2775,7 +2839,7 @@ def _run( ):
 						"Project {} references non-existent link dependency {}".format( proj.name,
 							depend.rsplit( "@", 1 )[0] ) )
 					already_errored_link[proj].add( depend )
-					del proj.reconciledLinkDepends[index]
+					proj.reconciledLinkDepends.remove(depend)
 				continue
 
 			projData = _shared_globals.projects[depend]
@@ -2816,7 +2880,7 @@ def _run( ):
 		_shared_globals.projects = newProjList
 
 	_shared_globals.sortedProjects = _utils.sortProjects( _shared_globals.projects )
-
+		
 	if args.dg:
 		builder = 'digraph G {\n\tlayout="neato";\n\toverlap="false";\n\tsplines="spline"\n'
 		colors = [
@@ -2829,12 +2893,13 @@ def _run( ):
 			"#00a2f2", "#397ee6", "#0000e6", "#8d29a6", "#990052"
 		]
 		idx = 0
+		libs_drawn = set()
 		for project in _shared_globals.sortedProjects:
 			color = colors[idx]
 			idx += 1
 			if idx == len(colors):
 				idx = 0
-			builder += '\t{} [shape="{}" color="{}"];\n'.format(project.name, "box3d" if project.type == ProjectType.Application else "oval", color);
+			builder += '\t{0} [shape="{1}" color="{2}" style="filled" fillcolor="{2}30"];\n'.format(project.name, "box3d" if project.type == ProjectType.Application else "oval", color)
 			for dep in project.linkDepends:
 				otherProj = _shared_globals.projects[dep]
 				builder += '\t{} -> {} [color="{}"];\n'.format(project.name, otherProj.name, color)
@@ -2844,6 +2909,16 @@ def _run( ):
 			for dep in project.linkDependsFinal:
 				otherProj = _shared_globals.projects[dep]
 				builder += '\t{} -> {} [color="{}B0" style="dashed" arrowhead="onormal"];\n'.format(project.name, otherProj.name, color)
+
+			if args.with_libs:
+				project.activeToolchain = project.toolchains[project.activeToolchainName]
+				project.activeToolchain.SetActiveTool("linker")
+				for lib in project.libraries:
+					lib = lib.replace("-", "_")
+					if lib not in libs_drawn:
+						builder += '\t{} [shape="diamond" color="#303030" style="filled" fillcolor="#D0D0D080"];\n'.format(lib)
+						libs_drawn.add(lib)
+					builder += '\t{} -> {} [color="{}" style="dotted" arrowhead="onormal"];\n'.format(project.name, lib, color)
 		builder += "}\n"
 		with open("depends.gv", "w") as f:
 			f.write(builder)

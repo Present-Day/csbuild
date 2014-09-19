@@ -29,6 +29,7 @@ import subprocess
 import sys
 import shlex
 import re
+import platform
 
 from csbuild import toolchain_gcc
 from csbuild import log
@@ -309,6 +310,22 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 
 	def get_link_command( self, project, outputFile, objList ):
 		self.SetupForProject( project )
+
+		linkFile = os.path.join(self._project_settings.csbuild_dir, "{}.cmd".format(self._project_settings.name))
+
+		data = " ".join( objList )
+		if sys.version_info >= (3, 0):
+			data = data.encode("utf-8")
+
+		file_mode = 438 # Octal 0666
+		flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+		if platform.system() == "Windows":
+			flags |= os.O_NOINHERIT
+		fd = os.open(linkFile, flags, file_mode)
+		os.write(fd, data)
+		os.fsync(fd)
+		os.close(fd)
+
 		if project.type == csbuild.ProjectType.StaticLibrary:
 			return "\"{}\" rcs {} {}".format( self._ar, outputFile, " ".join( objList ) )
 		else:
@@ -331,7 +348,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 				cmd,
 				"-pg " if project.profile else "",
 				outputFile,
-				" ".join( objList ),
+				"@{}".format(linkFile),
 				"-Wl,--no-as-needed -Wl,--start-group" if not self.strictOrdering else "",
 				self.get_libraries( project.libraries ),
 				self.get_static_libraries( project.static_libraries ),

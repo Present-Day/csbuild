@@ -397,7 +397,7 @@ class compiler_msvc( MsvcBase, toolchain.compilerBase ):
 		#This is safe to do because csbuild always creates C++ precompiled headers with a .hpp extension.
 		srcFile = os.path.join("{}.{}".format(split[0], "c" if split[1] == "h" else "cpp"))
 		file_mode = 438 # Octal 0666
-		fd = os.open(srcFile, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT, file_mode)
+		fd = os.open(srcFile, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT | os.O_TRUNC, file_mode)
 		data = "#include \"{}\"\n".format(input_file)
 		if sys.version_info >= (3, 0):
 			data = data.encode("utf-8")
@@ -638,10 +638,18 @@ class linker_msvc( MsvcBase, toolchain.linkerBase ):
 
 
 	def getLinkerCommand( self, output_file, obj_list ):
+		linkFile = os.path.join(self._project_settings.csbuild_dir, "{}.cmd".format(self._project_settings.name))
+
+		file_mode = 438 # Octal 0666
+		fd = os.open(linkFile, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT | os.O_TRUNC, file_mode)
+		os.write(fd, self._get_linker_args( output_file, obj_list ))
+		os.fsync(fd)
+		os.close(fd)
+
 		return "{}{}{}{}".format(
 			self._get_linker_exe( ),
 			"/NXCOMPAT /DYNAMICBASE " if self._project_settings.type != csbuild.ProjectType.StaticLibrary else "",
-			self._get_linker_args( output_file, obj_list ),
+			"@{}".format(linkFile),
 			" ".join( self._project_settings.linker_flags ) )
 
 

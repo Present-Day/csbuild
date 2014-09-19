@@ -1259,6 +1259,14 @@ class MainWindow( QMainWindow ):
 		self.m_textEdit.setFontFamily("monospace")
 		self.innerLayout2.addWidget(self.m_textEdit)
 
+		self.commandPage = QtGui.QWidget(self.innerWidget2)
+		self.innerLayout2 = QtGui.QVBoxLayout(self.commandPage)
+		self.m_commandEdit = QtGui.QTextEdit(self.commandPage)
+		self.m_commandEdit.setObjectName("commandEdit")
+		self.m_commandEdit.setReadOnly(True)
+		self.m_commandEdit.setFontFamily("monospace")
+		self.innerLayout2.addWidget(self.m_commandEdit)
+
 		self.errorsPage = QtGui.QWidget(self.innerWidget2)
 
 		self.innerLayout3 = QtGui.QVBoxLayout(self.errorsPage)
@@ -1280,6 +1288,7 @@ class MainWindow( QMainWindow ):
 
 		self.innerWidget2.addTab(self.errorsPage, "Errors/Warnings")
 		self.innerWidget2.addTab(self.textPage, "Text Output")
+		self.innerWidget2.addTab(self.commandPage, "Command Line")
 
 		self.m_splitter.addWidget(self.innerWidget2)
 
@@ -1575,6 +1584,7 @@ class MainWindow( QMainWindow ):
 								self.m_textEdit.setText(outStr)
 					elif widget.isExpanded():
 						def HandleChild( idx, file ):
+							file = os.path.normcase(file)
 							childWidget = widget.child(idx)
 
 							if childWidget == current:
@@ -1607,8 +1617,93 @@ class MainWindow( QMainWindow ):
 							HandleChild( idx, project.cheaderfile )
 							idx += 1
 
-						for file in project.final_chunk_set:
-							HandleChild( idx, file )
+						used_chunks = set()
+						for source in project.allsources:
+							inThisBuild = False
+							if source not in project.final_chunk_set:
+								chunk = project.get_chunk( source )
+								if not chunk:
+									continue
+
+								extension = "." + source.rsplit(".", 1)[1]
+								if extension in project.cExtensions:
+									extension = ".c"
+								else:
+									extension = ".cpp"
+
+								chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+
+								if chunk in used_chunks:
+									continue
+								if chunk in project.final_chunk_set:
+									inThisBuild = True
+									source = chunk
+									used_chunks.add(chunk)
+							else:
+								inThisBuild = True
+
+							if inThisBuild:
+								HandleChild( idx, source )
+
+							idx += 1
+		elif self.m_commandEdit.isVisible():
+			if current is not None:
+				for project in _shared_globals.sortedProjects:
+					widget = self.projectToItem[project]
+					if not widget:
+						continue
+
+					if widget == current:
+						self.m_commandEdit.setText(project.linkCommand)
+					elif widget.isExpanded():
+						def HandleChild( idx, file ):
+							file = os.path.normcase(file)
+							childWidget = widget.child(idx)
+
+							if childWidget == current:
+								if file in project.compileCommands:
+									self.m_commandEdit.setText(project.compileCommands[file])
+								else:
+									self.m_commandEdit.setText("")
+
+
+						idx = 0
+						if project.needs_cpp_precompile:
+							HandleChild( idx, project.cppheaderfile )
+							idx += 1
+
+						if project.needs_c_precompile:
+							HandleChild( idx, project.cheaderfile )
+							idx += 1
+
+						used_chunks = set()
+						for source in project.allsources:
+							inThisBuild = False
+							if source not in project.final_chunk_set:
+								chunk = project.get_chunk( source )
+								if not chunk:
+									continue
+
+								extension = "." + source.rsplit(".", 1)[1]
+								if extension in project.cExtensions:
+									extension = ".c"
+								else:
+									extension = ".cpp"
+
+								chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+
+								if chunk in used_chunks:
+									continue
+								if chunk in project.final_chunk_set:
+									inThisBuild = True
+									source = chunk
+									used_chunks.add(chunk)
+							else:
+								inThisBuild = True
+
+							if inThisBuild:
+								HandleChild( idx, source )
+
 							idx += 1
 		else:
 			if current != previous:
@@ -1734,6 +1829,7 @@ class MainWindow( QMainWindow ):
 							HandleError(project.parsedLinkErrors)
 					elif widget.isExpanded():
 						def HandleChild( idx, file ):
+							file = os.path.normcase(file)
 							childWidget = widget.child(idx)
 
 							if childWidget == current:

@@ -212,7 +212,7 @@ class threaded_build( threading.Thread ):
 							lastLine += 1
 					if platform.system() == "Windows":
 						file_mode = 438 # Octal 0666
-						fd = os.open(self.file, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT, file_mode)
+						fd = os.open(self.file, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT | os.O_TRUNC, file_mode)
 						os.write(fd, data.getvalue())
 						os.fsync(fd)
 						os.close(fd)
@@ -234,6 +234,7 @@ class threaded_build( threading.Thread ):
 			if _shared_globals.profile:
 				cmd += self.project.activeToolchain.Compiler().get_extra_post_preprocess_flags()
 
+			self.project.compileCommands[self.originalIn] = cmd
 			if _shared_globals.show_commands:
 				print(cmd)
 			if os.access(self.obj , os.F_OK):
@@ -521,8 +522,7 @@ def sortProjects( projects_to_sort ):
 			already_errored_link[project] = set( )
 			already_errored_source[project] = set( )
 
-		for index in range( len( project.reconciledLinkDepends ) ):
-			depend = project.reconciledLinkDepends[index]
+		for depend in project.reconciledLinkDepends:
 			if depend in already_inserted:
 				log.LOG_WARN(
 					"Circular dependencies detected: {0} and {1} in linkDepends".format( depend.rsplit( "@", 1 )[0],
@@ -533,7 +533,7 @@ def sortProjects( projects_to_sort ):
 					log.LOG_ERROR( "Project {} references non-existent link dependency {}".format(
 						project.name, depend.rsplit( "@", 1 )[0] ) )
 					already_errored_link[project].add( depend )
-					del project.reconciledLinkDepends[index]
+					project.reconciledLinkDepends.remove(depend)
 				continue
 			insert_depends( projects_to_sort[depend], already_inserted )
 
@@ -632,6 +632,7 @@ def prepare_precompiles( ):
 				cheaders = project.cheaders
 			else:
 				if not project.hasCppFiles:
+					cppheaders = []
 					cheaders = project.precompile + project.precompileAsC
 				else:
 					cppheaders = project.precompile
