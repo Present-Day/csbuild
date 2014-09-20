@@ -27,10 +27,10 @@ import codecs
 import tempfile
 import hashlib
 
-from csbuild import project_generator
-from csbuild import projectSettings
-from csbuild import log
-from csbuild import _shared_globals
+from . import project_generator
+from . import projectSettings
+from . import log
+from . import _shared_globals
 
 import csbuild
 

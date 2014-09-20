@@ -23,9 +23,9 @@ import xml.dom.minidom as minidom
 import os
 import sys
 
-from csbuild import project_generator
-from csbuild import projectSettings
-from csbuild import log
+from . import project_generator
+from . import projectSettings
+from . import log
 import csbuild
 
 

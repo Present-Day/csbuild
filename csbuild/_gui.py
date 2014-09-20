@@ -6,7 +6,7 @@ import stat
 import io
 import sys
 import csbuild
-from csbuild import log
+from . import log
 
 # try:
 # 	from PyQt5 import QtCore, QtGui, QtWidgets
@@ -42,7 +42,7 @@ import time
 import math
 import signal
 
-from csbuild import _shared_globals
+from . import _shared_globals
 
 class TreeWidgetItem(QtGui.QTreeWidgetItem):
 	def __init__(self, *args, **kwargs):
@@ -2818,7 +2818,11 @@ class GuiThread( threading.Thread ):
 					childItem.setText(1, "100")
 					#"Up-to-date!" text gets set by window.SetProgressBarUpToDate
 
-				childItem.setText(3, os.path.basename(source))
+				name = os.path.basename(source)
+				if source in project.splitChunks:
+					name = "[Split Chunk] {}".format(name)
+
+				childItem.setText(3, name)
 				childItem.setToolTip(3, source)
 				childItem.setText(4, project.targetName)
 				childItem.setToolTip(4, project.targetName)

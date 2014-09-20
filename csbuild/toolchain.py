@@ -30,8 +30,8 @@ from abc import abstractmethod, ABCMeta
 import glob
 import os
 import platform
-from csbuild import log
-from csbuild import _shared_globals
+from . import log
+from . import _shared_globals
 import csbuild
 
 

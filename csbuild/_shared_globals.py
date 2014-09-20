@@ -28,10 +28,6 @@ are documented here. Others are left undocumented.
 @var columns: The number of columns the output window has available to it
 @type columns: int
 
-@var printmutex: Mutex used to try and avoid multiple things printing to stdout at once
-and stepping on each other
-@type printmutex: threading.Lock
-
 @var max_threads: Number of threads available for compilation
 @type max_threads: int
 
@@ -112,7 +108,7 @@ and stepping on each other
 
 import threading
 import multiprocessing
-from csbuild import terminfo
+from . import terminfo
 
 class ProjectState( object ):
 	"""
@@ -180,8 +176,6 @@ def MetaClass(meta):
 color_supported = terminfo.TermInfo.SupportsColor( )
 columns = terminfo.TermInfo.GetNumColumns( ) if color_supported else 0
 
-printmutex = threading.Lock( )
-
 max_threads = multiprocessing.cpu_count( )
 max_linker_threads = max_threads
 
@@ -233,6 +227,7 @@ makefile_dict = { }
 
 allheaders = { }
 headerPaths = {}
+headerCheck = {}
 
 current_compile = 1
 
@@ -270,6 +265,11 @@ warningcount = 0
 errorcount = 0
 
 profile = False
+
+buildFinished = False
+
+logFile = None
+cacheDirectory = None
 
 class dummy_block( object ):
 	"""Some versions of python have a bug in threading where a dummy thread will try and use a value that it deleted.

@@ -33,9 +33,9 @@ import re
 import subprocess
 import sys
 
-from csbuild import toolchain
-from csbuild import _shared_globals
-from csbuild import log
+from . import toolchain
+from . import _shared_globals
+from . import log
 import csbuild
 
 ### Reference: http://msdn.microsoft.com/en-us/library/f35ctcxw.aspx
@@ -642,7 +642,11 @@ class linker_msvc( MsvcBase, toolchain.linkerBase ):
 
 		file_mode = 438 # Octal 0666
 		fd = os.open(linkFile, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT | os.O_TRUNC, file_mode)
-		os.write(fd, self._get_linker_args( output_file, obj_list ))
+
+		data = self._get_linker_args( output_file, obj_list )
+		if sys.version_info >= (3, 0):
+			data = data.encode("utf-8")
+		os.write(fd, data)
 		os.fsync(fd)
 		os.close(fd)
 

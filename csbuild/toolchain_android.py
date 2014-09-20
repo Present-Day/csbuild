@@ -31,9 +31,9 @@ import shlex
 import re
 import platform
 
-from csbuild import toolchain_gcc
-from csbuild import log
-from csbuild import _shared_globals
+from . import toolchain_gcc
+from . import log
+from . import _shared_globals
 import csbuild
 
 if platform.system() == "Windows":

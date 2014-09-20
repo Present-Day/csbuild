@@ -26,7 +26,7 @@ Defines the base class for project generation.
 
 from abc import abstractmethod, ABCMeta
 import os
-from csbuild import _shared_globals
+from . import _shared_globals
 
 
 @_shared_globals.MetaClass(ABCMeta)

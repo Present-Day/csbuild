@@ -49,9 +49,9 @@ import glob
 import itertools
 import threading
 
-from csbuild import log
-from csbuild import _shared_globals
-from csbuild import _utils
+from . import log
+from . import _shared_globals
+from . import _utils
 
 class projectSettings( object ):
 	"""
@@ -522,6 +522,8 @@ class projectSettings( object ):
 		self.linkMode = csbuild.StaticLinkMode.LinkLibs
 		self.linkModeSet = False
 
+		self.splitChunks = {}
+
 		#GUI support
 		self.state = _shared_globals.ProjectState.PENDING
 		self.startTime = 0
@@ -550,7 +552,6 @@ class projectSettings( object ):
 		self.linkOutput = ""
 		self.linkErrors = ""
 		self.parsedLinkErrors = None
-
 
 	def prepareBuild( self ):
 		log.LOG_BUILD( "Preparing tasks for {} ({} {}/{})...".format( self.output_name, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
@@ -881,6 +882,7 @@ class projectSettings( object ):
 			"extraObjs": list(self.extraObjs),
 			"linkMode" : self.linkMode,
 			"linkModeSet" : self.linkModeSet,
+			"splitChunks" : dict(self.splitChunks),
 			"state" : self.state,
 			"startTime" : self.startTime,
 			"buildEnd" : self.buildEnd,
@@ -1020,27 +1022,30 @@ class projectSettings( object ):
 
 
 	def get_full_path( self, headerFile, relativeDir ):
-		if relativeDir is not None:
-			if headerFile in _shared_globals.headerPaths:
-				return _shared_globals.headerPaths[headerFile]
+		if relativeDir in _shared_globals.headerPaths:
+			if headerFile in _shared_globals.headerPaths[relativeDir]:
+				return _shared_globals.headerPaths[relativeDir][headerFile]
+		else:
+			_shared_globals.headerPaths[relativeDir] = {}
+
 		if os.access(headerFile, os.F_OK):
-			_shared_globals.headerPaths[headerFile] = headerFile
-			return headerFile
+			_shared_globals.headerPaths[relativeDir][headerFile] = headerFile
+			path = os.path.join(os.getcwd(), headerFile)
+			_shared_globals.headerPaths[relativeDir][headerFile] = path
+			return path
 		else:
 			if relativeDir is not None:
 				path = os.path.join( relativeDir, headerFile )
 				if os.access(path, os.F_OK):
 					return path
+
 			for incDir in self.include_dirs:
 				path = os.path.join( incDir, headerFile )
 				if os.access(path, os.F_OK):
-					_shared_globals.headerPaths[headerFile] = path
+					_shared_globals.headerPaths[relativeDir][headerFile] = path
 					return path
-					#A lot of standard C and C++ headers will be in a compiler-specific directory that we won't
-					# check.
-					#Just ignore them to speed things up.
 
-			_shared_globals.headerPaths[headerFile] = ""
+			_shared_globals.headerPaths[relativeDir][headerFile] = ""
 			return ""
 
 
@@ -1059,6 +1064,7 @@ class projectSettings( object ):
 				if RMatch is None:
 					continue
 
+				#Don't follow system headers, we should assume those are immutable
 				if "." not in RMatch.group( 1 ):
 					continue
 
@@ -1085,7 +1091,7 @@ class projectSettings( object ):
 			return
 
 		if path in _shared_globals.allheaders:
-			allheaders += _shared_globals.allheaders[path]
+			allheaders.update(_shared_globals.allheaders[path])
 			return
 
 		headers = self.get_included_files( path )
@@ -1103,10 +1109,10 @@ class projectSettings( object ):
 				continue
 
 			if subpath in _shared_globals.allheaders:
-				allheaders += _shared_globals.allheaders[subpath]
+				allheaders.update(_shared_globals.allheaders[subpath])
 				continue
 
-			allheaders.append( subpath )
+			allheaders.add( subpath )
 
 			theseheaders = set( )
 
@@ -1114,7 +1120,7 @@ class projectSettings( object ):
 				self.follow_headers2( subpath, theseheaders, 1, headerFile )
 
 			_shared_globals.allheaders.update( { subpath: theseheaders } )
-			allheaders += theseheaders
+			allheaders.update(theseheaders)
 
 		_shared_globals.allheaders.update( { path: set( allheaders ) } )
 
@@ -1133,7 +1139,7 @@ class projectSettings( object ):
 			return
 
 		if path in _shared_globals.allheaders:
-			allheaders += _shared_globals.allheaders[path]
+			allheaders.update(_shared_globals.allheaders[path])
 			return
 
 		headers = self.get_included_files( path )
@@ -1150,7 +1156,7 @@ class projectSettings( object ):
 				continue
 
 			if subpath in _shared_globals.allheaders:
-				allheaders |= _shared_globals.allheaders[subpath]
+				allheaders.update(_shared_globals.allheaders[subpath])
 				continue
 
 			allheaders.add( subpath )
@@ -1161,7 +1167,7 @@ class projectSettings( object ):
 				self.follow_headers2( subpath, theseheaders, n + 1, headerFile )
 
 			_shared_globals.allheaders.update( { subpath: theseheaders } )
-			allheaders |= theseheaders
+			allheaders.update(theseheaders)
 
 
 	def should_recompile( self, srcFile, ofile = None, for_precompiled_header = False ):
@@ -1246,23 +1252,32 @@ class projectSettings( object ):
 		#If any included header file (recursive, to include headers included by headers) has been changed,
 		#then we need to recompile every source that includes that header.
 		#Follow the headers for this source file and find out if any have been changed o necessitate a recompile.
-		headers = []
+		headers = set()
 
 		self.follow_headers( srcFile, headers )
 
 		updatedheaders = []
 
 		for header in headers:
-			if os.access(header , os.F_OK):
-				path = header
-			else:
+			if not header:
 				continue
+
+			path = header
+
+			if header in _shared_globals.headerCheck:
+				b = _shared_globals.headerCheck[header]
+				if b:
+					updatedheaders.append( [header, path] )
+				else:
+					continue
+
 
 			header_mtime = os.path.getmtime( path )
 
 			if header_mtime > omtime:
 				if for_precompiled_header:
 					updatedheaders.append( [header, path] )
+					_shared_globals.headerCheck[header] = True
 					continue
 
 				#newmd5 is 0, oldmd5 is 1, so that they won't report equal if we ignore them.
@@ -1301,6 +1316,10 @@ class projectSettings( object ):
 
 				if oldmd5 != newmd5:
 					updatedheaders.append( [header, path] )
+					_shared_globals.headerCheck[header] = True
+					continue
+
+			_shared_globals.headerCheck[header] = False
 
 		if updatedheaders:
 			files = []

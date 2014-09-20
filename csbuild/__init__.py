@@ -47,7 +47,6 @@ once that thread tries to use it. Long story short: Don't import modules within 
 @undocumented: install
 @undocumented: make
 @undocumented: _options
-@undocumented: _barWriter
 @undocumented: __credits__
 @undocumented: __maintainer__
 @undocumented: __email__
@@ -70,6 +69,11 @@ import platform
 import imp
 import re
 import traceback
+
+if sys.version_info < (3,0):
+	import cPickle as pickle
+else:
+	import pickle
 
 class ProjectType( object ):
 	"""
@@ -103,18 +107,18 @@ class StaticLinkMode( object ):
 	LinkLibs = 0
 	LinkIntermediateObjects = 1
 
-from csbuild import _utils
-from csbuild import toolchain
-from csbuild import toolchain_msvc
-from csbuild import toolchain_gcc
-from csbuild import toolchain_android
-from csbuild import log
-from csbuild import _shared_globals
-from csbuild import projectSettings
-from csbuild import project_generator_qtcreator
-from csbuild import project_generator_slickedit
-from csbuild import project_generator_visual_studio
-from csbuild import project_generator
+from . import _utils
+from . import toolchain
+from . import toolchain_msvc
+from . import toolchain_gcc
+from . import toolchain_android
+from . import log
+from . import _shared_globals
+from . import projectSettings
+from . import project_generator_qtcreator
+from . import project_generator_slickedit
+from . import project_generator_visual_studio
+from . import project_generator
 
 
 __author__ = "Jaedyn K. Draper, Brandon M. Bare"
@@ -1287,7 +1291,7 @@ def preLinkStep( func ):
 
 _shared_globals.starttime = time.time( )
 
-_barWriter = log.bar_writer( )
+sys.stdout = log.stdoutWriter(sys.stdout)
 
 building = False
 
@@ -1310,8 +1314,6 @@ def build( ):
 
 	if _guiModule:
 		_guiModule.run()
-
-	_barWriter.start()
 
 	built = False
 	global building
@@ -1442,6 +1444,12 @@ def build( ):
 					chunkFileStr = ""
 					if chunk in project.chunksByFile:
 						chunkFileStr = " {}".format( [ os.path.basename(piece) for piece in project.chunksByFile[chunk] ] )
+					elif chunk in project.splitChunks:
+						chunkFileStr = " [Split from {}_{}{}]".format(
+							project.splitChunks[chunk],
+							project.targetName,
+							project.activeToolchain.Compiler().get_obj_ext()
+						)
 
 					built = True
 					obj = os.path.join(projectSettings.currentProject.obj_dir, "{}_{}{}".format(
@@ -1589,6 +1597,8 @@ def build( ):
 	totalmin = math.floor( compiletime / 60 )
 	totalsec = math.floor( compiletime % 60 )
 	log.LOG_BUILD( "Compilation took {0}:{1:02}".format( int( totalmin ), int( totalsec ) ) )
+
+	_shared_globals.buildFinished = True
 
 	return _shared_globals.build_success
 
@@ -1776,12 +1786,12 @@ def performLink(project, objs):
 	ret = fd.returncode
 	sys.stdout.flush( )
 	sys.stderr.flush( )
-	with _shared_globals.printmutex:
-		if sys.version_info >= (3, 0):
-			output = output.decode("utf-8")
-			errors = errors.decode("utf-8")
-		sys.stdout.write( output )
-		sys.stderr.write( errors )
+
+	if sys.version_info >= (3, 0):
+		output = output.decode("utf-8")
+		errors = errors.decode("utf-8")
+	sys.stdout.write( output )
+	sys.stderr.write( errors )
 
 	with project.mutex:
 		ansi_escape = re.compile(r'\x1b[^m]*m')
@@ -2322,6 +2332,36 @@ def _run( ):
 	else:
 		log.LOG_ERROR( "CSB cannot be run from the interactive console." )
 		Exit( 1 )
+
+	csbDir = os.path.join(mainfileDir, ".csbuild")
+	if not os.path.exists(csbDir):
+		os.makedirs(csbDir)
+
+	_shared_globals.cacheDirectory = os.path.join(csbDir, "cache")
+	if not os.path.exists(_shared_globals.cacheDirectory):
+		os.makedirs(_shared_globals.cacheDirectory)
+
+	logDirectory = os.path.join(csbDir, "log")
+	if not os.path.exists(logDirectory):
+		os.makedirs(logDirectory)
+
+	logFile = os.path.join(logDirectory, "build.log")
+
+	logBackup = "{}.4".format(logFile)
+	if os.path.exists(logBackup):
+		os.remove(logBackup)
+
+	for i in range(3,0,-1):
+		logBackup = "{}.{}".format(logFile, i)
+		if os.path.exists(logBackup):
+			newBackup = "{}.{}".format(logFile, i+1)
+			os.rename(logBackup, newBackup)
+
+	if os.path.exists(logFile):
+		logBackup = "{}.1".format(logFile)
+		os.rename(logFile, logBackup)
+
+	_shared_globals.logFile = open(logFile, "w")
 
 	epilog = "    ------------------------------------------------------------    \n\nProjects available in this makefile (listed in build order):\n\n"
 
@@ -2934,8 +2974,27 @@ def _run( ):
 			log.LOG_BUILD("Wrote depends.png")
 		return
 
+	headerCacheFile = os.path.join(_shared_globals.cacheDirectory, "header_info.csbc")
+	if os.path.exists(headerCacheFile):
+		log.LOG_BUILD("Loading cache data...")
+		with open(headerCacheFile, "rb") as f:
+			_shared_globals.allheaders = pickle.load(f)
+		mtime = os.path.getmtime(headerCacheFile)
+		for header in _shared_globals.allheaders.keys():
+			if not header:
+				continue
+			try:
+				htime = os.path.getmtime(header)
+				if htime > mtime:
+					del _shared_globals.allheaders[header]
+			except:
+				del _shared_globals.allheaders[header]
+
 	for proj in _shared_globals.sortedProjects:
 		proj.prepareBuild( )
+
+	with open(headerCacheFile, "wb") as f:
+		pickle.dump(_shared_globals.allheaders, f, 2)
 
 	_utils.check_version( )
 
@@ -2949,7 +3008,7 @@ def _run( ):
 
 	if args.gui:
 		_shared_globals.autoCloseGui = args.auto_close_gui
-		from csbuild import _gui
+		from . import _gui
 		global _guiModule
 		_guiModule = _gui
 
@@ -2990,8 +3049,6 @@ def _run( ):
 		for error in _shared_globals.errors[0:-1]:
 			log.LOG_ERROR( error )
 
-	_barWriter.stop( )
-
 	if not _shared_globals.build_success:
 		Exit( 1 )
 	else:
@@ -3005,7 +3062,6 @@ try:
 	_run( )
 	Exit( 0 )
 except Exception as e:
-	_barWriter.stop( )
 	if not imp.lock_held():
 		imp.acquire_lock()
 	raise

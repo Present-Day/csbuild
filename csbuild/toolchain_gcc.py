@@ -28,10 +28,10 @@ import subprocess
 import re
 import sys
 import platform
-from csbuild import _shared_globals
-from csbuild import toolchain
+from . import _shared_globals
+from . import toolchain
 import csbuild
-from csbuild import log
+from . import log
 
 class gccBase( object ):
 	def __init__( self ):
