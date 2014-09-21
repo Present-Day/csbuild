@@ -118,12 +118,12 @@ class TermInfo( object ):
 		if platform.system( ) == "Windows":
 			csbi = ctypes.create_string_buffer( 22 )
 			res = ctypes.windll.kernel32.GetConsoleScreenBufferInfo( ctypes.windll.kernel32.GetStdHandle( -11 ), csbi )
-			assert res
+			if res:
+				(bufx, bufy, curx, cury, wattr, left, top, right, bottom, maxx, maxy) = struct.unpack( "hhhhHhhhhhh", csbi.raw )
+				return right - left
+			else:
+				return 0
 
-			(bufx, bufy, curx, cury, wattr,
-			 left, top, right, bottom, maxx, maxy) = struct.unpack( "hhhhHhhhhhh", csbi.raw )
-
-			return right - left
 		else:
 			if TermInfo.cursesValid:
 				return curses.tigetnum( 'cols' )

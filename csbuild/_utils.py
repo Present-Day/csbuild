@@ -707,7 +707,7 @@ def chunked_build( ):
 					)
 					for filename in chunk:
 						owningProject.splitChunks[filename] = chunkname
-				owningProject.final_chunk_set = chunk
+				owningProject.final_chunk_set = owningProject.sources
 		return
 
 
