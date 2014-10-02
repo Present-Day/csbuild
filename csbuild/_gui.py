@@ -1,10 +1,14 @@
 # coding=utf-8
 import functools
-import hashlib
 import re
 import stat
-import io
 import sys
+if sys.version_info >= (3,0):
+	import io
+	StringIO = io.StringIO
+else:
+	import cStringIO
+	StringIO = cStringIO.StringIO
 import csbuild
 from . import log
 
@@ -661,7 +665,7 @@ class CodeProfileDisplay(CodeEditor):
 
 				with open(absPath, "r") as f:
 					data = f.read().split("\n")
-				io = io.StringIO.StringIO()
+				io = StringIO()
 
 				absPath = os.path.normcase(absPath)
 				baseFile = self.parentEditor.sourceFile
@@ -1395,7 +1399,7 @@ class MainWindow( QMainWindow ):
 
 		with open(filename, "r") as f:
 			data = f.read().split("\n")
-		io = io.StringIO.StringIO()
+		io = StringIO()
 
 		lineNo = 1
 		for line in data:
@@ -2413,7 +2417,7 @@ class MainWindow( QMainWindow ):
 							else:
 								summedTimes[filename] = project.summedTimes[filename]
 
-					builder = io.StringIO.StringIO()
+					builder = StringIO()
 
 					for item in sorted(summedTimes.items(), key=lambda tup: tup[1], reverse=True):
 						builder.write("{:f}\t::{}\n".format(item[1], item[0]))

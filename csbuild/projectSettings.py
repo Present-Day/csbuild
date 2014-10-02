@@ -599,7 +599,7 @@ class projectSettings( object ):
 		def apply_macro(l):
 			alteredList = []
 			for s in l:
-				s = s.format(project=self)
+				s = os.path.abspath(s.format(project=self))
 				alteredList.append(s)
 			return alteredList
 
@@ -692,7 +692,9 @@ class projectSettings( object ):
 			self.cheaders = []
 
 			self.get_files( self.allsources, self.cppheaders, self.cheaders )
-			self.allsources += self.extraFiles
+			if self.extraFiles:
+				log.LOG_INFO("Appending extra files {}".format(self.extraFiles))
+				self.allsources += self.extraFiles
 			self.allheaders = self.cppheaders + self.cheaders
 
 			if not self.allsources:

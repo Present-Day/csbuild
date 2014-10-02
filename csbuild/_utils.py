@@ -30,7 +30,12 @@ import datetime
 import glob
 import traceback
 import platform
-import io
+if sys.version_info >= (3,0):
+	import io
+	StringIO = io.StringIO
+else:
+	import cStringIO
+	StringIO = cStringIO.StringIO
 
 import csbuild
 from . import log
@@ -170,13 +175,17 @@ class threaded_build( threading.Thread ):
 					preprocessCmd = shlex.split(preprocessCmd)
 				fd = subprocess.Popen(preprocessCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
-				data = io.StringIO.StringIO()
+				data = StringIO()
 				lastLine = 0
 				lastFile = 0
 
 				highIndex = 0
 
 				op, er = fd.communicate()
+				if sys.version_info >= (3, 0):
+					op = op.decode("utf-8")
+					er = er.decode("utf-8")
+
 				if fd.returncode == 0:
 					text = op.split("\n")
 
@@ -707,7 +716,11 @@ def chunked_build( ):
 					)
 					for filename in chunk:
 						owningProject.splitChunks[filename] = chunkname
-				owningProject.final_chunk_set = owningProject.sources
+					owningProject.final_chunk_set = chunk
+					return
+				else:
+					owningProject.final_chunk_set = owningProject.sources
+					return
 		return
 
 
