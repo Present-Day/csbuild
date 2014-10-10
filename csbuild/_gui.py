@@ -1214,7 +1214,7 @@ class MainWindow( QMainWindow ):
 
 		self.timelineWidget.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.timelineWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
-		self.timelineWidget.setProperty("showDropIndicator", QtCore.QVariant(False))
+		self.timelineWidget.setProperty("showDropIndicator", False)
 		#self.timelineWidget.setSelectionMode(QtGui.QAbstractItemView.NoSelection)
 		self.timelineWidget.setAlternatingRowColors(True)
 		#self.timelineWidget.setVerticalScrollMode(QtGui.QAbstractItemView.ScrollPerPixel)

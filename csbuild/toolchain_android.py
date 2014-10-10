@@ -58,11 +58,11 @@ else:
 
 class AndroidBase( object ):
 	def __init__(self):
-		#TODO: Command line arguments for these
 		#TODO: Figure out a way to share some of this data between compiler and linker
 		self._ndkHome = os.getenv("NDK_HOME")
 		self._sdkHome = os.getenv("ANDROID_HOME")
 		self._antHome = os.getenv("ANT_HOME")
+		self._javaHome = os.getenv("JAVA_HOME")
 		#self._maxSdkVersion = 19
 		#TODO: Determine this from highest number in the filesystem.
 		self._targetSdkVersion = 19
@@ -71,11 +71,18 @@ class AndroidBase( object ):
 		self._activityName = None
 		self._usedFeatures = []
 		self._sysRootDir = ""
+		self._keystoreLocation = ""
+		self._keystorePwFile = ""
+		self._keyPwFile = ""
+		self._keystoreAlias = ""
+		self._stlVersion = "GNU"
+		self._addNativeAppGlue = True
 
 	def CopyTo(self, other):
 		other._ndkHome = self._ndkHome
 		other._sdkHome = self._sdkHome
 		other._antHome = self._antHome
+		other._javaHome = self._javaHome
 		#other._maxSdkVersion = self._maxSdkVersion
 		other._targetSdkVersion = self._targetSdkVersion
 		other._minSdkVersion = self._minSdkVersion
@@ -83,6 +90,12 @@ class AndroidBase( object ):
 		other._activityName = self._activityName
 		other._usedFeatures = list(self._usedFeatures)
 		other._sysRootDir = self._sysRootDir
+		other._keystoreLocation = self._keystoreLocation
+		other._keystorePwFile = self._keystorePwFile
+		other._keyPwFile = self._keyPwFile
+		other._keystoreAlias = self._keystoreAlias
+		other._stlVersion = self._stlVersion
+		other._addNativeAppGlue = self._addNativeAppGlue
 
 	def NdkHome(self, pathToNdk):
 		self._ndkHome = os.path.abspath(pathToNdk)
@@ -92,6 +105,23 @@ class AndroidBase( object ):
 
 	def AntHome(self, pathToAnt):
 		self._antHome = os.path.abspath(pathToAnt)
+
+	def JavaHome(self, pathToJava):
+		self._javaHome = os.path.abspath(pathToJava)
+
+	def Keystore(self, pathToKeystore):
+		self._keystoreLocation = os.path.abspath(pathToKeystore)
+		if not self._keystorePwFile:
+			self._keystorePwFile = os.path.join(csbuild.mainfileDir, os.path.basename(pathToKeystore+".pass"))
+
+	def KeystorePwFile(self, pathToPwFile):
+		self._keystorePwFile = os.path.abspath(pathToPwFile)
+
+	def KeyPwFile(self, pathToPwFile):
+		self._keyPwFile = os.path.abspath(pathToPwFile)
+
+	def KeystoreAlias(self, alias):
+		self._keystoreAlias = alias
 
 	def MinSdkVersion(self, version):
 		self._minSdkVersion = version
@@ -111,8 +141,11 @@ class AndroidBase( object ):
 	def UsedFeatures(self, *args):
 		self._usedFeatures += list(args)
 
+	def AddNativeAppGlue(self, addGlue):
+		self._addNativeAppGlue = addGlue
+
 	def GetValidArchitectures(self):
-		return ['x86', 'arm', 'mips']
+		return ['x86', 'armeabi', 'armeabi-v7a', 'armeabi-v7a-hard', 'mips']
 
 	def _getTargetTriple(self, project):
 		if self.isClang:
@@ -120,12 +153,16 @@ class AndroidBase( object ):
 				return "-target i686-linux-android"
 			elif project.outputArchitecture == "mips":
 				return "-target mipsel-linux-android"
-			else:
+			elif project.outputArchitecture == "armeabi":
 				return "-target armv7-linux-androideabi"
+			else:
+				return "-target armv7a-linux-androideabi"
 		else:
 			return ""
 
 	def _getSimplifiedArch(self, project):
+		if project.outputArchitecture.startswith("arm"):
+			return "arm"
 		return project.outputArchitecture
 
 	def _setSysRootDir(self, project):
@@ -220,13 +257,14 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.compiler_gcc):
 		return ret
 
 	def postPrepareBuildStep(self, project):
-		appGlueDir = os.path.join( self._ndkHome, "sources", "android", "native_app_glue" )
-		project.include_dirs.append(appGlueDir)
-		project.extraDirs.append(appGlueDir)
-		project.RediscoverFiles()
+		if project.metaType == csbuild.ProjectType.Application and self._addNativeAppGlue:
+			appGlueDir = os.path.join( self._ndkHome, "sources", "android", "native_app_glue" )
+			project.include_dirs.append(appGlueDir)
+			project.extraDirs.append(appGlueDir)
+			project.RediscoverFiles()
 
 	def GetDefaultArchitecture(self):
-		return "arm"
+		return "armeabi-v7a"
 
 	def _SetupCompiler(self, project):
 		#TODO: Let user choose which compiler version to use; for now, using the highest numbered version.
@@ -252,6 +290,43 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.compiler_gcc):
 	def prePrepareBuildStep(self, project):
 		self.SetupForProject(project)
 
+	def _getSystemDirectories(self, project, isCpp):
+		ret = ""
+		if isCpp:
+			if self._stlVersion == "GNU":
+				ret += "-isystem \"{}\" ".format(os.path.join(
+					self._ndkHome,
+					"sources",
+					"cxx-stl",
+					"gnu-libstdc++",
+					"4.8",
+					"libs",
+					project.outputArchitecture,
+					"include")
+				)
+				ret += "-isystem \"{}\" ".format(os.path.join( self._ndkHome, "sources", "cxx-stl", "gnu-libstdc++", "4.8", "include"))
+			elif self._stlVersion == "stlport":
+				ret += "-isystem \"{}\" ".format(os.path.join( self._ndkHome, "sources", "cxx-stl", "system", "include"))
+				ret += "-isystem \"{}\" ".format(os.path.join( self._ndkHome, "sources", "cxx-stl", "stlport", "stlport"))
+			elif self._stlVersion == "libc++":
+				ret += "-isystem \"{}\" ".format(os.path.join( self._ndkHome, "sources", "cxx-stl", "llvm-libc++", "libcxx", "include"))
+
+
+		ret += "--sysroot \"{}\" ".format(self._sysRootDir)
+		ret += "-isystem \"{}\" ".format(
+			os.path.join(
+				self._ndkHome,
+				"platforms",
+				"android-{}".format(self._targetSdkVersion),
+				"arch-{}".format(self._getSimplifiedArch(project)),
+				"usr",
+				"include"
+			)
+		)
+
+		ret += "-I {} ".format(self._ndkHome)
+		return ret
+
 	def get_base_command( self, compiler, project, isCpp ):
 		self.SetupForProject(project)
 
@@ -265,7 +340,7 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.compiler_gcc):
 		else:
 			standard = self.cStandard
 
-		return "\"{}\" {} -Winvalid-pch -c {}-g{} -O{} {}{}{} {} {} --sysroot \"{}\" {} -isystem \"{}\"".format(
+		return "\"{}\" {} -Winvalid-pch -c {}-g{} -O{} {}{}{} {} {} {}".format(
 			compiler,
 			exitcodes,
 			self.get_defines( project.defines, project.undefines ),
@@ -275,11 +350,16 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.compiler_gcc):
 			"-pg " if project.profile else "",
 			"--std={0}".format( standard ) if standard != "" else "",
 			" ".join( project.cpp_compiler_flags ) if isCpp else " ".join( project.c_compiler_flags ),
-			"-isystem \"{}\"".format(os.path.join( self._ndkHome, "sources", "cxx-stl", "stlport", "stlport")) if isCpp else "",
-			self._sysRootDir,
-			self._getTargetTriple(project),
-			os.path.join( self._ndkHome, "platforms", "android-{}".format(self._targetSdkVersion), "arch-{}".format(self._getSimplifiedArch(project)), "usr", "include")
+			self._getSystemDirectories(project, isCpp),
+			self._getTargetTriple(project)
 		)
+
+	def get_include_dirs( self, includeDirs ): 
+		"""Returns a string containing all of the passed include directories, formatted to be passed to gcc/g++.""" 
+		ret = ""
+		for inc in includeDirs:
+			ret += "-I{} ".format( os.path.abspath( inc ) )
+		return ret
 
 
 class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
@@ -294,6 +374,18 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 		ret._setupCompleted = self._setupCompleted
 		return ret
 
+	@staticmethod
+	def additional_args( parser ):
+		parser.add_argument("--ndk-home", help="Location of android NDK directory")
+		parser.add_argument("--sdk-home", help="Location of android SDK directory")
+		parser.add_argument("--ant-home", help="Location of apache ant")
+		parser.add_argument("--java-home", help="Location of java")
+		parser.add_argument("--keystore", help="Location of keystore to sign release apks (default is {makefile location}/{project name}.keystore")
+		parser.add_argument("--keystore-pwfile", help="Location of password file for loading keystore (default is {makefile location}/{keystore_filename}.pass)")
+		parser.add_argument("--alias", help="Alias to use inside the keystore (default is project name)")
+		parser.add_argument("--key-pwfile", help="Location of password file for signing release apks (default is {makefile location}/{keystore_filename}.{alias}.pass)")
+		parser.add_argument("--zipalign-location", help="Location of zipalign")
+
 	def _SetupLinker(self, project):
 		#TODO: Let user choose which compiler version to use; for now, using the highest numbered version.
 		self._ld, self._ar = self._getCommands(project, "ld", "ar")
@@ -306,6 +398,95 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 			self._SetupLinker(project)
 			self._setSysRootDir(project)
 			self._setupCompleted = True
+
+			if not self._keystoreLocation:
+				self._keystoreLocation = os.path.join(csbuild.mainfileDir, project.name+".keystore")
+
+			if not self._keystoreAlias:
+				self._keystoreAlias = project.name
+
+			alias = csbuild.get_option("alias")
+
+			if alias:
+				self._keystoreAlias = alias
+
+			if not self._keystorePwFile:
+				self._keystorePwFile = os.path.join(csbuild.mainfileDir, self._keystoreLocation+".pass")
+
+			if not self._keyPwFile:
+				self._keyPwFile = os.path.join(csbuild.mainfileDir, self._keystoreAlias + ".keystore." + project.name + ".pass")
+
+
+			ndkHome = csbuild.get_option("ndk_home")
+			sdkHome = csbuild.get_option("sdk_home")
+			antHome = csbuild.get_option("ant_home")
+			javaHome = csbuild.get_option("java_home")
+			keystore = csbuild.get_option("keystore")
+			keystorePwFile = csbuild.get_option("keystore_pwfile")
+			keyPwFile = csbuild.get_option("key_pwfile")
+
+			if ndkHome:
+				self._ndkHome = ndkHome
+			if sdkHome:
+				self._sdkHome = sdkHome
+			if antHome:
+				self._antHome = antHome
+			if javaHome:
+				self._javaHome = javaHome
+			if keystore:
+				self._keystoreLocation = keystore
+			if keystorePwFile:
+				self._keystorePwFile = keystorePwFile
+			if keyPwFile:
+				self._keyPwFile = keyPwFile
+
+	def _getSystemLibDirs(self, project):
+		ret = ""
+		if project.hasCppFiles:
+			if self._stlVersion == "GNU":
+				ret += "-L\"{}\" ".format(os.path.join(
+					self._ndkHome,
+					"sources",
+					"cxx-stl",
+					"gnu-libstdc++",
+					"4.8",
+					"libs",
+					project.outputArchitecture)
+				)
+				if project.static_runtime:
+					ret += "-lgnustl_static "
+				else:
+					ret += "-lgnustl_shared "
+			elif self._stlVersion == "stlport":
+				ret += "-L\"{}\" ".format(os.path.join(
+					self._ndkHome,
+					"sources",
+					"cxx-stl",
+					"stlport",
+					"libs",
+					project.outputArchitecture)
+				)
+				if project.static_runtime:
+					ret += "-lstlport_static "
+				else:
+					ret += "-lstlport_shared "
+			elif self._stlVersion == "libc++":
+				ret += "-L\"{}\" ".format(os.path.join(
+					self._ndkHome,
+					"sources",
+					"cxx-stl",
+					"llvm-libc++",
+					"libs",
+					project.outputArchitecture)
+				)
+				if project.static_runtime:
+					ret += "-lc++_static "
+				else:
+					ret += "-lc++_shared "
+
+		ret += "--sysroot \"{}\"".format(self._sysRootDir)
+		return ret
+
 
 
 	def get_link_command( self, project, outputFile, objList ):
@@ -344,7 +525,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 				if not os.access(crtend, os.F_OK):
 					symlink(os.path.join(libDir, "crtend_so.o"), crtend)
 
-			return "\"{}\" {}-o{} {} {} {}{}{} {} {}-g{} -O{} {} {} {} --sysroot \"{}\" {} -L\"{}\"".format(
+			return "\"{}\" {}-o{} {} {} {}{}{} {} {}-g{} -O{} {} {} {} {} -L\"{}\"".format(
 				cmd,
 				"-pg " if project.profile else "",
 				outputFile,
@@ -359,16 +540,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 				project.opt_level,
 				"-shared" if project.type == csbuild.ProjectType.SharedLibrary else "",
 				" ".join( project.linker_flags ),
-				"-L\"{}\" -lstlport_static".format(os.path.join(
-					self._ndkHome,
-					"sources",
-					"cxx-stl",
-					"stlport",
-					"libs",
-					"armeabi-v7a" if project.outputArchitecture == "arm" else project.outputArchitecture)
-				) if project.hasCppFiles else "",
-				self._sysRootDir,
-				#os.path.join( self._ndkHome, "platforms", "android-{}".format(self._targetSdkVersion), "arch-{}".format(self._getSimplifiedArch(project))),
+				self._getSystemLibDirs(project),
 				self._getTargetTriple(project),
 				libDir
 			)
@@ -382,7 +554,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 			cmd = [self._ld, "-o", nullOut, "--verbose",
 				   "-static" if force_static else "-shared" if force_shared else "", "-l{}".format( library ),
 				   "-L", os.path.join( self._ndkHome, "platforms", "android-{}".format(self._targetSdkVersion), "arch-{}".format(self._getSimplifiedArch(project)), "usr", "lib")]
-			cmd += shlex.split( self.get_library_dirs( library_dirs, False ) )
+			cmd += shlex.split( self.get_library_dirs( library_dirs, False ), posix=(platform.system() != "Windows") )
 
 			if _shared_globals.show_commands:
 				print(" ".join(cmd))
@@ -413,7 +585,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 					cmd = [self._ld, "-o", nullOut, "--verbose",
 						   "-static" if force_static else "-shared" if force_shared else "", "-l:{}".format( library ),
 						   "-L", os.path.join( self._ndkHome, "platforms", "android-{}".format(self._targetSdkVersion), "arch-{}".format(self._getSimplifiedArch(project)), "usr", "lib")]
-					cmd += shlex.split( self.get_library_dirs( library_dirs, False ) )
+					cmd += shlex.split( self.get_library_dirs( library_dirs, False ), posix=(platform.system() != "Windows") )
 
 					if _shared_globals.show_commands:
 						print(" ".join(cmd))
@@ -445,9 +617,10 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 	def prePrepareBuildStep(self, project):
 		#Everything on Android has to build as a shared library
 		project.metaType = project.type
-		project.type = csbuild.ProjectType.SharedLibrary
-		if not project.output_name.startswith("lib"):
-			project.output_name = "lib{}".format(project.output_name)
+		if project.type == csbuild.ProjectType.Application:
+			project.type = csbuild.ProjectType.SharedLibrary
+			if not project.output_name.startswith("lib"):
+				project.output_name = "lib{}".format(project.output_name)
 
 	def postBuildStep(self, project):
 		log.LOG_BUILD("Generating APK for {} ({} {}/{})".format(project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName))
@@ -481,6 +654,10 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 			libDir = "x86"
 		elif project.outputArchitecture == "mips":
 			libDir = "mips"
+		elif project.outputArchitecture == "armeabi":
+			libDir = "armeabi"
+		elif project.outputArchitecture == "armeabi-v7a-hard":
+			libDir = "armeabi-v7a-hard"
 		else:
 			libDir = "armeabi-v7a"
 
@@ -524,7 +701,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 			f.write("  </application>\n")
 			f.write("</manifest>\n")
 
-		if project.debug_level != csbuild.DebugLevel.Disabled:
+		if project.opt_level != csbuild.OptimizationLevel.Max:
 			antBuildType = "debug"
 		else:
 			antBuildType = "release"
@@ -544,20 +721,68 @@ class AndroidLinker(AndroidBase, toolchain_gcc.linker_gcc):
 			log.LOG_ERROR("Ant build failed!\n{}".format(output))
 			return
 
-	#def postMakeStepGlobal(self):
-	#	projectMap = { "debug" : {}, "release" : {} }
-	#	for project in _shared_globals.sortedProjects:
-	#		if project.debug_level != csbuild.DebugLevel.Disabled:
-	#			antBuildType = "debug"
-	#		else:
-	#			antBuildType = "release"
+		appNameBase = "{}-{}".format(project.output_name[3:-3], antBuildType)
+		appName = appNameBase + ".apk"
+		appStartLoc = os.path.join(appDir, "bin", appName)
 
-	#	appDir = os.path.join(project.csbuild_dir, "apk", project.name)
+		if antBuildType == "release":
+			appNameUnsigned = appNameBase + "-unsigned.apk"
+			appUnsignedLoc = os.path.join(appDir, "bin", appNameUnsigned)
+			with open(self._keystorePwFile, "r") as f:
+				storePass = f.read().strip()
+			if os.access(self._keyPwFile, os.F_OK):
+				with open(self._keyPwFile, "r") as f:
+					keyPass = f.read().strip()
+			else:
+				keyPass = storePass
 
-		appName = "{}-{}.apk".format(project.output_name[3:-3], antBuildType)
+			log.LOG_BUILD("Signing {} with key {}...".format(appName, self._keystoreLocation))
+
+			jarsigner = os.path.join(self._javaHome, "bin", "jarsigner{}".format(".exe" if platform.system() == "Windows" else ""))
+			fd = subprocess.Popen(
+				[
+					jarsigner,
+					"-sigalg", "SHA1withRSA",
+					"-digestalg", "SHA1",
+					"-keystore", self._keystoreLocation,
+					"-storepass", storePass,
+					"-keypass", keyPass,
+					appUnsignedLoc,
+					self._keystoreAlias
+				],
+				stderr=subprocess.STDOUT,
+				stdout=subprocess.PIPE,
+				cwd=appDir
+			)
+
+			output, errors = fd.communicate()
+			if fd.returncode != 0:
+				log.LOG_ERROR("Signing failed!\n{}".format(output))
+				return
+
+			log.LOG_BUILD("Zip-Aligning {}...".format(appName, self._keystoreLocation))
+
+			zipalign = os.path.join(self._sdkHome, "tools", "zipalign{}".format(".exe" if platform.system() == "Windows" else ""))
+			fd = subprocess.Popen(
+				[
+					zipalign,
+					"-v", "4",
+					appUnsignedLoc,
+					appStartLoc
+				],
+				stderr=subprocess.STDOUT,
+				stdout=subprocess.PIPE,
+				cwd=appDir
+			)
+
+			output, errors = fd.communicate()
+			if fd.returncode != 0:
+				log.LOG_ERROR("Zipalign failed!\n{}".format(output))
+				return
+
 		appEndLoc = os.path.join(project.output_dir, appName)
 		if os.access(appEndLoc, os.F_OK):
 			os.remove(appEndLoc)
 
-		shutil.move(os.path.join(appDir, "bin", appName), project.output_dir)
+		shutil.move(appStartLoc, project.output_dir)
 		log.LOG_BUILD("Finished generating APK for {} ({} {}/{})".format(project.output_name, project.targetName, project.outputArchitecture, project.activeToolchainName))

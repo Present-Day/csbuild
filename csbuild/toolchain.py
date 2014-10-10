@@ -79,6 +79,8 @@ class SettingsOverrider( object ):
 				ret.settingsOverrides[kvp[0]] = dict( kvp[1] )
 			elif isinstance( kvp[1], set ):
 				ret.settingsOverrides[kvp[0]] = set( kvp[1] )
+			elif isinstance( kvp[1], csbuild.projectSettings.projectSettings.UserData ):
+				ret.settingsOverrides[kvp[0]] = kvp[1].copy()
 			else:
 				ret.settingsOverrides[kvp[0]] = kvp[1]
 
@@ -839,6 +841,29 @@ class SettingsOverrider( object ):
 		"""
 		self.settingsOverrides["linkMode"] = mode
 		self.settingsOverrides["linkModeSet"] = True
+
+
+	def SetUserData(self, key, value):
+		"""
+		Adds miscellaneous data to a project. This can be used later in a build event or in a format string.
+
+		This becomes an attribute on the project's userData member variable. As an example, to set a value:
+
+		csbuild.SetUserData("someData", "someValue")
+
+		Then to access it later:
+
+		project.userData.someData
+
+		@type key: str
+		@param key: name of the variable to set
+		@type value: any
+		@param value: value to set to that variable
+		"""
+		if "userData" not in self.settingsOverrides:
+			self.settingsOverrides["userData"] = csbuild.projectSettings.projectSettings.UserData()
+
+		self.settingsOverrides["userData"].dataDict[key] = value
 
 @_shared_globals.MetaClass(ABCMeta)
 class linkerBase( SettingsOverrider ):

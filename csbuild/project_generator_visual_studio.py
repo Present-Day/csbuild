@@ -64,7 +64,9 @@ def GetPlatformName(toolchain, architecture):
 		# Android architectures will always build under the Tegra-Android platform.
 		"android": {
 			"x86": "Tegra-Android",
-			"arm": "Tegra-Android",
+			"armeabi": "Tegra-Android",
+			"armeabi-v7a": "Tegra-Android",
+			"armeabi-v7a-hard": "Tegra-Android",
 			"mips": "Tegra-Android",
 		},
 	}
@@ -128,9 +130,10 @@ class Project:
 
 class CachedFileData:
 
-	def __init__(self, outputFilePath, fileData):
+	def __init__(self, outputFilePath, fileData, isUserFile):
 		self._outputFilePath = outputFilePath
 		self._fileData = fileData
+		self._isUserFile = isUserFile
 		self._md5FileDataHash = hashlib.md5()
 		self._md5FileDataHash.update(self._fileData)
 		self._md5FileDataHash = self._md5FileDataHash.hexdigest()
@@ -139,6 +142,11 @@ class CachedFileData:
 	def SaveFile(self):
 		canWriteOutputFile = True
 		if os.access(self._outputFilePath, os.F_OK):
+			# Any user files that already exist will be ignored to preserve user debug settings.
+			if self._isUserFile and not csbuild.get_option("do-not-ignore-user-files"):
+				log.LOG_BUILD("Ignoring: {}".format(self._outputFilePath))
+				return
+
 			with open(self._outputFilePath, "rb") as fileHandle:
 				fileData = fileHandle.read()
 				fileDataHash = hashlib.md5()
@@ -222,11 +230,16 @@ class project_generator_visual_studio(project_generator.project_generator):
 			help = "Select the version of Visual Studio the generated solution will be compatible with.",
 			choices = VisualStudioVersion.All,
 			default = VisualStudioVersion.v2012,
-			type = int)
+			type = int,
+		)
+		parser.add_argument("--do-not-ignore-user-files",
+			help = "When generating project files, do not ignore existing .vcxproj.user files.",
+			action = "store_true",
+		)
 		#parser.add_argument("--create-native-project",
 		#	help = "Create a native solution that calls into MSBuild and NOT the makefiles.",
-		#	default = False,
-		#	nargs = "?")
+		#	action = "store_true,
+		#)
 
 
 	def write_solution(self):
@@ -510,7 +523,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 
 		with open(tempSolutionPath, "rb") as fileHandle:
 			fileData = fileHandle.read()
-			cachedFile = CachedFileData(finalSolutionPath, fileData)
+			cachedFile = CachedFileData(finalSolutionPath, fileData, False)
 			cachedFile.SaveFile()
 
 		if os.access(tempSolutionPath, os.F_OK):
@@ -666,7 +679,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 				importNode = AddNode(rootNode, "Import")
 				importNode.set("Project", r"$(VCTargetsPath)\Microsoft.Cpp.targets")
 
-				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}".format(projectData.name, self._projectFileType)))
+				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}".format(projectData.name, self._projectFileType)), False)
 
 
 	def _WriteVcxprojFiltersFiles(self):
@@ -718,7 +731,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 							headerFileNode.set("Include", os.path.relpath(headerFilePath, projectData.outputPath))
 							filterNode.text = "Header Files"
 
-				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}.filters".format(projectData.name, self._projectFileType)))
+				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}.filters".format(projectData.name, self._projectFileType)), False)
 
 
 	def _WriteVcxprojUserFiles(self):
@@ -745,10 +758,10 @@ class project_generator_visual_studio(project_generator.project_generator):
 							debuggerFlavorNode.text = "WindowsLocalDebugger"
 
 
-				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}.user".format(projectData.name, self._projectFileType)))
+				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}.user".format(projectData.name, self._projectFileType)), True)
 
 
-	def _SaveXmlFile(self, rootNode, xmlFilename):
+	def _SaveXmlFile(self, rootNode, xmlFilename, isUserFile):
 		# Grab a string of the XML document we've created and save it.
 		xmlString = ET.tostring(rootNode)
 
@@ -773,5 +786,5 @@ class project_generator_visual_studio(project_generator.project_generator):
 		if sys.version_info >= (3, 0):
 			finalXmlString = finalXmlString.encode("utf-8")
 
-		cachedFile = CachedFileData(xmlFilename, finalXmlString)
+		cachedFile = CachedFileData(xmlFilename, finalXmlString, isUserFile)
 		cachedFile.SaveFile()

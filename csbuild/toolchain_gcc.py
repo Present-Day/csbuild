@@ -534,7 +534,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 					library ))
 			cmd = [self._ld, "-o", "/dev/null", "--verbose",
 				   "-static" if force_static else "-shared" if force_shared else "", "-l{}".format( library )]
-			cmd += shlex.split( self.get_library_dirs( library_dirs, False ) )
+			cmd += shlex.split( self.get_library_dirs( library_dirs, False ), posix=(platform.system() != "Windows") )
 			out = subprocess.check_output( cmd, stderr = subprocess.STDOUT )
 		except subprocess.CalledProcessError as e:
 			out = e.output
@@ -564,7 +564,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 							library ))
 					cmd = [self._ld, "-o", "/dev/null", "--verbose",
 						   "-static" if force_static else "-shared" if force_shared else "", "-l{}".format( library )]
-					cmd += shlex.split( self.get_library_dirs( library_dirs, False ) )
+					cmd += shlex.split( self.get_library_dirs( library_dirs, False ), posix=(platform.system() != "Windows") )
 					out = subprocess.check_output( cmd, stderr = subprocess.STDOUT )
 				except subprocess.CalledProcessError as e:
 					out = e.output

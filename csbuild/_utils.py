@@ -688,8 +688,8 @@ def chunked_build( ):
 
 	for project in _shared_globals.projects.values( ):
 		for source in project.sources:
-			chunk = project.get_chunk( source )
-			if chunk:
+			chunk = (project.key, project.get_chunk( source ))
+			if chunk[1]:
 				if chunk not in chunks_to_build:
 					chunks_to_build.add( chunk )
 					totalBuildThreads += 1
@@ -701,7 +701,7 @@ def chunked_build( ):
 		return
 
 	if len(chunks_to_build) == 1 and not owningProject.unity:
-		chunkname = list(chunks_to_build)[0]
+		chunkname = list(chunks_to_build)[0][1]
 
 		obj = os.path.join(owningProject.obj_dir, "{}_{}{}".format( chunkname,
 			owningProject.targetName, owningProject.activeToolchain.Compiler().get_obj_ext() ))
@@ -722,7 +722,6 @@ def chunked_build( ):
 					owningProject.final_chunk_set = owningProject.sources
 					return
 		return
-
 
 	for project in _shared_globals.projects.values( ):
 		for chunk in project.chunks:

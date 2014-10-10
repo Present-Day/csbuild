@@ -351,6 +351,19 @@ class projectSettings( object ):
 	instance variable list when that toolchain is active. See toolchain documentation for
 	more details on what additional instance variables are available.
 	"""
+
+	class UserData(object):
+		def __init__(self):
+			self.dataDict = {}
+
+		def copy(self):
+			ret = projectSettings.UserData()
+			ret.dataDict = dict(self.dataDict)
+			return ret
+
+		def __getattr__(self, item):
+			return object.__getattribute__(self, "dataDict")[item]
+
 	def __init__( self ):
 		"""
 		Default projectSettings constructor
@@ -524,6 +537,8 @@ class projectSettings( object ):
 
 		self.splitChunks = {}
 
+		self.userData = projectSettings.UserData()
+
 		#GUI support
 		self.state = _shared_globals.ProjectState.PENDING
 		self.startTime = 0
@@ -559,6 +574,14 @@ class projectSettings( object ):
 		os.chdir( self.workingDirectory )
 
 		self.activeToolchain = self.toolchains[self.activeToolchainName]
+
+		global currentProject
+		currentProject = self
+
+		self.activeToolchain.prePrepareBuildStep(self)
+		if self.prePrepareBuildStep:
+			log.LOG_BUILD( "Running pre-PrepareBuild step for {} ({} {}/{})".format( self.output_name, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
+			self.prePrepareBuildStep(self)
 
 		self.activeToolchain.SetActiveTool("linker")
 		self.output_dir = os.path.abspath( self.output_dir ).format(project=self)
@@ -616,14 +639,6 @@ class projectSettings( object ):
 		self.header_subdir = self.header_subdir.format(project=self)
 
 		self.exclude_dirs.append( self.csbuild_dir )
-
-		global currentProject
-		currentProject = self
-
-		self.activeToolchain.prePrepareBuildStep(self)
-		if self.prePrepareBuildStep:
-			log.LOG_BUILD( "Running pre-PrepareBuild step for {} ({} {}/{})".format( self.output_name, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
-			self.prePrepareBuildStep(self)
 
 		self.activeToolchain.SetActiveTool("linker")
 		if self.ext is None:
@@ -730,6 +745,10 @@ class projectSettings( object ):
 						return ret + object.__getattribute__( self, name )
 					elif isinstance( ret, set ):
 						return ret | object.__getattribute__( self, name )
+					elif isinstance( ret, csbuild.projectSettings.projectSettings.UserData ):
+						ret2 = object.__getattribute__( self, name )
+						ret2.dataDict.update( ret.dataDict )
+						return ret2
 
 				return ret
 			elif name in activeToolchain.settingsOverrides:
@@ -744,6 +763,10 @@ class projectSettings( object ):
 						return ret + object.__getattribute__( self, name )
 					elif isinstance( ret, set ):
 						return ret | object.__getattribute__( self, name )
+					elif isinstance( ret, csbuild.projectSettings.projectSettings.UserData ):
+						ret2 = object.__getattribute__( self, name )
+						ret2.dataDict.update( ret.dataDict )
+						return ret2
 
 				return ret
 		return object.__getattribute__( self, name )
@@ -920,7 +943,8 @@ class projectSettings( object ):
 			"supportedArchitectures" : set(self.supportedArchitectures),
 			"supportedToolchains" : set(self.supportedToolchains),
 			"linkCommand" : self.linkCommand,
-			"compileCommands" : dict(self.compileCommands)
+			"compileCommands" : dict(self.compileCommands),
+			"userData" : self.userData.copy(),
 		}
 
 		for name in self.targets:

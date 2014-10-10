@@ -884,6 +884,26 @@ def SetStaticLinkMode(mode):
 	projectSettings.currentProject.linkModeSet = True
 
 
+def SetUserData(key, value):
+	"""
+	Adds miscellaneous data to a project. This can be used later in a build event or in a format string.
+
+	This becomes an attribute on the project's userData member variable. As an example, to set a value:
+
+	csbuild.SetUserData("someData", "someValue")
+
+	Then to access it later:
+
+	project.userData.someData
+
+	@type key: str
+	@param key: name of the variable to set
+	@type value: any
+	@param value: value to set to that variable
+	"""
+	projectSettings.currentProject.userData.dataDict[key] = value
+
+
 def SupportedArchitectures(*architectures):
 	"""
 	Specifies the architectures that this project supports. This can be used to limit
@@ -985,7 +1005,6 @@ def SetActiveToolchain( name ):
 	_shared_globals.selectedToolchains.add(name)
 	projectSettings.currentProject.activeToolchainName = name
 
-
 #</editor-fold>
 
 #<editor-fold desc="decorators">
@@ -993,14 +1012,22 @@ def SetActiveToolchain( name ):
 scriptfiles = []
 
 class Link(object):
-	def __init__(self, libName, scope = ScopeDef.Final):
+	def __init__(self, libName, scope = ScopeDef.Final, includeToolchains=None, includeArchitectures=None, excludeToolchains=None, excludeArchitectures=None):
 		self.libName = libName
 		self.scope = scope
+		self.includeToolchains = includeToolchains
+		self.includeArchitectures = includeArchitectures
+		self.excludeToolchains = excludeToolchains
+		self.excludeArchitectures = excludeArchitectures
 
 class Src(object):
-	def __init__(self, libName, scope = ScopeDef.Final):
+	def __init__(self, libName, scope = ScopeDef.Final, includeToolchains=None, includeArchitectures=None, excludeToolchains=None, excludeArchitectures=None):
 		self.libName = libName
 		self.scope = scope
+		self.includeToolchains = includeToolchains
+		self.includeArchitectures = includeArchitectures
+		self.excludeToolchains = excludeToolchains
+		self.excludeArchitectures = excludeArchitectures
 
 def project( name, workingDirectory, depends = None, priority = -1, ignoreDependencyOrdering = False ):
 	"""
@@ -1053,18 +1080,18 @@ def project( name, workingDirectory, depends = None, priority = -1, ignoreDepend
 
 			if isinstance(depend, Link):
 				if depend.scope & ScopeDef.Self:
-					newProject.linkDepends.append(depend.libName)
+					newProject.linkDepends.append(depend)
 				if depend.scope & ScopeDef.Intermediate:
-					newProject.linkDependsIntermediate.append(depend.libName)
+					newProject.linkDependsIntermediate.append(depend)
 				if depend.scope & ScopeDef.Final:
-					newProject.linkDependsFinal.append(depend.libName)
+					newProject.linkDependsFinal.append(depend)
 			elif isinstance(depend, Src):
 				if depend.scope & ScopeDef.Self:
-					newProject.srcDepends.append(depend.libName)
+					newProject.srcDepends.append(depend)
 				if depend.scope & ScopeDef.Intermediate:
-					newProject.srcDependsIntermediate.append(depend.libName)
+					newProject.srcDependsIntermediate.append(depend)
 				if depend.scope & ScopeDef.Final:
-					newProject.srcDependsFinal.append(depend.libName)
+					newProject.srcDependsFinal.append(depend)
 
 		newProject.func = projectFunction
 
@@ -2303,7 +2330,7 @@ def _execfile( file, glob, loc ):
 
 
 mainfile = ""
-
+mainfileDir = ""
 
 def _run( ):
 
@@ -2313,8 +2340,8 @@ def _run( ):
 	args = dummy( )
 
 	global mainfile
+	global mainfileDir
 	mainfile = sys.modules['__main__'].__file__
-	mainfileDir = None
 	if mainfile is not None:
 		mainfileDir = os.path.abspath( os.path.dirname( mainfile ) )
 		if mainfileDir:
@@ -2721,18 +2748,71 @@ def _run( ):
 				alteredSrcDependsFinal = []
 
 				for depend in newproject.linkDepends:
-					alteredLinkDepends.append( "{}@{}#{}${}".format( depend, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+					if depend.includeToolchains and newproject.activeToolchainName not in depend.includeToolchains:
+						continue
+					if depend.includeArchitectures and newproject.outputArchitecture not in depend.includeArchitectures:
+						continue
+					if depend.excludeToolchains and newproject.activeToolchainName in depend.excludeToolchains:
+						continue
+					if depend.excludeArchitectures and newproject.outputArchitecture in depend.excludeArchitectures:
+						continue
+					alteredLinkDepends.append( "{}@{}#{}${}".format( depend.libName, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+
 				for depend in newproject.linkDependsIntermediate:
-					alteredLinkDependsIntermediate.append( "{}@{}#{}${}".format( depend, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+					if depend.includeToolchains and newproject.activeToolchainName not in depend.includeToolchains:
+						continue
+					if depend.includeArchitectures and newproject.outputArchitecture not in depend.includeArchitectures:
+						continue
+					if depend.excludeToolchains and newproject.activeToolchainName in depend.excludeToolchains:
+						continue
+					if depend.excludeArchitectures and newproject.outputArchitecture in depend.excludeArchitectures:
+						continue
+					alteredLinkDependsIntermediate.append( "{}@{}#{}${}".format( depend.libName, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+
 				for depend in newproject.linkDependsFinal:
-					alteredLinkDependsFinal.append( "{}@{}#{}${}".format( depend, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+					if depend.includeToolchains and newproject.activeToolchainName not in depend.includeToolchains:
+						continue
+					if depend.includeArchitectures and newproject.outputArchitecture not in depend.includeArchitectures:
+						continue
+					if depend.excludeToolchains and newproject.activeToolchainName in depend.excludeToolchains:
+						continue
+					if depend.excludeArchitectures and newproject.outputArchitecture in depend.excludeArchitectures:
+						continue
+					alteredLinkDependsFinal.append( "{}@{}#{}${}".format( depend.libName, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+
 
 				for depend in newproject.srcDepends:
-					alteredSrcDepends.append( "{}@{}#{}${}".format( depend, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+					if depend.includeToolchains and newproject.activeToolchainName not in depend.includeToolchains:
+						continue
+					if depend.includeArchitectures and newproject.outputArchitecture not in depend.includeArchitectures:
+						continue
+					if depend.excludeToolchains and newproject.activeToolchainName in depend.excludeToolchains:
+						continue
+					if depend.excludeArchitectures and newproject.outputArchitecture in depend.excludeArchitectures:
+						continue
+					alteredSrcDepends.append( "{}@{}#{}${}".format( depend.libName, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+
 				for depend in newproject.srcDependsIntermediate:
-					alteredSrcDependsIntermediate.append( "{}@{}#{}${}".format( depend, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+					if depend.includeToolchains and newproject.activeToolchainName not in depend.includeToolchains:
+						continue
+					if depend.includeArchitectures and newproject.outputArchitecture not in depend.includeArchitectures:
+						continue
+					if depend.excludeToolchains and newproject.activeToolchainName in depend.excludeToolchains:
+						continue
+					if depend.excludeArchitectures and newproject.outputArchitecture in depend.excludeArchitectures:
+						continue
+					alteredSrcDependsIntermediate.append( "{}@{}#{}${}".format( depend.libName, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+
 				for depend in newproject.srcDependsFinal:
-					alteredSrcDependsFinal.append( "{}@{}#{}${}".format( depend, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
+					if depend.includeToolchains and newproject.activeToolchainName not in depend.includeToolchains:
+						continue
+					if depend.includeArchitectures and newproject.outputArchitecture not in depend.includeArchitectures:
+						continue
+					if depend.excludeToolchains and newproject.activeToolchainName in depend.excludeToolchains:
+						continue
+					if depend.excludeArchitectures and newproject.outputArchitecture in depend.excludeArchitectures:
+						continue
+					alteredSrcDependsFinal.append( "{}@{}#{}${}".format( depend.libName, projectSettings.currentProject.targetName, projectSettings.currentProject.outputArchitecture, projectSettings.currentProject.activeToolchainName ) )
 
 				newproject.linkDepends = alteredLinkDepends
 				newproject.linkDependsIntermediate = alteredLinkDependsIntermediate
@@ -2746,12 +2826,12 @@ def _run( ):
 
 			for project in _shared_globals.tempprojects.values( ):
 
-				if project.supportedToolchains and chain not in project.supportedToolchains:
-					continue
-
 				if chain is not None:
 					_shared_globals.selectedToolchains.add(chain)
 					project.activeToolchainName = chain
+
+				if project.supportedToolchains and project.activeToolchainName not in project.supportedToolchains:
+					continue
 
 				project.activeToolchain = project.toolchains[project.activeToolchainName]
 
@@ -2848,6 +2928,9 @@ def _run( ):
 			depends = project.linkDepends + project.linkDependsIntermediate + project.linkDependsFinal
 
 		for dep in depends:
+			if dep not in _shared_globals.projects:
+				log.LOG_ERROR("Project {} references unknown dependency {}".format(project.name, dep.rsplit("@")[0]))
+				return
 			proj = _shared_globals.projects[dep]
 			project.reconciledLinkDepends.add(dep)
 			if args.dg:
@@ -2974,27 +3057,27 @@ def _run( ):
 			log.LOG_BUILD("Wrote depends.png")
 		return
 
-	headerCacheFile = os.path.join(_shared_globals.cacheDirectory, "header_info.csbc")
-	if os.path.exists(headerCacheFile):
-		log.LOG_BUILD("Loading cache data...")
-		with open(headerCacheFile, "rb") as f:
-			_shared_globals.allheaders = pickle.load(f)
-		mtime = os.path.getmtime(headerCacheFile)
-		for header in _shared_globals.allheaders.keys():
-			if not header:
-				continue
-			try:
-				htime = os.path.getmtime(header)
-				if htime > mtime:
-					del _shared_globals.allheaders[header]
-			except:
-				del _shared_globals.allheaders[header]
+	#headerCacheFile = os.path.join(_shared_globals.cacheDirectory, "header_info.csbc")
+	#if os.path.exists(headerCacheFile):
+	#	log.LOG_BUILD("Loading cache data...")
+	#	with open(headerCacheFile, "rb") as f:
+	#		_shared_globals.allheaders = pickle.load(f)
+	#	mtime = os.path.getmtime(headerCacheFile)
+	#	for header in _shared_globals.allheaders.keys():
+	#		if not header:
+	#			continue
+	#		try:
+	#			htime = os.path.getmtime(header)
+	#			if htime > mtime:
+	#				del _shared_globals.allheaders[header]
+	#		except:
+	#			del _shared_globals.allheaders[header]
 
 	for proj in _shared_globals.sortedProjects:
 		proj.prepareBuild( )
 
-	with open(headerCacheFile, "wb") as f:
-		pickle.dump(_shared_globals.allheaders, f, 2)
+	#with open(headerCacheFile, "wb") as f:
+	#	pickle.dump(_shared_globals.allheaders, f, 2)
 
 	_utils.check_version( )
 
