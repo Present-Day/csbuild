@@ -154,7 +154,12 @@ class stdoutWriter( object ):
 
 			self.stdout.write(text)
 
-			_shared_globals.columns = terminfo.TermInfo.GetNumColumns( )
+			if _shared_globals.forceProgressBar == "on":
+				_shared_globals.columns = 80
+			elif _shared_globals.forceProgressBar == "off":
+				_shared_globals.columns = 0
+			else:
+				_shared_globals.columns = terminfo.TermInfo.GetNumColumns( )
 
 			if text.endswith("\n") and _shared_globals.columns != 0 and not _shared_globals.buildFinished and _shared_globals.total_compiles > 0:
 				self.barPresent = True

@@ -2622,10 +2622,7 @@ def _run( ):
 	elif args.force_color == "off":
 		_shared_globals.color_supported = False
 
-	if args.force_progress_bar == "on":
-		_shared_globals.columns = 80
-	elif args.force_progress_bar == "off":
-		_shared_globals.columns = 0
+	_shared_globals.forceProgressBar = args.force_progress_bar
 
 	if args.prefix:
 		_shared_globals.install_prefix = os.path.abspath(args.prefix)
