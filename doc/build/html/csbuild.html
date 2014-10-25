@@ -1,0 +1,1581 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>csbuild package &mdash; csbuild 1.0.0b1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="csbuild-package">
+<h1>csbuild package<a class="headerlink" href="#csbuild-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.log.html">csbuild.log module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.projectSettings.html">csbuild.projectSettings module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.project_generator.html">csbuild.project_generator module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.project_generator_qtcreator.html">csbuild.project_generator_qtcreator module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.project_generator_slickedit.html">csbuild.project_generator_slickedit module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.project_generator_visual_studio.html">csbuild.project_generator_visual_studio module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.terminfo.html">csbuild.terminfo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.toolchain.html">csbuild.toolchain module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.toolchain_android.html">csbuild.toolchain_android module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.toolchain_gcc.html">csbuild.toolchain_gcc module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.toolchain_ios.html">csbuild.toolchain_ios module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="csbuild.toolchain_msvc.html">csbuild.toolchain_msvc module</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-csbuild">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-csbuild" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-CSBuild"></span><div class="admonition attention">
+<p class="first admonition-title">Attention</p>
+<p class="last">To support CSBuild&#8217;s operation, Python&#8217;s import lock is DISABLED once CSBuild has started.</p>
+</div>
+<p>This should not be a problem for most makefiles, but if you do any threading within your makefile, take note:
+anything that&#8217;s imported and used by those threads should always be implemented on the main thread before that
+thread&#8217;s execution starts. Otherwise, CSBuild does not guarantee that the import will have completed
+once that thread tries to use it. Long story short: Don&#8217;t import modules within threads.</p>
+<dl class="function">
+<dt id="csbuild.AddCcCompilerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddCcCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the C compiler. As this is toolchain-specific, it should be
+called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddCompilerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the both the C compiler and the C++ compiler.
+As this is toolchain-specific, it should be called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddCxxCompilerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddCxxCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddCxxCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the C++ compiler. As this is toolchain-specific, it should be
+called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddDefines">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddDefines</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddDefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add additionally defined preprocessor directives, as if each file had a #define directive at the very top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of preprocessor directives to define</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddExcludeDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddExcludeDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddExcludeDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude the given directories from the project. This may be called multiple times to add additional excludes.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be excluded.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddExcludeFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddExcludeFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddExcludeFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude the given files from the project. This may be called multiple times to add additional excludes.
+Files are relative to the location of the script itself, not the specified project working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of files to be excluded.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddExtraDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddExtraDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddExtraDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds additional directories to search for files in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of directories to search.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddExtraFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddExtraFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddExtraFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds additional files to be compiled that are not in the project directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of files to add.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddExtraObjects">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddExtraObjects</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddExtraObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds additional objects to be passed to the linker that are not in the project directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of objects to add.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddFrameworkDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddFrameworkDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddFrameworkDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the given directories for framworks to link. This may be called multiple times to add additional directories.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be searched.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddFrameworks">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddFrameworks</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddFrameworks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add frameworks for Objective-C/C++ compilations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddIncludeDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddIncludeDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddIncludeDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the given directories for include headers. This may be called multiple times to add additional directories.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<p>In the gcc toolchain, /usr/include and /usr/local/include (or the platform appropriate equivalents) will always
+be appended to the end of this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be searched.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddLibraries">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddLibraries</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>When linking the project, link in the given libraries. This may be called multiple times to add additional libraries.</p>
+<p>In the gcc toolchain, these will all be prefixed with &#8220;lib&#8221; when looking for the file to link. I.e.,
+csbuild.Libraries(&#8220;MyLib&#8221;) will link libMyLib.so or libMyLib.a.</p>
+<p>For compatibility, the msvc toolchain will search for the library exactly as specified, and if it can&#8217;t find it,
+will then search for it with the lib prefix. I.e., csbuild.Libraries(&#8220;MyLib&#8221;) will first search for MyLib.lib,
+and if that isn&#8217;t found, will then search for libMyLib.lib.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddLibraryDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddLibraryDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddLibraryDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the given directories for libraries to link. This may be called multiple times to add additional directories.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<p>In the gcc toolchain, /usr/lib and /usr/local/lib (or the platform appropriate equivalents) will always
+be appended to the end of this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be searched.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddLinkerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddLinkerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddLinkerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the linker. As this is toolchain-specific, it should be
+called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddOption">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddOption</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#csbuild.AddOption" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an option to the argument parser.
+The syntax for this is identical to the ArgParse add_argument syntax; see
+the :argparse: documentation</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddScript">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddScript</tt><big>(</big><em>incFile</em><big>)</big><a class="headerlink" href="#csbuild.AddScript" title="Permalink to this definition">¶</a></dt>
+<dd><p>Include the given makefile script as part of this build process.</p>
+<div class="admonition attention">
+<p class="first admonition-title">Attention</p>
+<p class="last">The included file will be loaded in the <strong>current</strong> file&#8217;s namespace, not a new namespace.</p>
+</div>
+<p>This doesn&#8217;t work the same way as importing a module. Any functions or variables defined in the current module
+will be available to the called script, and anything defined in the called script will be available to the
+calling module after it&#8217;s been called. As a result, this can be used much like #include in C++ to pull in
+utility scripts in addition to calling makefiles. The result is essentially as if the called script were
+copied and pasted directly into this one in the location of the AddScript() call.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>incFile</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; path to an additional makefile script to call as part of this build</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddSharedLibraries">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddSharedLibraries</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddSharedLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to csbuild.Libraries, but forces these libraries to be linked dynamically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddStaticLibraries">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddStaticLibraries</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddStaticLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to csbuild.Libraries, but forces these libraries to be linked statically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddUndefines">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddUndefines</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddUndefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add explicitly undefined preprocessor directives, as if each file had a #undef directive at the very top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of preprocessor directives to undefine</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearCcCompilerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearCcCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal C compiler flags.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearChunks">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearChunks</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearChunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the explicitly set list of chunks and returns the behavior to the default.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearCompilerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal compiler flags.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearCxxCompilerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearCxxCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearCxxCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal C++ compiler flags.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearDefines">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearDefines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearDefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of defined preprocessor directives</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearExtraDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearExtraDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearExtraDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of external directories to search.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearExtraFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearExtraFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearExtraFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of external files to compile.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearExtraObjects">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearExtraObjects</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearExtraObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of external objects to link.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearIncludeDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearIncludeDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearIncludeDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the include directories</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearLibraries">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearLibraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of libraries</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearLibraryDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearLibraryDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearLibraryDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the library directories</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearLinkerFlags">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearLinkerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearLinkerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal linker flags.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearSharedibraries">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearSharedibraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearSharedibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of dynamically-linked libraries</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearStaticLibraries">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearStaticLibraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearStaticLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of statically-linked libraries</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearUndefines">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearUndefines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearUndefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of undefined preprocessor directives</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.DebugLevel">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">DebugLevel</tt><a class="headerlink" href="#csbuild.DebugLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="attribute">
+<dt id="csbuild.DebugLevel.Disabled">
+<tt class="descname">Disabled</tt><em class="property"> = 0</em><a class="headerlink" href="#csbuild.DebugLevel.Disabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.DebugLevel.EmbeddedSymbols">
+<tt class="descname">EmbeddedSymbols</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.DebugLevel.EmbeddedSymbols" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.DebugLevel.ExternalSymbols">
+<tt class="descname">ExternalSymbols</tt><em class="property"> = 2</em><a class="headerlink" href="#csbuild.DebugLevel.ExternalSymbols" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.DebugLevel.ExternalSymbolsPlus">
+<tt class="descname">ExternalSymbolsPlus</tt><em class="property"> = 3</em><a class="headerlink" href="#csbuild.DebugLevel.ExternalSymbolsPlus" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DisableChunkedBuild">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DisableChunkedBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.DisableChunkedBuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn off the chunked/unity build system and build using individual files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DisablePrecompile">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DisablePrecompile</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.DisablePrecompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables precompilation and handles headers as usual.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of files to disable precompilation for.</td>
+</tr>
+</tbody>
+</table>
+<p>If this list is empty, it will disable precompilation entirely.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DisableProfiling">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DisableProfiling</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.DisableProfiling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns profiling optimizations back off</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DisableWarnings">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DisableWarnings</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.DisableWarnings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables all warnings.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DisableWarningsAsErrors">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DisableWarningsAsErrors</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.DisableWarningsAsErrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable the promotion of warnings to errors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DoNotChunk">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DoNotChunk</tt><big>(</big><em>*files</em><big>)</big><a class="headerlink" href="#csbuild.DoNotChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prevents the listed files (or files matching the listed patterns) from ever being placed
+in a chunk, ever.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>files</strong> (<em>arbitrary number of strings</em>) &#8211; filenames or patterns to exclude from chunking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.DoNotChunkTogether">
+<tt class="descclassname">csbuild.</tt><tt class="descname">DoNotChunkTogether</tt><big>(</big><em>pattern</em>, <em>*additionalPatterns</em><big>)</big><a class="headerlink" href="#csbuild.DoNotChunkTogether" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes files matching the given patterns mutually exclusive for chunking.
+I.e., if you call this with DoNotChunkTogether(&#8220;File1.cpp&#8221;, &#8220;File2.cpp&#8221;), it guarantees
+File1 and File2 will never appear together in the same chunk. If you specify more than two files,
+or a pattern that matches more than two files, no two files in the list will ever appear together.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pattern</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Pattern to search for files with (i.e., Source/<a href="#id1"><span class="problematic" id="id2">*</span></a>_Unchunkable.cpp)</li>
+<li><strong>additionalPatterns</strong> (<em>arbitrary number of optional strings</em>) &#8211; Additional patterns to compile the list of mutually exclusive files with</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.Done">
+<tt class="descclassname">csbuild.</tt><tt class="descname">Done</tt><big>(</big><em>code=0</em><big>)</big><a class="headerlink" href="#csbuild.Done" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit the build process early</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>code</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Exit code to exit with</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableChunkedBuild">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableChunkedBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableChunkedBuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn chunked/unity build on and build using larger compilation units. This is the default.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableChunkedPrecompile">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableChunkedPrecompile</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableChunkedPrecompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>When this is enabled, all header files will be precompiled into a single &#8220;superheader&#8221; and included in all files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableHeaderInstall">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableHeaderInstall</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableHeaderInstall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables installation of the project&#8217;s headers.
+Default target is /usr/local/include, unless the &#8211;prefix option is specified.
+If &#8211;prefix is specified, the target will be <em>{prefix</em>}/include</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableOutputInstall">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableOutputInstall</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableOutputInstall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables installation of the compiled output file.
+The default installation directory is /usr/local/lib.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableProfiling">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableProfiling</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableProfiling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimize output for profiling</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableUnityBuild">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableUnityBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableUnityBuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns on true unity builds, combining all files into only one compilation unit.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableWarningsAsErrors">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableWarningsAsErrors</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableWarningsAsErrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Promote all warnings to errors.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.Exit">
+<tt class="descclassname">csbuild.</tt><tt class="descname">Exit</tt><big>(</big><em>code=0</em><big>)</big><a class="headerlink" href="#csbuild.Exit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exit the build process early</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>code</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Exit code to exit with</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.GetArgDefault">
+<tt class="descclassname">csbuild.</tt><tt class="descname">GetArgDefault</tt><big>(</big><em>argname</em><big>)</big><a class="headerlink" href="#csbuild.GetArgDefault" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the default argument for the requested option</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>argname</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; the name of the option</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.GetArgs">
+<tt class="descclassname">csbuild.</tt><tt class="descname">GetArgs</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.GetArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets all of the arguments parsed by the argument parser.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an argparse.Namespace object</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">argparse.Namespace</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.GetOption">
+<tt class="descclassname">csbuild.</tt><tt class="descname">GetOption</tt><big>(</big><em>option</em><big>)</big><a class="headerlink" href="#csbuild.GetOption" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the given option from the parsed command line arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>option</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the option, without any preceding dashes.</td>
+</tr>
+</tbody>
+</table>
+<p>ArgParse replaces dashes with underscores, but csbuild will accept dashes and automatically handle the conversion
+internally.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The given argument, if it exists. If the argument has never been specified, returns csbuild.ARG_NOT_SET.</td>
+</tr>
+</tbody>
+</table>
+<p>If &#8211;help has been specified, this will ALWAYS return csbuild.ARG_NOT_SET for user-specified arguments.
+Handle csbuild.ARG_NOT_SET to prevent code from being unintentionally run with &#8211;help.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.GetTargetList">
+<tt class="descclassname">csbuild.</tt><tt class="descname">GetTargetList</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.GetTargetList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of targets currently being built.</p>
+<p>If no target has been specified (the default is being used), this list is empty.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The list of targets</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.IgnoreExternalHeaders">
+<tt class="descclassname">csbuild.</tt><tt class="descname">IgnoreExternalHeaders</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.IgnoreExternalHeaders" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this option is set, external headers will not be checked or followed when building. Only headers within the
+base project&#8217;s directory and its subdirectories will be checked. This will speed up header checking, but if you
+modify any external headers, you will need to manually &#8211;clean or &#8211;rebuild the project.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.Link">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">Link</tt><big>(</big><em>libName</em>, <em>scope=4</em>, <em>includeToolchains=None</em>, <em>includeArchitectures=None</em>, <em>excludeToolchains=None</em>, <em>excludeArchitectures=None</em><big>)</big><a class="headerlink" href="#csbuild.Link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.LinkSharedRuntime">
+<tt class="descclassname">csbuild.</tt><tt class="descname">LinkSharedRuntime</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.LinkSharedRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link against a dynamic C/C++ runtime library.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.LinkStaticRuntime">
+<tt class="descclassname">csbuild.</tt><tt class="descname">LinkStaticRuntime</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.LinkStaticRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link against a static C/C++ runtime library.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.NoBuiltInTargets">
+<tt class="descclassname">csbuild.</tt><tt class="descname">NoBuiltInTargets</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.NoBuiltInTargets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable the built-in &#8220;debug&#8221; and &#8220;release&#8221; targets.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.OptimizationLevel">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">OptimizationLevel</tt><a class="headerlink" href="#csbuild.OptimizationLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="attribute">
+<dt id="csbuild.OptimizationLevel.Disabled">
+<tt class="descname">Disabled</tt><em class="property"> = 0</em><a class="headerlink" href="#csbuild.OptimizationLevel.Disabled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.OptimizationLevel.Max">
+<tt class="descname">Max</tt><em class="property"> = 3</em><a class="headerlink" href="#csbuild.OptimizationLevel.Max" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.OptimizationLevel.Size">
+<tt class="descname">Size</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.OptimizationLevel.Size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.OptimizationLevel.Speed">
+<tt class="descname">Speed</tt><em class="property"> = 2</em><a class="headerlink" href="#csbuild.OptimizationLevel.Speed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.Precompile">
+<tt class="descclassname">csbuild.</tt><tt class="descname">Precompile</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.Precompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicit list of header files to precompile. Disables chunk precompile when called.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The files to precompile.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.PrecompileAsC">
+<tt class="descclassname">csbuild.</tt><tt class="descname">PrecompileAsC</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.PrecompileAsC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies header files that should be compiled as C headers instead of C++ headers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The files to specify as C files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.ProjectType">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">ProjectType</tt><a class="headerlink" href="#csbuild.ProjectType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Specifies the type of project to compile</p>
+<dl class="attribute">
+<dt id="csbuild.ProjectType.Application">
+<tt class="descname">Application</tt><em class="property"> = 0</em><a class="headerlink" href="#csbuild.ProjectType.Application" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.ProjectType.SharedLibrary">
+<tt class="descname">SharedLibrary</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.ProjectType.SharedLibrary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.ProjectType.StaticLibrary">
+<tt class="descname">StaticLibrary</tt><em class="property"> = 2</em><a class="headerlink" href="#csbuild.ProjectType.StaticLibrary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.RegisterProjectGenerator">
+<tt class="descclassname">csbuild.</tt><tt class="descname">RegisterProjectGenerator</tt><big>(</big><em>name</em>, <em>generator</em><big>)</big><a class="headerlink" href="#csbuild.RegisterProjectGenerator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a new project generator for use in solution generation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the generator being registered</li>
+<li><strong>generator</strong> (<a class="reference internal" href="csbuild.project_generator.html#csbuild.project_generator.project_generator" title="csbuild.project_generator.project_generator"><em>csbuild.project_generator.project_generator</em></a>) &#8211; The generator to associate with that name</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.RegisterToolchain">
+<tt class="descclassname">csbuild.</tt><tt class="descname">RegisterToolchain</tt><big>(</big><em>name</em>, <em>compiler</em>, <em>linker</em><big>)</big><a class="headerlink" href="#csbuild.RegisterToolchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register a new toolchain for use in the project.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name of the toolchain being registered</li>
+<li><strong>compiler</strong> (class derived from <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.compilerBase" title="csbuild.toolchain.compilerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.compilerBase</span></tt></a>) &#8211; The compiler used in this toolchain</li>
+<li><strong>linker</strong> (class derived from <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.linkerBase" title="csbuild.toolchain.linkerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.linkerBase</span></tt></a>) &#8211; The linker used in this toolchain</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.ScopeDef">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">ScopeDef</tt><a class="headerlink" href="#csbuild.ScopeDef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="attribute">
+<dt id="csbuild.ScopeDef.All">
+<tt class="descname">All</tt><em class="property"> = 7</em><a class="headerlink" href="#csbuild.ScopeDef.All" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.ScopeDef.DependentsOnly">
+<tt class="descname">DependentsOnly</tt><em class="property"> = 6</em><a class="headerlink" href="#csbuild.ScopeDef.DependentsOnly" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.ScopeDef.Final">
+<tt class="descname">Final</tt><em class="property"> = 4</em><a class="headerlink" href="#csbuild.ScopeDef.Final" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.ScopeDef.Intermediate">
+<tt class="descname">Intermediate</tt><em class="property"> = 2</em><a class="headerlink" href="#csbuild.ScopeDef.Intermediate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.ScopeDef.Self">
+<tt class="descname">Self</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.ScopeDef.Self" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetActiveToolchain">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetActiveToolchain</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.SetActiveToolchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the active toolchain to be used when building the project.</p>
+<p>On Windows platforms, this is set to msvc by default.
+On Linux platforms, this is set to gcc by default.</p>
+<p>This will be overridden if the script is executed with the &#8211;toolchain option.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The toolchain to use to build the project</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetCcCommand">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetCcCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetCcCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the compiler executable to be used for compiling C files. Ignored by the msvc toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Path to the executable to use for compilation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetChunkTolerance">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetChunkTolerance</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.SetChunkTolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Please see detailed description.</p>
+<p><strong>If building using ChunkSize():</strong></p>
+<p>Set the number of modified files below which a chunk will be split into individual files.</p>
+<p>For example, if you set this to 3 (the default), then a chunk will be built as a chunk
+if more than three of its files need to be built; if three or less need to be built, they will
+be built individually to save build time.</p>
+<p><strong>If building using ChunkFilesize():</strong></p>
+<p>Sets the total combined filesize of modified files within a chunk below which the chunk will be split into
+individual files.</p>
+<p>For example, if you set this to 150000 (the default), then a chunk will be built as a chunk if the total
+filesize of the files needing to be built exceeds 150kb. If less than 150kb worth of data needs to be built,
+they will be built individually to save time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of files required to trigger chunk building.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetChunks">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetChunks</tt><big>(</big><em>*chunks</em><big>)</big><a class="headerlink" href="#csbuild.SetChunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicitly set the chunks used as compilation units.</p>
+<p>NOTE that setting this will disable the automatic file gathering, so any files in the project directory that
+are not specified here will not be built.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chunks</strong> (<em>an arbitrary number of lists of strings</em>) &#8211; Lists containing filenames of files to be built,</td>
+</tr>
+</tbody>
+</table>
+<p>relativel to the script&#8217;s location, NOT the project working directory. Each list will be built as one chunk.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetCxxCommand">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetCxxCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetCxxCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the compiler executable to be used for compiling C++ files. Ignored by the msvc toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Path to the executable to use for compilation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetDebugLevel">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetDebugLevel</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.SetDebugLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the debug level. Due to toolchain differences, this should be called per-toolchain, usually.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>DebugLevel</em>) &#8211; How (and if) symbols should be generated</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetDefaultTarget">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetDefaultTarget</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetDefaultTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the default target if none is specified. The default value for this is release.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of the target to build for this project if none is specified.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetHeaderInstallSubdirectory">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetHeaderInstallSubdirectory</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetHeaderInstallSubdirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a subdirectory of <em>{prefix</em>}/include in which to install the headers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The desired subdirectory; i.e., if you specify this as &#8220;myLib&#8221;, the headers will be</td>
+</tr>
+</tbody>
+</table>
+<p>installed under <em>{prefix</em>}/include/myLib.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetHeaderRecursionDepth">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetHeaderRecursionDepth</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.SetHeaderRecursionDepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the depth to search for header files. If set to 0, it will search with unlimited recursion to find included
+headers. Otherwise, it will travel to a depth of i to check headers. If set to 1, this will only check first-level
+headers and not check headers included in other headers; if set to 2, this will check headers included in headers,
+but not headers included by <em>those</em> headers; etc.</p>
+<p>This is very useful if you&#8217;re using a large library (such as boost) or a very large project and are experiencing
+long waits prior to compilation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Recursion depth for header examination</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetIntermediateDirectory">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetIntermediateDirectory</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetIntermediateDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the directory in which to place the intermediate .o or .obj files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The object directory, relative to the current script location, NOT to the project working directory.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetMaxChunkFileSize">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetMaxChunkFileSize</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.SetMaxChunkFileSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the maximum combined filesize for a chunk. The default is 500000, and this is the default behavior.</p>
+<p>This value is ignored if SetChunks is called.</p>
+<p>Mutually exclusive with ChunkNumFiles()</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Maximum size per chunk in bytes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetNumFilesPerChunk">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetNumFilesPerChunk</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.SetNumFilesPerChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the size of the chunks used in the chunked build. This indicates the number of files per compilation unit.
+The default is 10.</p>
+<p>This value is ignored if SetChunks is called.</p>
+<p>Mutually exclusive with ChunkFilesize().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of files per chunk</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetOptimizationLevel">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetOptimizationLevel</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.SetOptimizationLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the optimization level. Due to toolchain differences, this should be called per-toolchain, usually.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>OptimizationLevel</em>) &#8211; The level of optimization to use</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetOutput">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetOutput</tt><big>(</big><em>name</em>, <em>projectType=0</em><big>)</big><a class="headerlink" href="#csbuild.SetOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the output options for this project.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The output name. Do not include an extension, and do not include the &#8220;lib&#8221; prefix for libraries on</td>
+</tr>
+</tbody>
+</table>
+<p>Linux. These are added automatically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>projectType</strong> (<a class="reference internal" href="#csbuild.ProjectType" title="csbuild.ProjectType"><em>csbuild.ProjectType</em></a>) &#8211; The type of project to compile. The options are:
+- ProjectType.Application - on Windows, this will be built with a .exe extension. On Linux, there is no extension.
+- ProjectType.SharedLibrary - on Windows, this will generate a .lib and a .dll.
+On Linux, this will generate a .so and prefix &#8220;lib&#8221; to the output name.
+- ProjectType.StaticLibrary - on Windows, this will generate a .lib. On Linux, this will generate a .a and prefix
+&#8220;lib&#8221; to the output name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetOutputArchitecture">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetOutputArchitecture</tt><big>(</big><em>arch</em><big>)</big><a class="headerlink" href="#csbuild.SetOutputArchitecture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the output architecture.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arch</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The desired architecture. Choose from x86, x64, ARM.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetOutputDirectory">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetOutputDirectory</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetOutputDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the directory in which to place the output file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The output directory, relative to the current script location, NOT to the project working directory.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetOutputExtension">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetOutputExtension</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.SetOutputExtension" title="Permalink to this definition">¶</a></dt>
+<dd><p>This allows you to override the extension used for the output file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The desired extension, including the .; i.e., csbuild.Extension( &#8221;.exe&#8221; )</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetStaticLinkMode">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetStaticLinkMode</tt><big>(</big><em>mode</em><big>)</big><a class="headerlink" href="#csbuild.SetStaticLinkMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines how static links are handled. With the msvc toolchain, iterative link times of a project with many libraries
+can be significantly improved by setting this to :StaticLinkMode.LinkLibs:. This will cause the linker to link
+the .obj files used to make a library directly into the dependent project. Link times for full builds may be slightly slower,
+but this will allow incremental linking to function when libraries are being changed. (Usually, changing a .lib results
+in a full link.)</p>
+<p>On most toolchains, this defaults to :StaticLinkMode.LinkLibs:. In debug mode only for the msvc toolchain, this defaults
+to :StaticLinkMode.LinkIntermediateObjects:.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mode</strong> &#8211; The link mode to set</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetSupportedArchitectures">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetSupportedArchitectures</tt><big>(</big><em>*architectures</em><big>)</big><a class="headerlink" href="#csbuild.SetSupportedArchitectures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the architectures that this project supports. This can be used to limit
+&#8211;all-architectures from building everything supported by the toolchain, if the project
+is not set up to support all of the toolchain&#8217;s architectures.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetSupportedToolchains">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetSupportedToolchains</tt><big>(</big><em>*toolchains</em><big>)</big><a class="headerlink" href="#csbuild.SetSupportedToolchains" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the toolchains that this project supports. This can be used to limit
+&#8211;all-toolchains from building everything supported by csbuild, if the project
+is not set up to support all of the toolchains.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetUserData">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetUserData</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.SetUserData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds miscellaneous data to a project. This can be used later in a build event or in a format string.</p>
+<p>This becomes an attribute on the project&#8217;s userData member variable. As an example, to set a value:</p>
+<p>csbuild.SetUserData(&#8220;someData&#8221;, &#8220;someValue&#8221;)</p>
+<p>Then to access it later:</p>
+<p>project.userData.someData</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the variable to set</li>
+<li><strong>value</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) &#8211; value to set to that variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetupDebugTarget">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetupDebugTarget</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.SetupDebugTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default debug target.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.SetupReleaseTarget">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetupReleaseTarget</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.SetupReleaseTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default release target.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.Src">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">Src</tt><big>(</big><em>libName</em>, <em>scope=4</em>, <em>includeToolchains=None</em>, <em>includeArchitectures=None</em>, <em>excludeToolchains=None</em>, <em>excludeArchitectures=None</em><big>)</big><a class="headerlink" href="#csbuild.Src" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.StaticLinkMode">
+<em class="property">class </em><tt class="descclassname">csbuild.</tt><tt class="descname">StaticLinkMode</tt><a class="headerlink" href="#csbuild.StaticLinkMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="attribute">
+<dt id="csbuild.StaticLinkMode.LinkIntermediateObjects">
+<tt class="descname">LinkIntermediateObjects</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.StaticLinkMode.LinkIntermediateObjects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.StaticLinkMode.LinkLibs">
+<tt class="descname">LinkLibs</tt><em class="property"> = 0</em><a class="headerlink" href="#csbuild.StaticLinkMode.LinkLibs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.StopOnFirstError">
+<tt class="descclassname">csbuild.</tt><tt class="descname">StopOnFirstError</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.StopOnFirstError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stop compilation when the first error is encountered.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.Toolchain">
+<tt class="descclassname">csbuild.</tt><tt class="descname">Toolchain</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.Toolchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform actions on the listed toolchains. Examples:</p>
+<p>csbuild.Toolchain(&#8220;gcc&#8221;).NoPrecompile()
+csbuild.Toolchain(&#8220;gcc&#8221;, &#8220;msvc&#8221;).EnableWarningsAsErrors()</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>arbitrary number of strings</em>) &#8211; The list of toolchains to act on</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A proxy object that enables functions to be applied to one or more specific toolchains.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.architecture">
+<tt class="descclassname">csbuild.</tt><tt class="descname">architecture</tt><big>(</big><em>archs</em>, <em>override=False</em><big>)</big><a class="headerlink" href="#csbuild.architecture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies settings for a specific list of architectures.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.fileSettings">
+<tt class="descclassname">csbuild.</tt><tt class="descname">fileSettings</tt><big>(</big><em>files</em>, <em>override=False</em><big>)</big><a class="headerlink" href="#csbuild.fileSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies settings that affect a single specific file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>files</strong> (<em>str or list[str]</em>) &#8211; The file or files to apply these settings to</li>
+<li><strong>override</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If this is true, existing functionality for this target will be discarded for this project.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.postBuildStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">postBuildStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.postBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a post-build step for the containing project. Post-build steps run after the project has
+<strong>successfully</strong> compiled <strong>and</strong> linked.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.postMakeStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">postMakeStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.postMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a post-make step for the containing project. Post-make steps run after all projects have
+finished building and linking. This step will only run if the entire build process was successful.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.postPrepareBuildStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">postPrepareBuildStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a post-compile step for the containing project. Post-PrepareBuild steps run just after the
+project completes its build preparation. This is the only place where running project.RediscoverFiles() has any
+appreciable effect.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.preBuildStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">preBuildStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.preBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a pre-build step for the containing project. Pre-build steps run just before the project
+begins compiling.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.preLinkStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">preLinkStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.preLinkStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a pre-link step for the containing project. Pre-link steps run after a successful compile of
+the project, but before the project links.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.preMakeStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">preMakeStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.preMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a pre-make step for the containing project. Pre-make steps run after all projects&#8217; preparation
+steps have completed and their final chunk sets have been collected, but before any compiling starts.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.prePrepareBuildStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">prePrepareBuildStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a pre-build step for the containing project. Pre-PrepareBuild steps run just before the project
+begins preparing its build tasks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take a single argument, which will be of type
+<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.project">
+<tt class="descclassname">csbuild.</tt><tt class="descname">project</tt><big>(</big><em>name</em>, <em>workingDirectory</em>, <em>depends=None</em>, <em>priority=-1</em>, <em>ignoreDependencyOrdering=False</em><big>)</big><a class="headerlink" href="#csbuild.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator used to declare a project. linkDepends and srcDepends here will be used to determine project build order.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; A unique name to be used to refer to this project</li>
+<li><strong>workingDirectory</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The directory in which to perform build operations. This directory</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>(or a subdirectory) should contain the project&#8217;s source files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>linkDepends</strong> &#8211; A list of other projects. This project will not be linked until the dependent projects</td>
+</tr>
+</tbody>
+</table>
+<p>have completed their build process. These can be specified as either projName, Link(projName, scope), or Src(projName, scope).</p>
+<p>projName will be converted to Link(projName, ScopeDef.Final)
+Link will cause the project it applies to to link this dependency.
+Src will cause the project it applies to to wait until this project finishes before it starts its build at all.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.projectGroup">
+<tt class="descclassname">csbuild.</tt><tt class="descname">projectGroup</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.projectGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a grouping of projects. This will add scope to the global project settings, and will additionally be used
+in solution generation to group the projects.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name to identify this project group</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.scope">
+<tt class="descclassname">csbuild.</tt><tt class="descname">scope</tt><big>(</big><em>scope</em><big>)</big><a class="headerlink" href="#csbuild.scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="csbuild.target">
+<tt class="descclassname">csbuild.</tt><tt class="descname">target</tt><big>(</big><em>name</em>, <em>override=False</em><big>)</big><a class="headerlink" href="#csbuild.target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies settings for a target. If the target doesn&#8217;t exist it will be implicitly created. If a target does exist
+with this name, this function will be appended to a list of functions to be run for that target name, unless
+override is True.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The name for the target; i.e., &#8220;debug&#8221;, &#8220;release&#8221;</li>
+<li><strong>override</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; If this is true, existing functionality for this target will be discarded for this project.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">csbuild package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-csbuild">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/csbuild.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

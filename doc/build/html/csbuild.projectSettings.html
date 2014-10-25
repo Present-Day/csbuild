@@ -1,0 +1,475 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>csbuild.projectSettings module &mdash; csbuild 1.0.0b1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-csbuild.projectSettings">
+<span id="csbuild-projectsettings-module"></span><h1>csbuild.projectSettings module<a class="headerlink" href="#module-csbuild.projectSettings" title="Permalink to this headline">¶</a></h1>
+<p><strong>ProjectSettings module</strong></p>
+<p>Defines the projectSettings class.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">var currentProject:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The current project being built. Note that if this is accessed outside of an &#64;project</td>
+</tr>
+</tbody>
+</table>
+<p>block, the project returned will only be a temporary variable that will not be valid for compilation
+:type currentProject: projectSettings</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">var rootGroup:</th><td class="field-body">This is the top-level project group that all projects and project groups fall under.</td>
+</tr>
+</tbody>
+</table>
+<p>It has no name and is NOT itself a valid or &#8220;real&#8221; group.
+:type rootGroup: ProjectGroup</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name" colspan="2">var currentGroup:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">The current group that&#8217;s being populated</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">type currentGroup:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">ProjectGroup</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="csbuild.projectSettings.ProjectGroup">
+<em class="property">class </em><tt class="descclassname">csbuild.projectSettings.</tt><tt class="descname">ProjectGroup</tt><big>(</big><em>name</em>, <em>parentGroup</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.ProjectGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Defines a group of projects, and also may contain subgroups.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>tempprojects</strong> &#8211; Temporary list of projects directly under this group</li>
+<li><strong>projects</strong> &#8211; Fully fleshed-out list of projects under this group</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Dict is { name : { target : project } }
+:type projects: dict[str, dict[str, projectSettings]]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>subgroups</strong> &#8211; List of child groups</li>
+<li><strong>name</strong> &#8211; Group name</li>
+<li><strong>parentGroup</strong> &#8211; The group&#8217;s parent group</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.projectSettings.projectSettings">
+<em class="property">class </em><tt class="descclassname">csbuild.projectSettings.</tt><tt class="descname">projectSettings</tt><a class="headerlink" href="#csbuild.projectSettings.projectSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Contains settings for the project</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> &#8211; The project&#8217;s name</li>
+<li><strong>key</strong> &#8211; A unique key made by combining project name and target</li>
+<li><strong>workingDirectory</strong> &#8211; The directory containing all of the project&#8217;s files</li>
+<li><strong>linkDepends</strong> &#8211; The projects that this one depends on for linking</li>
+<li><strong>srcDepends</strong> &#8211; The projects that this one depends on for compiling</li>
+<li><strong>func</strong> &#8211; The project&#8217;s settings function - the function wrapped in the &#64;project decorator</li>
+<li><strong>libraries</strong> &#8211; The libraries the project will link against</li>
+<li><strong>staticLibraries</strong> &#8211; The libraries the project will forcibly statically link against</li>
+<li><strong>sharedLibraries</strong> &#8211; The libraries the project will forcibly statically link against</li>
+<li><strong>includeDirs</strong> &#8211; Directories to search for included headers in</li>
+<li><strong>libraryDirs</strong> &#8211; Directories to search for libraries in</li>
+<li><strong>optLevel</strong> &#8211; Optimization level for this project</li>
+<li><strong>debugLevel</strong> &#8211; Debug level for this project</li>
+<li><strong>defines</strong> &#8211; #define declarations for this project</li>
+<li><strong>undefines</strong> &#8211; #undef declarations for this project</li>
+<li><strong>cxx</strong> &#8211; C++ compiler executable for this project</li>
+<li><strong>cc</strong> &#8211; C compiler executable for this project</li>
+<li><strong>hasCppFiles</strong> &#8211; Whether or not the project includes C++ files</li>
+<li><strong>objDir</strong> &#8211; Output directory for intermediate object files</li>
+<li><strong>outputDir</strong> &#8211; Output directory for the final output file</li>
+<li><strong>csbuildDir</strong> &#8211; Output directory for csbuild internal data, subdir of objDir</li>
+<li><strong>outputName</strong> &#8211; Final filename to be generated for this project</li>
+<li><strong>headerInstallSubdir</strong> &#8211; Subdirectory that headers live in for this project</li>
+<li><strong>sources</strong> &#8211; Source files within this project that are being compiled during this run</li>
+<li><strong>allsources</strong> &#8211; All source files within this project</li>
+<li><strong>allheaders</strong> &#8211; Headers within this project</li>
+<li><a class="reference external" href="http://docs.python.org/library/functions.html#type" title="(in Python v2.7)"><strong>type</strong></a> &#8211; Project type</li>
+<li><strong>ext</strong> &#8211; Extension override for output</li>
+<li><a class="reference external" href="http://docs.python.org/library/profile.html#module-profile" title="(in Python v2.7)"><strong>profile</strong></a> &#8211; Whether or not to optimize for profiling</li>
+<li><strong>cxxCompilerFlags</strong> &#8211; Literal flags to pass to the C++ compiler</li>
+<li><strong>ccCompilerFlags</strong> &#8211; Literal flags to pass to the C compiler</li>
+<li><strong>linkerFlags</strong> &#8211; Literal flags to pass to the linker</li>
+<li><strong>excludeDirs</strong> &#8211; Directories excluded from source file discovery</li>
+<li><strong>excludeFiles</strong> &#8211; Files excluded from source file discovery</li>
+<li><strong>_outputDir_set</strong> &#8211; Whether or not the output directory has been set</li>
+<li><strong>_objDir_set</strong> &#8211; Whether or not the object directory has been set</li>
+<li><strong>_debugLevel_set</strong> &#8211; Whether or not debug settings have been set</li>
+<li><strong>_optLevel_set</strong> &#8211; Whether or not optimization settings have been set</li>
+<li><strong>allPaths</strong> &#8211; All the paths used to contain all headers included by this project</li>
+<li><strong>chunks</strong> &#8211; Compiled list of chunks to be compiled in this project</li>
+<li><strong>chunksByFile</strong> &#8211; Dictionary to get the list of files in a chunk from its filename</li>
+<li><strong>useChunks</strong> &#8211; Whether or not to use chunks</li>
+<li><strong>chunkTolerance</strong> &#8211; minimum number of modified files needed to build a chunk as a chunk</li>
+<li><strong>chunkSize</strong> &#8211; number of files per chunk</li>
+<li><strong>chunkFilesize</strong> &#8211; maximum file size of a built chunk, in bytes</li>
+<li><strong>chunkSizeTolerance</strong> &#8211; minimum total filesize of modified files needed to build a chunk as a chunk</li>
+<li><strong>headerRecursionDepth</strong> &#8211; Depth to recurse when building header information</li>
+<li><strong>ignoreExternalHeaders</strong> &#8211; Whether or not to ignore external headers when building header information</li>
+<li><strong>defaultTarget</strong> &#8211; The target to be built when none is specified</li>
+<li><strong>chunkedPrecompile</strong> &#8211; Whether or not to precompile all headers in the project</li>
+<li><strong>precompile</strong> &#8211; List of files to precompile</li>
+<li><strong>precompileExcludeFiles</strong> &#8211; List of files NOT to precompile</li>
+<li><strong>cppHeaderFile</strong> &#8211; The C++ precompiled header that&#8217;s been built (if any)</li>
+<li><strong>cHeaderFile</strong> &#8211; The C precompiled header that&#8217;s been built (if any)</li>
+<li><strong>needsPrecompileCpp</strong> &#8211; Whether or not the C++ precompiled header needs to be rebuilt during this compile</li>
+<li><strong>needsPrecompileC</strong> &#8211; Whether or not the C++ precompiled header needs to be rebuilt during this compile</li>
+<li><strong>unity</strong> &#8211; Whether or not to build in full unity mode (all files included in one translation unit)</li>
+<li><strong>precompileDone</strong> &#8211; Whether or not the project&#8217;s precompile step has been completed</li>
+<li><strong>noWarnings</strong> &#8211; Whether or not to disable all warnings for this project</li>
+<li><strong>toolchains</strong> &#8211; All toolchains enabled for this project</li>
+<li><strong>cxxCmd</strong> &#8211; Base C++ compile command, returned from toolchain.get_base_cxx_command</li>
+<li><strong>ccCmd</strong> &#8211; Base C compile command, returned from toolchain.get_base_cc_command</li>
+<li><strong>cxxpccmd</strong> &#8211; Base C++ precompile command, returned from toolchain.get_base_cxx_precompile_command</li>
+<li><strong>ccpccmd</strong> &#8211; Base C precompile command, returned from toolchain.get_base_cc_precompile_command</li>
+<li><strong>recompileAll</strong> &#8211; Whether or not conditions have caused the entire project to need recompilation</li>
+<li><strong>targets</strong> &#8211; List of targets in this project with their associated settings functions, decorated with &#64;target</li>
+<li><strong>targetName</strong> &#8211; The target name for this project as it&#8217;s currently being built</li>
+<li><strong>_finalChunkSet</strong> &#8211; The list of chunks to be built after building all chunks, determining whether or not to build
+them as chunks, etc.</li>
+<li><strong>compilationCompleted</strong> &#8211; The number of files that have been compiled (successfully or not) at this point in the
+compile process. Note that this variable is modified in multiple threads and should be handled within project.mutex</li>
+<li><strong>compilationFailed</strong> &#8211; Whether or not ANY compilation unit has failed to successfully compile in this build</li>
+<li><strong>useStaticRuntime</strong> &#8211; Whether or not to link against a static runtime</li>
+<li><strong>cppHeaders</strong> &#8211; List of C++ headers</li>
+<li><strong>cHeaders</strong> &#8211; List of C headers</li>
+<li><strong>activeToolchainName</strong> &#8211; The name of the currently active toolchain</li>
+<li><strong>activeToolchain</strong> &#8211; The actual currently active toolchain</li>
+<li><strong>warningsAsErrors</strong> &#8211; Whether all warnings should be treated as errors</li>
+<li><strong>_builtSomething</strong> &#8211; Whether or not ANY file has been compiled in this build</li>
+<li><strong>outputArchitecture</strong> &#8211; The architecture to build against</li>
+<li><strong>libraryLocations</strong> &#8211; evaluated locations of the project&#8217;s libraries</li>
+<li><strong>scriptPath</strong> &#8211; The location of the script file this project is defined in</li>
+<li><a class="reference external" href="http://docs.python.org/library/mutex.html#module-mutex" title="(in Python v2.7)"><strong>mutex</strong></a> &#8211; A mutex used to control modification of project data across multiple threads</li>
+<li><strong>preBuildStep</strong> &#8211; A function that will be executed before compile of this project begins</li>
+<li><strong>postBuildStep</strong> &#8211; A function that will be executed after compile of this project ends</li>
+<li><strong>parentGroup</strong> &#8211; The group this project is contained within</li>
+<li><strong>state</strong> &#8211; Current state of the project</li>
+<li><strong>startTime</strong> &#8211; The time the project build started</li>
+<li><strong>endTime</strong> &#8211; The time the project build ended</li>
+<li><strong>extraFiles</strong> &#8211; Extra files being compiled, these will be rolled into project.sources, so use that instead</li>
+<li><strong>extraDirs</strong> &#8211; Extra directories used to search for files</li>
+<li><strong>extraObjs</strong> &#8211; Extra objects to pass to the linker</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Toolchains can define additional variables that will show up on this class&#8217;s
+instance variable list when that toolchain is active. See toolchain documentation for
+more details on what additional instance variables are available.</p>
+</div>
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.AddToSet">
+<tt class="descname">AddToSet</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.AddToSet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.AppendList">
+<tt class="descname">AppendList</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.AppendList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.CanJoinChunk">
+<tt class="descname">CanJoinChunk</tt><big>(</big><em>chunk</em>, <em>newFile</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.CanJoinChunk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.ContainsChunk">
+<tt class="descname">ContainsChunk</tt><big>(</big><em>inputChunkFile</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.ContainsChunk" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.ExtendList">
+<tt class="descname">ExtendList</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.ExtendList" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.GetAttr">
+<tt class="descname">GetAttr</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.GetAttr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.GetAttrNext">
+<tt class="descname">GetAttrNext</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.GetAttrNext" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.RediscoverFiles">
+<tt class="descname">RediscoverFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.RediscoverFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force a re-run of the file discovery process. Useful if a postPrepareBuild step adds additional files to the project.
+This will have no effect when called from any place other than a postPrepareBuild step.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.SetAttr">
+<tt class="descname">SetAttr</tt><big>(</big><em>name</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.SetAttr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.SetAttrNext">
+<tt class="descname">SetAttrNext</tt><big>(</big><em>name</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.SetAttrNext" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.SetValue">
+<tt class="descname">SetValue</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.SetValue" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.UnionSet">
+<tt class="descname">UnionSet</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.UnionSet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.UpdateDict">
+<tt class="descname">UpdateDict</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.UpdateDict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="csbuild.projectSettings.projectSettings.UserData">
+<em class="property">class </em><tt class="descname">UserData</tt><a class="headerlink" href="#csbuild.projectSettings.projectSettings.UserData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.UserData.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.UserData.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.check_libraries">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">check_libraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.check_libraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks the libraries designated by the make script.
+Invokes ld to determine whether or not the library exists.1
+Uses the -t flag to get its location.
+And then stores the library&#8217;s last modified time to a global list to be used by the linker later, to determine
+whether or not a project with up-to-date objects still needs to link against new libraries.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.copy">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.finalizeSettings">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">finalizeSettings</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.finalizeSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finalize the settings by applying the settings from the selected toolchain and architecture
+:return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.finalizeSettings2">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">finalizeSettings2</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.finalizeSettings2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extra-finalize the settings by pulling in settings from the project dependency tree
+:return: None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.follow_headers">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">follow_headers</tt><big>(</big><em>headerFile</em>, <em>allheaders</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.follow_headers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Follow the headers in a file.
+First, this will check to see if the given header has been followed already.
+If it has, it pulls the list from the allheaders global dictionary and returns it.
+If not, it populates a new allheaders list with follow_headers2, and then adds
+that to the allheaders dictionary</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.follow_headers2">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">follow_headers2</tt><big>(</big><em>headerFile</em>, <em>allheaders</em>, <em>n</em>, <em>parent</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.follow_headers2" title="Permalink to this definition">¶</a></dt>
+<dd><p>More intensive, recursive, and cpu-hogging function to follow a header.
+Only executed the first time we see a given header; after that the information is cached.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.get_chunk">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">get_chunk</tt><big>(</big><em>srcFile</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.get_chunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the chunk that a given file belongs to.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.get_files">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">get_files</tt><big>(</big><em>sources=None</em>, <em>headers=None</em>, <em>cHeaders=None</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.get_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>Steps through the current directory tree and finds all of the source and header files, and returns them as a list.
+Accepts two lists as arguments, which it populates. If sources or headers are excluded from the parameters, it will
+ignore files of the relevant types.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.get_full_path">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">get_full_path</tt><big>(</big><em>headerFile</em>, <em>relativeDir</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.get_full_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.get_included_files">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">get_included_files</tt><big>(</big><em>headerFile</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.get_included_files" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.make_chunks">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">make_chunks</tt><big>(</big><em>l</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.make_chunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts the list into a list of lists - i.e., &#8220;chunks&#8221;
+Each chunk represents one compilation unit in the chunked build system.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.projectSettings.projectSettings.name">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">name</tt><em class="property"> = None</em><a class="headerlink" href="#csbuild.projectSettings.projectSettings.name" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">str</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+<p>Project name</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.precompile_headers">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">precompile_headers</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.precompile_headers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.prepareBuild">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">prepareBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.prepareBuild" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.save_md5">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">save_md5</tt><big>(</big><em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.save_md5" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.save_md5s">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">save_md5s</tt><big>(</big><em>sources</em>, <em>headers</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.save_md5s" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.should_recompile">
+<tt class="descclassname">projectSettings.</tt><tt class="descname">should_recompile</tt><big>(</big><em>srcFile</em>, <em>ofile=None</em>, <em>for_precompiled_header=False</em><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.should_recompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks various properties of a file to determine whether or not it needs to be recompiled.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/csbuild.projectSettings.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

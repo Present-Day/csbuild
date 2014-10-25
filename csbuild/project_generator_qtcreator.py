@@ -24,10 +24,10 @@ import xml.dom.minidom as minidom
 import os
 import sys
 
-from csbuild import project_generator
-from csbuild import _shared_globals
-from csbuild import projectSettings
-from csbuild import log
+from . import project_generator
+from . import _shared_globals
+from . import projectSettings
+from . import log
 import csbuild
 
 
@@ -36,24 +36,17 @@ class project_generator_qtcreator( project_generator.project_generator ):
 	Generator used to generate QtCreator solutions.
 
 	Generator options: --qtpath: Path to QtCreator configuration (default ~/.config, should contain QtProject directory)
-
-	@undocumented: __init__
-	@undocumented: _writeProject
-	@undocumented: _writeSubdirsProject
-	@undocumented: _writeSharedFile
-	@undocumented: update_qtcreator_config
-	@undocumented: _printXml
 	"""
 	def __init__( self, path, solutionname, extraargs ):
 		project_generator.project_generator.__init__( self, path, solutionname, extraargs )
 
-		self.qtpath = os.path.expanduser( csbuild.get_option( "qtpath" ) )
+		self.qtpath = os.path.expanduser( csbuild.GetOption( "qtpath" ) )
 
 		self.update_qtcreator_config( )
 
 
 	@staticmethod
-	def additional_args( parser ):
+	def AdditionalArgs( parser ):
 		parser.add_argument( "--qtpath",
 			help = "Path to QtCreator configuration (default ~/.config, should contain QtProject directory)",
 			default = "~/.config" )
@@ -72,7 +65,7 @@ class project_generator_qtcreator( project_generator.project_generator ):
 		# These values don't matter much as they're likely to be the same (or close enough to the same for our purposes)
 		# across all targets.
 		archDict = projectDict[list(projectDict.keys())[0]]
-		toolchainDict = projectDict[list(archDict.keys())[0]]
+		toolchainDict = archDict[list(archDict.keys())[0]]
 		project = toolchainDict[list(toolchainDict.keys())[0]]
 
 		projectpath = os.path.join( self.rootpath, parentPath, project.name )
@@ -95,9 +88,9 @@ class project_generator_qtcreator( project_generator.project_generator ):
 				for header in project.allheaders:
 					f.write( "\t{} \\\n".format( os.path.relpath( header, projectpath ) ) )
 
-			f.write( "\nDESTDIR = {}\n\n".format( project.output_dir ) )
+			f.write( "\nDESTDIR = {}\n\n".format( project.outputDir ) )
 
-			f.write( "TARGET = {}\n\n".format( project.output_name ) )
+			f.write( "TARGET = {}\n\n".format( project.outputName ) )
 
 			if project.type == csbuild.ProjectType.Application:
 				f.write( "TEMPLATE = app\n\n" )
@@ -106,11 +99,11 @@ class project_generator_qtcreator( project_generator.project_generator ):
 
 			f.write( "INCLUDEPATH += \\\n" )
 
-			for incdir in project.include_dirs:
+			for incdir in project.includeDirs:
 				f.write( "\t{} \\\n".format( incdir ) )
 
-			if project.cpp_compiler_flags:
-				f.write( "\nQMAKE_CXXFLAGS += {}\n".format( " ".join( project.cpp_compiler_flags ) ) )
+			if project.cxxCompilerFlags:
+				f.write( "\nQMAKE_CXXFLAGS += {}\n".format( " ".join( project.cxxCompilerFlags ) ) )
 
 			try:
 				if project.cppstandard:
@@ -118,8 +111,8 @@ class project_generator_qtcreator( project_generator.project_generator ):
 			except:
 				pass
 
-			if project.c_compiler_flags:
-				f.write( "\nQMAKE_CFLAGS += {}\n".format( " ".join( project.c_compiler_flags ) ) )
+			if project.ccCompilerFlags:
+				f.write( "\nQMAKE_CFLAGS += {}\n".format( " ".join( project.ccCompilerFlags ) ) )
 
 			try:
 				if project.cstandard:
@@ -134,10 +127,10 @@ class project_generator_qtcreator( project_generator.project_generator ):
 		#		if written:
 		#			f.write('el')
 		#		f.write('if [ "$CSB_BUILD_TARGET" = "{}" ]; then\n'.format(project.targetName))
-		#		executable = os.path.join(project.output_dir, project.output_name)
+		#		executable = os.path.join(project.outputDir, project.outputName)
 		#		f.write('\techo "Executing {} $@ ({} target)..."\n'.format(project.targetName, executable))
-		#		f.write('\tcd {}\n'.format(project.output_dir))
-		#		f.write('\t./{} $@\n'.format(project.output_name))
+		#		f.write('\tcd {}\n'.format(project.outputDir))
+		#		f.write('\t./{} $@\n'.format(project.outputName))
 		#		f.write('\texit $?\n')
 		#		written = True
 
@@ -345,7 +338,7 @@ class project_generator_qtcreator( project_generator.project_generator ):
 			"QtCreatorProject" )
 
 
-	def write_solution( self ):
+	def WriteProjectFiles( self ):
 		log.LOG_BUILD( "Writing QtCreator solution {}".format( self.solutionname ) )
 		parentNames = []
 		projlist = set( )

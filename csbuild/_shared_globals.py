@@ -22,97 +22,56 @@
 Defines shared globals used by the application. Some of these are useful to plugins, and those
 are documented here. Others are left undocumented.
 
-@var color_supported: Whether or not colored output is supported
-@type color_supported: bool
+:var color_supported: Whether or not colored output is supported
+:type color_supported: bool
 
-@var columns: The number of columns the output window has available to it
-@type columns: int
+:var columns: The number of columns the output window has available to it
+:type columns: int
 
-@var printmutex: Mutex used to try and avoid multiple things printing to stdout at once
-and stepping on each other
-@type printmutex: threading.Lock
+:var max_threads: Number of threads available for compilation
+:type max_threads: int
 
-@var max_threads: Number of threads available for compilation
-@type max_threads: int
+:var build_success: Whether or not the build succeeded
+:type build_success: bool
 
-@var build_success: Whether or not the build succeeded
-@type build_success: bool
+:var show_commands: Whether or not to print commands sent to the OS
+:type show_commands: bool
 
-@var show_commands: Whether or not to print commands sent to the OS
-@type show_commands: bool
+:var projects: Full list of all projects
+:type projects: dict[str, csbuild.projectSettings.projectSettings]
 
-@var projects: Full list of all projects
-@type projects: dict[str, csbuild.projectSettings.projectSettings]
+:var install_prefix: The base location that files will be installed to (defaults to /usr/local)
+:type install_prefix: str
 
-@var install_prefix: The base location that files will be installed to (defaults to /usr/local)
-@type install_prefix: str
+:var project_build_list: Projects the user has requested to build
+:type project_build_list: set[str]
 
-@var project_build_list: Projects the user has requested to build
-@type project_build_list: set[str]
+:var sortedProjects: Projects being built in build order, sorted according to dependencies
+:type sortedProjects: list[csbuild.projectSettings.projectSettings]
 
-@var sortedProjects: Projects being built in build order, sorted according to dependencies
-@type sortedProjects: list[csbuild.projectSettings.projectSettings]
+:var project_generators: All project generators currently available
+:type project_generators: dict[str, csbuild.project_generator.project_generator]
 
-@var project_generators: All project generators currently available
-@type project_generators: dict[str, csbuild.project_generator.project_generator]
+:var alltargets: All targets in the makefile, collected from all projects
+:type alltargets: set[str]
 
-@var alltargets: All targets in the makefile, collected from all projects
-@type alltargets: set[str]
+:var alltoolchains: All toolchains that have been registered
+:type alltoolchains: dict[str, :class:`csbuild.toolchain.toolchain`]
 
-@var alltoolchains: All toolchains that have been registered
-@type alltoolchains: dict[str, L{csbuild.toolchain.toolchain}]
-
-@var allgenerators: All project generators that have been registered
-@type allgenerators: dict[str, csbuild.project_generator.project_generator]
+:var allgenerators: All project generators that have been registered
+:type allgenerators: dict[str, csbuild.project_generator.project_generator]
 @todo: Is allgenerators the same as project_generators? Can it be deleted?
 
-@var sgmutex: A mutex to wrap around changes to values in _shared_globals
-@type sgmutex: threading.Lock
+:var sgmutex: A mutex to wrap around changes to values in _shared_globals
+:type sgmutex: threading.Lock
 
-@var target_list: List of targets requested by the user, empty if using default target
-@type target_list: list[str]
-
-@undocumented: semaphore
-@undocumented: lock
-@undocumented: called_something
-@undocumented: overrides
-@undocumented: quiet
-@undocumented: interrupted
-@undocumented: oldmd5s
-@undocumented: newmd5s
-@undocumented: times
-@undocumented: starttime
-@undocumented: esttime
-@undocumented: lastupdate
-@undocumented: buildtime
-@undocumented: target
-@undocumented: CleanBuild
-@undocumented: do_install
-@undocumented: tempprojects
-@undocumented: finished_projects
-@undocumented: built_files
-@undocumented: allfiles
-@undocumented: total_precompiles
-@undocumented: precompiles_done
-@undocumented: total_compiles
-@undocumented: makefile_dict
-@undocumented: allheaders
-@undocumented: current_compile
-@undocumented: errors
-@undocumented: warnings
-@undocumented: disable_precompile
-@undocumented: disable_chunks
-@undocumented: rebuild
-@undocumented: dummy_block
-@undocumented: stopOnError
-@undocumented: autoCloseGui
-@undocumented: warningcount
-@undocumented: errorcount
+:var target_list: List of targets requested by the user, empty if using default target
+:type target_list: list[str]
 """
 
 import threading
 import multiprocessing
-from csbuild import terminfo
+from . import terminfo
 
 class ProjectState( object ):
 	"""
@@ -144,23 +103,23 @@ class OutputLine( object ):
 	"""
 	Defines a line of parsed output from the compiler.
 
-	@type level: L{OutputLevel}
-	@ivar level: the output level associated with this line
+	:type level: :OutputLevel:
+	:ivar level: the output level associated with this line
 
-	@type text: str
-	@ivar text: The actual text of the message
+	:type text: str
+	:ivar text: The actual text of the message
 
-	@type file: str
-	@ivar file: The file that generated the message, as indicated by the compiler
+	:type file: str
+	:ivar file: The file that generated the message, as indicated by the compiler
 
-	@type line: int
-	@ivar line: The line that the message occurred on. -1 if this information is not available.
+	:type line: int
+	:ivar line: The line that the message occurred on. -1 if this information is not available.
 
-	@type column: int
-	@ivar column: The column that the message occurred on. -1 if this information is not available.
+	:type column: int
+	:ivar column: The column that the message occurred on. -1 if this information is not available.
 
-	@type details: list[L{OutputLine}]
-	@ivar details: Additional details (such as callstacks, macro expansions, or notes) related to this line of output
+	:type details: list[:OutputLine:]
+	:ivar details: Additional details (such as callstacks, macro expansions, or notes) related to this line of output
 	"""
 	def __init__(self):
 		self.level = OutputLevel.UNKNOWN
@@ -179,8 +138,6 @@ def MetaClass(meta):
 
 color_supported = terminfo.TermInfo.SupportsColor( )
 columns = terminfo.TermInfo.GetNumColumns( ) if color_supported else 0
-
-printmutex = threading.Lock( )
 
 max_threads = multiprocessing.cpu_count( )
 max_linker_threads = max_threads
@@ -216,7 +173,10 @@ CleanBuild = False
 do_install = False
 
 tempprojects = { }
+
 projects = { }
+""" :type: dict[str, csbuild.projectSettings.projectSettings]"""
+
 finished_projects = set( )
 built_files = set( )
 
@@ -233,6 +193,7 @@ makefile_dict = { }
 
 allheaders = { }
 headerPaths = {}
+headerCheck = {}
 
 current_compile = 1
 
@@ -271,8 +232,15 @@ errorcount = 0
 
 profile = False
 
+buildFinished = False
+
+logFile = None
+cacheDirectory = None
+
+forceProgressBar = ""
+
 class dummy_block( object ):
-	"""Some versions of python have a bug in threading where a dummy thread will try and use a value that it deleted.
+	"""Some versions of python have a bug in threading where a dummy thread will try to use a value that it deleted.
 	To keep that from erroring on systems with those versions of python, this is a dummy object with the required
 	methods in it, which can be recreated in __init__ for the thread object to prevent this bug from happening.
 	"""

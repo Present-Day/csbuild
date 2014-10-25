@@ -19,19 +19,17 @@
 # SOFTWARE.
 
 """
-B{Toolchain Module}
+**Toolchain Module**
 
 Defines the base class for creating custom toolchains
-
-@undocumented: ClassCombiner
 """
 
 from abc import abstractmethod, ABCMeta
 import glob
 import os
 import platform
-from csbuild import log
-from csbuild import _shared_globals
+from . import log
+from . import _shared_globals
 import csbuild
 
 
@@ -39,7 +37,7 @@ class ClassCombiner( object ):
 	"""
 	Represents the combined return value of a multi-object accessor.
 
-	@ivar objs: The objects contained within the combined class
+	:ivar objs: The objects contained within the combined class
 	@itype objs: list[object]
 	"""
 	def __init__( self, objs ):
@@ -67,89 +65,91 @@ class ClassCombiner( object ):
 
 class SettingsOverrider( object ):
 	def __init__(self):
-		self.settingsOverrides = {}
+		self._settingsOverrides = {}
 
 	def copy(self):
 		ret = self.__class__()
 
-		for kvp in self.settingsOverrides.items( ):
+		for kvp in self._settingsOverrides.items( ):
 			if isinstance( kvp[1], list ):
-				ret.settingsOverrides[kvp[0]] = list( kvp[1] )
+				ret._settingsOverrides[kvp[0]] = list( kvp[1] )
 			elif isinstance( kvp[1], dict ):
-				ret.settingsOverrides[kvp[0]] = dict( kvp[1] )
+				ret._settingsOverrides[kvp[0]] = dict( kvp[1] )
 			elif isinstance( kvp[1], set ):
-				ret.settingsOverrides[kvp[0]] = set( kvp[1] )
+				ret._settingsOverrides[kvp[0]] = set( kvp[1] )
+			elif isinstance( kvp[1], csbuild.projectSettings.projectSettings.UserData ):
+				ret._settingsOverrides[kvp[0]] = kvp[1].copy()
 			else:
-				ret.settingsOverrides[kvp[0]] = kvp[1]
+				ret._settingsOverrides[kvp[0]] = kvp[1]
 
 		return ret
 
-	def InstallOutput( self ):
+	def EnableOutputInstall( self ):
 		"""
 		Enables installation of the compiled output file.
 		Default target is /usr/local/lib, unless the --prefix option is specified.
-		If --prefix is specified, the target will be I{{prefix}}/lib
+		If --prefix is specified, the target will be *{prefix*}/lib
 
-		@type s: str
-		@param s: Override directory - i.e., if you specify this as "libraries", the libraries will be installed
-		to I{{prefix}}/libraries.
+		:type s: str
+		:param s: Override directory - i.e., if you specify this as "libraries", the libraries will be installed
+		to *{prefix*}/libraries.
 		"""
-		self.settingsOverrides["install_output"] = True
+		self._settingsOverrides["installOutput"] = True
 
 
-	def InstallHeaders( self ):
+	def EnableHeaderInstall( self ):
 		"""
 		Enables installation of the project's headers
 		Default target is /usr/local/include, unless the --prefix option is specified.
-		If --prefix is specified, the target will be I{{prefix}}/include
+		If --prefix is specified, the target will be *{prefix*}/include
 
-		@type s: str
-		@param s: Override directory - i.e., if you specify this as "headers", the headers will be installed
-		to I{{prefix}}/headers.
+		:type s: str
+		:param s: Override directory - i.e., if you specify this as "headers", the headers will be installed
+		to *{prefix*}/headers.
 		"""
-		self.settingsOverrides["install_headers"] = True
+		self._settingsOverrides["installHeaders"] = True
 
 
-	def InstallSubdir( self, s ):
+	def SetHeaderInstallSubdirectory( self, s ):
 		"""
-		Specifies a subdirectory of I{{prefix}}/include in which to install the headers.
+		Specifies a subdirectory of *{prefix*}/include in which to install the headers.
 
-		@type s: str
-		@param s: The desired subdirectory; i.e., if you specify this as "myLib", the headers will be
-		installed under I{{prefix}}/include/myLib.
+		:type s: str
+		:param s: The desired subdirectory; i.e., if you specify this as "myLib", the headers will be
+		installed under *{prefix*}/include/myLib.
 		"""
-		self.settingsOverrides["header_subdir"] = s
+		self._settingsOverrides["headerInstallSubdir"] = s
 
 
-	def ExcludeDirs( self, *args ):
+	def AddExcludeDirectories( self, *args ):
 		"""
 		Exclude the given directories from the project. This may be called multiple times to add additional excludes.
 		Directories are relative to the location of the script itself, not the specified project working directory.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of directories to be excluded.
+		:type args: an arbitrary number of strings
+		:param args: The list of directories to be excluded.
 		"""
-		if "exclude_dirs" not in self.settingsOverrides:
-			self.settingsOverrides["exclude_dirs"] = []
+		if "excludeDirs" not in self._settingsOverrides:
+			self._settingsOverrides["excludeDirs"] = []
 		args = list( args )
 		newargs = []
 		for arg in args:
 			if arg[0] != '/' and not arg.startswith( "./" ):
 				arg = "./" + arg
 			newargs.append( os.path.abspath( arg ) )
-		self.settingsOverrides["exclude_dirs"] += newargs
+		self._settingsOverrides["excludeDirs"] += newargs
 
 
-	def ExcludeFiles( self, *args ):
+	def AddExcludeFiles( self, *args ):
 		"""
 		Exclude the given files from the project. This may be called multiple times to add additional excludes.
 		Files are relative to the location of the script itself, not the specified project working directory.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of files to be excluded.
+		:type args: an arbitrary number of strings
+		:param args: The list of files to be excluded.
 		"""
-		if "exclude_files" not in self.settingsOverrides:
-			self.settingsOverrides["exclude_files"] = []
+		if "excludeFiles" not in self._settingsOverrides:
+			self._settingsOverrides["excludeFiles"] = []
 
 		args = list( args )
 		newargs = []
@@ -157,10 +157,10 @@ class SettingsOverrider( object ):
 			if arg[0] != '/' and not arg.startswith( "./" ):
 				arg = "./" + arg
 			newargs.append( os.path.abspath( arg ) )
-		self.settingsOverrides["exclude_files"] += newargs
+		self._settingsOverrides["excludeFiles"] += newargs
 
 
-	def Libraries( self, *args ):
+	def AddLibraries( self, *args ):
 		"""
 		When linking the project, link in the given libraries. This may be called multiple times to add additional libraries.
 
@@ -171,42 +171,57 @@ class SettingsOverrider( object ):
 		will then search for it with the lib prefix. I.e., csbuild.Libraries("MyLib") will first search for MyLib.lib,
 		and if that isn't found, will then search for libMyLib.lib.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of libraries to link in.
+		:type args: an arbitrary number of strings
+		:param args: The list of libraries to link in.
 		"""
-		if "libraries" not in self.settingsOverrides:
-			self.settingsOverrides["libraries"] = set()
+		if "libraries" not in self._settingsOverrides:
+			self._settingsOverrides["libraries"] = set()
 
-		self.settingsOverrides["libraries"] |= set( args )
+		self._settingsOverrides["libraries"] |= set( args )
 
 
-	def StaticLibraries( self, *args ):
+	def AddStaticLibraries( self, *args ):
 		"""
 		Similar to csbuild.toolchain.Libraries, but forces these libraries to be linked statically.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of libraries to link in.
+		:type args: an arbitrary number of strings
+		:param args: The list of libraries to link in.
 		"""
-		if "static_libraries" not in self.settingsOverrides:
-			self.settingsOverrides["static_libraries"] = set()
+		if "staticLibraries" not in self._settingsOverrides:
+			self._settingsOverrides["staticLibraries"] = set()
 
-		self.settingsOverrides["static_libraries"] |= set( args )
+		self._settingsOverrides["staticLibraries"] |= set( args )
 
 
-	def SharedLibraries( self, *args ):
+	def AddSharedLibraries( self, *args ):
 		"""
 		Similar to csbuild.toolchain.Libraries, but forces these libraries to be linked dynamically.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of libraries to link in.
+		:type args: an arbitrary number of strings
+		:param args: The list of libraries to link in.
 		"""
-		if "shared_libraries" not in self.settingsOverrides:
-			self.settingsOverrides["shared_libraries"] = set()
+		if "sharedLibraries" not in self._settingsOverrides:
+			self._settingsOverrides["sharedLibraries"] = set()
 
-		self.settingsOverrides["shared_libraries"] |= set( args )
+		self._settingsOverrides["sharedLibraries"] |= set( args )
 
 
-	def IncludeDirs( self, *args ):
+	def AddFrameworks( self, *args ):
+		"""
+		When linking the project, link against the given frameworks. This may be called multiple times to add additional frameworks.
+
+		These will have no effect on toolchains that do not support frameworks.
+
+		:type args: an arbitrary number of strings
+		:param args: The list of frameworks to link in.
+		"""
+		if "frameworks" not in self._settingsOverrides:
+			self._settingsOverrides["frameworks"] = set()
+
+		self._settingsOverrides["frameworks"] |= set( args )
+
+
+	def AddIncludeDirectories( self, *args ):
 		"""
 		Search the given directories for include headers. This may be called multiple times to add additional directories.
 		Directories are relative to the location of the script itself, not the specified project working directory.
@@ -214,18 +229,18 @@ class SettingsOverrider( object ):
 		In the gcc toolchain, /usr/include and /usr/local/include (or the platform appropriate equivalents) will always
 		be appended to the end of this list.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of directories to be searched.
+		:type args: an arbitrary number of strings
+		:param args: The list of directories to be searched.
 		"""
-		if "include_dirs" not in self.settingsOverrides:
-			self.settingsOverrides["include_dirs"] = []
+		if "includeDirs" not in self._settingsOverrides:
+			self._settingsOverrides["includeDirs"] = []
 
 		for arg in args:
 			arg = os.path.abspath( arg )
-			self.settingsOverrides["include_dirs"].append( arg )
+			self._settingsOverrides["includeDirs"].append( arg )
 
 
-	def LibDirs( self, *args ):
+	def AddLibraryDirectories( self, *args ):
 		"""
 		Search the given directories for libraries to link. This may be called multiple times to add additional directories.
 		Directories are relative to the location of the script itself, not the specified project working directory.
@@ -233,280 +248,306 @@ class SettingsOverrider( object ):
 		In the gcc toolchain, /usr/lib and /usr/local/lib (or the platform appropriate equivalents) will always
 		be appended to the end of this list.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of directories to be searched.
+		:type args: an arbitrary number of strings
+		:param args: The list of directories to be searched.
 		"""
-		if "library_dirs" not in self.settingsOverrides:
-			self.settingsOverrides["library_dirs"] = []
+		if "libraryDirs" not in self._settingsOverrides:
+			self._settingsOverrides["libraryDirs"] = []
 
 		for arg in args:
 			arg = os.path.abspath( arg )
-			self.settingsOverrides["library_dirs"].append( arg )
+			self._settingsOverrides["libraryDirs"].append( arg )
+
+
+	def AddFrameworkDirectories( self, *args ):
+		"""
+		Search the given directories for frameworks. This may be called multiple times to add additional directories.
+		Directories are relative to the location of the script itself, not the specified project working directory.
+
+		:type args: an arbitrary number of strings
+		:param args: The list of directories to be searched.
+		"""
+		if "frameworkDirs" not in self._settingsOverrides:
+			self._settingsOverrides["frameworkDirs"] = []
+
+		for arg in args:
+			arg = os.path.abspath( arg )
+			self._settingsOverrides["frameworkDirs"].append( arg )
 
 
 	def ClearLibraries( self ):
 		"""Clears the list of libraries"""
-		self.settingsOverrides["libraries"] = set()
+		self._settingsOverrides["libraries"] = set()
 
 
 	def ClearStaticLibraries( self ):
 		"""Clears the list of libraries"""
-		self.settingsOverrides["static_libraries"] = set()
+		self._settingsOverrides["staticLibraries"] = set()
 
 
 	def ClearSharedLibraries( self ):
 		"""Clears the list of libraries"""
-		self.settingsOverrides["shared_libraries"] = set()
+		self._settingsOverrides["sharedLibraries"] = set()
 
 
-	def ClearIncludeDirs( self ):
+	def ClearFrameworks( self ):
+		"""Clears the list of framworks"""
+		self._settingsOverrides["frameworks"] = set()
+
+
+	def ClearIncludeDirectories( self ):
 		"""Clears the include directories, including the defaults."""
-		self.settingsOverrides["include_dirs"] = []
+		self._settingsOverrides["includeDirs"] = []
 
 
-	def ClearLibDirs( self ):
+	def ClearLibDirectories( self ):
 		"""Clears the library directories, including the defaults"""
-		self.settingsOverrides["library_dirs"] = []
+		self._settingsOverrides["libraryDirs"] = []
 
 
-	def Opt( self, i ):
+	def ClearFrameworkDirectories( self ):
+		"""Clears the framework directories, including the defaults."""
+		self._settingsOverrides["frameworkDirs"] = []
+
+
+	def SetOptimizationLevel( self, i ):
 		"""
 		Sets the optimization level. Due to toolchain differences, this should be called per-toolchain, usually.
 
-		@type i: either str or int
-		@param i: A toolchain-appropriate optimization level.
+		:type i: either str or int
+		:param i: A toolchain-appropriate optimization level.
 		"""
-		self.settingsOverrides["opt_level"] = i
-		self.settingsOverrides["opt_set"] = True
+		self._settingsOverrides["optLevel"] = i
+		self._settingsOverrides["_optLevel_set"] = True
 
 
-	def Debug( self, i ):
+	def SetDebugLevel( self, i ):
 		"""
 		Sets the debug level. Due to toolchain differences, this should be called per-toolchain, usually.
 
-		@type i: either str or int
-		@param i: A toolchain-appropriate debug level.
+		:type i: either str or int
+		:param i: A toolchain-appropriate debug level.
 		"""
-		self.settingsOverrides["debug_level"] = i
-		self.settingsOverrides["debug_set"] = True
+		self._settingsOverrides["debugLevel"] = i
+		self._settingsOverrides["_debugLevel_set"] = True
 
 
-	def Define( self, *args ):
+	def AddDefines( self, *args ):
 		"""
 		Add additionally defined preprocessor directives, as if each file had a #define directive at the very top.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of preprocessor directives to define
+		:type args: an arbitrary number of strings
+		:param args: The list of preprocessor directives to define
 		"""
-		if "defines" not in self.settingsOverrides:
-			self.settingsOverrides["defines"] = []
+		if "defines" not in self._settingsOverrides:
+			self._settingsOverrides["defines"] = []
 
-		self.settingsOverrides["defines"] += list( args )
+		self._settingsOverrides["defines"] += list( args )
 
 
 	def ClearDefines( self ):
 		"""clears the list of defines"""
-		self.settingsOverrides["defines"] = []
+		self._settingsOverrides["defines"] = []
 
 
-	def Undefine( self, *args ):
+	def AddUndefines( self, *args ):
 		"""
 		Add explicitly undefined preprocessor directives, as if each file had a #undef directive at the very top.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of preprocessor directives to undefine
+		:type args: an arbitrary number of strings
+		:param args: The list of preprocessor directives to undefine
 		"""
-		if "undefines" not in self.settingsOverrides:
-			self.settingsOverrides["undefines"] = []
+		if "undefines" not in self._settingsOverrides:
+			self._settingsOverrides["undefines"] = []
 
-		self.settingsOverrides["undefines"] += list( args )
+		self._settingsOverrides["undefines"] += list( args )
 
 
 	def ClearUndefines( self ):
 		"""clears the list of undefines"""
-		self.settingsOverrides["undefines"] = []
+		self._settingsOverrides["undefines"] = []
 
 
-	def CppCompiler( self, s ):
+	def SetCxxCommand( self, s ):
 		"""
 		Specify the compiler executable to be used for compiling C++ files. Ignored by the msvc toolchain.
 
-		@type s: str
-		@param s: Path to the executable to use for compilation
+		:type s: str
+		:param s: Path to the executable to use for compilation
 		"""
-		self.settingsOverrides["cxx"] = s
+		self._settingsOverrides["cxx"] = s
 
 
-	def CCompiler( self, s ):
+	def SetCcCommand( self, s ):
 		"""
 		Specify the compiler executable to be used for compiling C files. Ignored by the msvc toolchain.
 
-		@type s: str
-		@param s: Path to the executable to use for compilation
+		:type s: str
+		:param s: Path to the executable to use for compilation
 		"""
-		self.settingsOverrides["cc"] = s
+		self._settingsOverrides["cc"] = s
 
 
-	def Output( self, name, projectType = csbuild.ProjectType.Application ):
+	def SetOutput( self, name, projectType = csbuild.ProjectType.Application ):
 		"""
 		Sets the output options for this project.
 
-		@type name: str
-		@param name: The output name. Do not include an extension, and do not include the "lib" prefix for libraries on
+		:type name: str
+		:param name: The output name. Do not include an extension, and do not include the "lib" prefix for libraries on
 		Linux. These are added automatically.
 
-		@type projectType: csbuild.ProjectType
-		@param projectType: The type of project to compile. The options are:
+		:type projectType: csbuild.ProjectType
+		:param projectType: The type of project to compile. The options are:
 			- ProjectType.Application - on Windows, this will be built with a .exe extension. On Linux, there is no extension.
 			- ProjectType.SharedLibrary - on Windows, this will generate a .lib and a .dll.
 			On Linux, this will generate a .so and prefix "lib" to the output name.
 			- ProjectType.StaticLibrary - on Windows, this will generate a .lib. On Linux, this will generate a .a and prefix
-			"lib" ot the output name.
+			"lib" to the output name.
 		"""
-		self.settingsOverrides["output_name"] = name
-		self.settingsOverrides["type"] = projectType
+		self._settingsOverrides["outputName"] = name
+		self._settingsOverrides["type"] = projectType
 
 
-	def Extension( self, name ):
+	def SetOutputExtension( self, name ):
 		"""
 		This allows you to override the extension used for the output file.
 
-		@type name: str
-		@param name: The desired extension, including the .; i.e., csbuild.Extension( ".exe" )
+		:type name: str
+		:param name: The desired extension, including the .; i.e., csbuild.Extension( ".exe" )
 		"""
-		self.settingsOverrides["ext"] = name
+		self._settingsOverrides["ext"] = name
 
 
-	def OutDir( self, s ):
+	def SetOutputDirectory( self, s ):
 		"""
 		Specifies the directory in which to place the output file.
 
-		@type s: str
-		@param s: The output directory, relative to the current script location, NOT to the project working directory.
+		:type s: str
+		:param s: The output directory, relative to the current script location, NOT to the project working directory.
 		"""
-		self.settingsOverrides["output_dir"] = os.path.abspath( s )
-		self.settingsOverrides["output_dir_set"] = True
+		self._settingsOverrides["outputDir"] = os.path.abspath( s )
+		self._settingsOverrides["_outputDir_set"] = True
 
 
-	def ObjDir( self, s ):
+	def SetIntermediateDirectory( self, s ):
 		"""
 		Specifies the directory in which to place the intermediate .o or .obj files.
 
-		@type s: str
-		@param s: The object directory, relative to the current script location, NOT to the project working directory.
+		:type s: str
+		:param s: The object directory, relative to the current script location, NOT to the project working directory.
 		"""
-		self.settingsOverrides["obj_dir"] = os.path.abspath( s )
-		self.settingsOverrides["obj_dir_set"] = True
+		self._settingsOverrides["objDir"] = os.path.abspath( s )
+		self._settingsOverrides["_objDir_set"] = True
 
 
-	def EnableProfile( self ):
+	def EnableProfiling( self ):
 		"""
 		Optimize output for profiling
 		"""
-		self.settingsOverrides["profile"] = True
+		self._settingsOverrides["profile"] = True
 
 
-	def DisableProfile( self ):
+	def DisableProfiling( self ):
 		"""
 		Turns profiling optimizations back off
 		"""
-		self.settingsOverrides["profile"] = False
+		self._settingsOverrides["profile"] = False
 
 
-	def CppCompilerFlags( self, *args ):
+	def AddCxxCompilerFlags( self, *args ):
 		"""
 		Specifies a list of literal strings to be passed to the C++ compiler. As this is toolchain-specific, it should be
 		called on a per-toolchain basis.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of flags to be passed
+		:type args: an arbitrary number of strings
+		:param args: The list of flags to be passed
 		"""
-		if "cpp_compiler_flags" not in self.settingsOverrides:
-			self.settingsOverrides["cpp_compiler_flags"] = []
+		if "cxxCompilerFlags" not in self._settingsOverrides:
+			self._settingsOverrides["cxxCompilerFlags"] = []
 
-		self.settingsOverrides["cpp_compiler_flags"] += list( args )
+		self._settingsOverrides["cxxCompilerFlags"] += list( args )
 
 
-	def ClearCppCompilerFlags( self ):
+	def ClearCxxCompilerFlags( self ):
 		"""
 		Clears the list of literal C++ compiler flags.
 		"""
-		self.settingsOverrides["cpp_compiler_flags"] = []
+		self._settingsOverrides["cxxCompilerFlags"] = []
 
 
-	def CCompilerFlags( self, *args ):
+	def AddCcCompilerFlags( self, *args ):
 		"""
 		Specifies a list of literal strings to be passed to the C compiler. As this is toolchain-specific, it should be
 		called on a per-toolchain basis.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of flags to be passed
+		:type args: an arbitrary number of strings
+		:param args: The list of flags to be passed
 		"""
-		if "c_compiler_flags" not in self.settingsOverrides:
-			self.settingsOverrides["c_compiler_flags"] = []
+		if "ccCompilerFlags" not in self._settingsOverrides:
+			self._settingsOverrides["ccCompilerFlags"] = []
 
-		self.settingsOverrides["c_compiler_flags"] += list( args )
+		self._settingsOverrides["ccCompilerFlags"] += list( args )
 
 
-	def ClearCCompilerFlags( self ):
+	def ClearCcCompilerFlags( self ):
 		"""
 		Clears the list of literal C compiler flags.
 		"""
-		self.settingsOverrides["c_compiler_flags"] = []
+		self._settingsOverrides["ccCompilerFlags"] = []
 
 
-	def CompilerFlags( self, *args ):
+	def AddCompilerFlags( self, *args ):
 		"""
 		Specifies a list of literal strings to be passed to the both the C compiler and the C++ compiler.
 		As this is toolchain-specific, it should be called on a per-toolchain basis.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of flags to be passed
+		:type args: an arbitrary number of strings
+		:param args: The list of flags to be passed
 		"""
-		self.CCompilerFlags( *args )
-		self.CppCompilerFlags( *args )
+		self.AddCcCompilerFlags( *args )
+		self.AddCxxCompilerFlags( *args )
 
 
 	def ClearCompilerFlags( self ):
 		"""
 		Clears the list of literal compiler flags.
 		"""
-		self.ClearCCompilerFlags( )
-		self.ClearCppCompilerFlags( )
+		self.ClearCcCompilerFlags( )
+		self.ClearCxxCompilerFlags( )
 
 
-	def LinkerFlags( self, *args ):
+	def AddLinkerFlags( self, *args ):
 		"""
 		Specifies a list of literal strings to be passed to the linker. As this is toolchain-specific, it should be
 		called on a per-toolchain basis.
 
-		@type args: an arbitrary number of strings
-		@param args: The list of flags to be passed
+		:type args: an arbitrary number of strings
+		:param args: The list of flags to be passed
 		"""
-		if "linker_flags" not in self.settingsOverrides:
-			self.settingsOverrides["linker_flags"] = []
+		if "linkerFlags" not in self._settingsOverrides:
+			self._settingsOverrides["linkerFlags"] = []
 
-		self.settingsOverrides["linker_flags"] += list( args )
+		self._settingsOverrides["linkerFlags"] += list( args )
 
 
 	def ClearLinkerFlags( self ):
 		"""
 		Clears the list of literal linker flags.
 		"""
-		self.settingsOverrides["linker_flags"] = []
+		self._settingsOverrides["linkerFlags"] = []
 
 
 	def DisableChunkedBuild( self ):
 		"""Turn off the chunked/unity build system and build using individual files."""
-		self.settingsOverrides["use_chunks"] = False
+		self._settingsOverrides["useChunks"] = False
 
 
 	def EnableChunkedBuild( self ):
 		"""Turn chunked/unity build on and build using larger compilation units. This is the default."""
-		self.settingsOverrides["use_chunks"] = True
+		self._settingsOverrides["useChunks"] = True
 
 
-	def ChunkNumFiles( self, i ):
+	def SetNumFilesPerChunk( self, i ):
 		"""
 		Set the size of the chunks used in the chunked build. This indicates the number of files per compilation unit.
 		The default is 10.
@@ -515,14 +556,14 @@ class SettingsOverrider( object ):
 
 		Mutually exclusive with ChunkFilesize().
 
-		@type i: int
-		@param i: Number of files per chunk
+		:type i: int
+		:param i: Number of files per chunk
 		"""
-		self.settingsOverrides["chunk_size"] = i
-		self.settingsOverrides["chunk_filesize"] = 0
+		self._settingsOverrides["chunkSize"] = i
+		self._settingsOverrides["chunkFilesize"] = 0
 
 
-	def ChunkFilesize( self, i ):
+	def SetMaxChunkFileSize( self, i ):
 		"""
 		Sets the maximum combined filesize for a chunk. The default is 500000, and this is the default behavior.
 
@@ -530,16 +571,16 @@ class SettingsOverrider( object ):
 
 		Mutually exclusive with ChunkNumFiles()
 
-		@type i: int
-		@param i: Maximum size per chunk in bytes.
+		:type i: int
+		:param i: Maximum size per chunk in bytes.
 		"""
-		self.settingsOverrides["chunk_filesize"] = i
-		self.settingsOverrides["chunk_size"] = i
+		self._settingsOverrides["chunkFilesize"] = i
+		self._settingsOverrides["chunkSize"] = i
 
 
-	def ChunkTolerance( self, i ):
+	def SetChunkTolerance( self, i ):
 		"""
-		B{If building using ChunkSize():}
+		**If building using ChunkSize():**
 
 		Set the number of modified files below which a chunk will be split into individual files.
 
@@ -547,7 +588,7 @@ class SettingsOverrider( object ):
 		if more than three of its files need to be built; if three or less need to be built, they will
 		be built individually to save build time.
 
-		B{If building using ChunkFilesize():}
+		**If building using ChunkFilesize():**
 
 		Sets the total combined filesize of modified files within a chunk below which the chunk will be split into
 		individual files.
@@ -556,13 +597,13 @@ class SettingsOverrider( object ):
 		filesize of the files needing to be built exceeds 150kb. If less than 150kb worth of data needs to be built,
 		they will be built individually to save time.
 
-		@type i: int
-		@param i: Number of files required to trigger chunk building.
+		:type i: int
+		:param i: Number of files required to trigger chunk building.
 		"""
-		if "chunk_filesize" in self.settingsOverrides and self.settingsOverrides["chunk_filesize"] > 0:
-			self.settingsOverrides["chunk_size_tolerance"] = i
-		elif "chunk_size" in self.settingsOverrides and self.settingsOverrides["chunk_size"] > 0:
-			self.settingsOverrides["chunk_tolerance"] = i
+		if "chunkFilesize" in self._settingsOverrides and self._settingsOverrides["chunkFilesize"] > 0:
+			self._settingsOverrides["chunkSizeTolerance"] = i
+		elif "chunkSize" in self._settingsOverrides and self._settingsOverrides["chunkSize"] > 0:
+			self._settingsOverrides["chunkTolerance"] = i
 		else:
 			log.LOG_WARN( "Chunk size and chunk filesize are both zero or negative, cannot set a tolerance." )
 
@@ -574,20 +615,20 @@ class SettingsOverrider( object ):
 		NOTE that setting this will disable the automatic file gathering, so any files in the project directory that
 		are not specified here will not be built.
 
-		@type chunks: an arbitrary number of lists of strings
-		@param chunks: Lists containing filenames of files to be built,
+		:type chunks: an arbitrary number of lists of strings
+		:param chunks: Lists containing filenames of files to be built,
 		relativel to the script's location, NOT the project working directory. Each list will be built as one chunk.
 		"""
 		chunks = list( chunks )
-		self.settingsOverrides["forceChunks"] = chunks
+		self._settingsOverrides["forceChunks"] = chunks
 
 
 	def ClearChunks( self ):
 		"""Clears the explicitly set list of chunks and returns the behavior to the default."""
-		self.settingsOverrides["forceChunks"] = []
+		self._settingsOverrides["forceChunks"] = []
 
 
-	def HeaderRecursionLevel( self, i ):
+	def SetHeaderRecursionDepth( self, i ):
 		"""
 		Sets the depth to search for header files. If set to 0, it will search with unlimited recursion to find included
 		headers. Otherwise, it will travel to a depth of i to check headers. If set to 1, this will only check first-level
@@ -597,10 +638,10 @@ class SettingsOverrider( object ):
 		This is very useful if you're using a large library (such as boost) or a very large project and are experiencing
 		long waits prior to compilation.
 
-		@type i: int
-		@param i: Recursion depth for header examination
+		:type i: int
+		:param i: Recursion depth for header examination
 		"""
-		self.settingsOverrides["header_recursion"] = i
+		self._settingsOverrides["headerRecursionDepth"] = i
 
 
 	def IgnoreExternalHeaders( self ):
@@ -609,68 +650,68 @@ class SettingsOverrider( object ):
 		base project's directory and its subdirectories will be checked. This will speed up header checking, but if you
 		modify any external headers, you will need to manually --clean or --rebuild the project.
 		"""
-		self.settingsOverrides["ignore_external_headers"] = True
+		self._settingsOverrides["ignoreExternalHeaders"] = True
 
 
 	def DisableWarnings( self ):
 		"""
 		Disables all warnings.
 		"""
-		self.settingsOverrides["no_warnings"] = True
+		self._settingsOverrides["noWarnings"] = True
 
 
-	def DefaultTarget( self, s ):
+	def SetDefaultTarget( self, s ):
 		"""
 		Sets the default target if none is specified. The default value for this is release.
 
-		@type s: str
-		@param s: Name of the target to build for this project if none is specified.
+		:type s: str
+		:param s: Name of the target to build for this project if none is specified.
 		"""
-		self.settingsOverrides["default_target"] = s.lower( )
+		self._settingsOverrides["defaultTarget"] = s.lower( )
 
 
 	def Precompile( self, *args ):
 		"""
 		Explicit list of header files to precompile. Disables chunk precompile when called.
 
-		@type args: an arbitrary number of strings
-		@param args: The files to precompile.
+		:type args: an arbitrary number of strings
+		:param args: The files to precompile.
 		"""
-		self.settingsOverrides["precompile"] = []
+		self._settingsOverrides["precompile"] = []
 		for arg in list( args ):
-			self.settingsOverrides["precompile"].append( os.path.abspath( arg ) )
-		self.settingsOverrides["chunk_precompile"] = False
+			self._settingsOverrides["precompile"].append( os.path.abspath( arg ) )
+		self._settingsOverrides["chunkedPrecompile"] = False
 
 
 	def PrecompileAsC( self, *args ):
 		"""
 		Specifies header files that should be compiled as C headers instead of C++ headers.
 
-		@type args: an arbitrary number of strings
-		@param args: The files to specify as C files.
+		:type args: an arbitrary number of strings
+		:param args: The files to specify as C files.
 		"""
-		self.settingsOverrides["precompileAsC"] = []
+		self._settingsOverrides["precompileAsC"] = []
 		for arg in list( args ):
-			self.settingsOverrides["precompileAsC"].append( os.path.abspath( arg ) )
+			self._settingsOverrides["precompileAsC"].append( os.path.abspath( arg ) )
 
 
-	def ChunkPrecompile( self ):
+	def EnableChunkedPrecompile( self ):
 		"""
 		When this is enabled, all header files will be precompiled into a single "superheader" and included in all files.
 		"""
-		self.settingsOverrides["chunk_precompile"] = True
+		self._settingsOverrides["chunkedPrecompile"] = True
 
 
-	def NoPrecompile( self, *args ):
+	def DisablePrecompile( self, *args ):
 		"""
 		Disables precompilation and handles headers as usual.
 
-		@type args: an arbitrary number of strings
-		@param args: A list of files to disable precompilation for.
+		:type args: an arbitrary number of strings
+		:param args: A list of files to disable precompilation for.
 		If this list is empty, it will disable precompilation entirely.
 		"""
-		if "precompile_exclude" not in self.settingsOverrides:
-			self.settingsOverrides["precompile_exclude"] = []
+		if "precompileExcludeFiles" not in self._settingsOverrides:
+			self._settingsOverrides["precompileExcludeFiles"] = []
 
 		args = list( args )
 		if args:
@@ -679,95 +720,119 @@ class SettingsOverrider( object ):
 				if arg[0] != '/' and not arg.startswith( "./" ):
 					arg = "./" + arg
 				newargs.append( os.path.abspath( arg ) )
-				self.settingsOverrides["precompile_exclude"] += newargs
+				self._settingsOverrides["precompileExcludeFiles"] += newargs
 		else:
-			self.settingsOverrides["chunk_precompile"] = False
-			self.settingsOverrides["precompile"] = []
-			self.settingsOverrides["precompileAsC"] = []
+			self._settingsOverrides["chunkedPrecompile"] = False
+			self._settingsOverrides["precompile"] = []
+			self._settingsOverrides["precompileAsC"] = []
 
 
-	def EnableUnity( self ):
+	def EnableUnityBuild( self ):
 		"""
 		Turns on true unity builds, combining all files into only one compilation unit.
 		"""
-		self.settingsOverrides["unity"] = True
+		self._settingsOverrides["unity"] = True
 
 
-	def StaticRuntime( self ):
+	def LinkStaticRuntime( self ):
 		"""
 		Link against a static C/C++ runtime library.
 		"""
-		self.settingsOverrides["static_runtime"] = True
+		self._settingsOverrides["useStaticRuntime"] = True
 
 
-	def SharedRuntime( self ):
+	def LinkSharedRuntime( self ):
 		"""
 		Link against a dynamic C/C++ runtime library.
 		"""
-		self.settingsOverrides["static_runtime"] = False
+		self._settingsOverrides["useStaticRuntime"] = False
 
 
-	def OutputArchitecture( self, arch ):
+	def SetOutputArchitecture( self, arch ):
 		"""
 		Set the output architecture.
 
-		@type arch: ArchitectureType
-		@param arch: The desired architecture.
+		:type arch: ArchitectureType
+		:param arch: The desired architecture.
 		"""
-		self.settingsOverrides["outputArchitecture"] = arch
+		self._settingsOverrides["outputArchitecture"] = arch
 
-	def ExtraFiles( self, *args ):
+	def AddExtraFiles( self, *args ):
 		"""
 		Adds additional files to be compiled that are not in the project directory.
 
-		@type args: an arbitrary number of strings
-		@param args: A list of files to add.
+		:type args: an arbitrary number of strings
+		:param args: A list of files to add.
 		"""
-		if "extraFiles" not in self.settingsOverrides:
-			self.settingsOverrides["extraFiles"] = []
+		if "extraFiles" not in self._settingsOverrides:
+			self._settingsOverrides["extraFiles"] = []
 		for arg in list( args ):
 			for file in glob.glob( arg ):
-				self.settingsOverrides["extraFiles"].append( os.path.abspath( file ) )
+				self._settingsOverrides["extraFiles"].append( os.path.abspath( file ) )
 
 
 	def ClearExtraFiles(self):
 		"""
 		Clear the list of external files to compile.
 		"""
-		self.settingsOverrides["extraFiles"] = []
+		self._settingsOverrides["extraFiles"] = []
 
 
-	def ExtraDirs( self, *args ):
+	def AddExtraDirectories( self, *args ):
 		"""
 		Adds additional directories to search for files in.
 
-		@type args: an arbitrary number of strings
-		@param args: A list of directories to search.
+		:type args: an arbitrary number of strings
+		:param args: A list of directories to search.
 		"""
-		if "extraDirs" not in self.settingsOverrides:
-			self.settingsOverrides["extraDirs"] = []
+		if "extraDirs" not in self._settingsOverrides:
+			self._settingsOverrides["extraDirs"] = []
 		for arg in list( args ):
-			self.settingsOverrides["extraDirs"].append( os.path.abspath( arg ) )
+			self._settingsOverrides["extraDirs"].append( os.path.abspath( arg ) )
 
 
-	def ClearExtraDirs(self):
+	def AddExtraObjects( self, *args ):
+		"""
+		Adds additional objects to be passed to the linker that are not in the project directory.
+
+		:type args: an arbitrary number of strings
+		:param args: A list of objects to add.
+		"""
+		# Make sure the set exists before adding anything to it.
+		if not "extraObjs" in self._settingsOverrides:
+			self._settingsOverrides["extraObjs"] = set()
+
+		for arg in list( args ):
+			for file in glob.glob( arg ):
+				self._settingsOverrides["extraObjs"].add( os.path.abspath( file ) )
+
+
+	def ClearExtraObjects( self ):
+		"""
+		Clear the list of external objects to link.
+		"""
+		if "extraObjs" in self._settingsOverrides:
+			self._settingsOverrides["extraObjs"] = set()
+
+
+	def ClearExtraDirectories(self):
 		"""
 		Clear the list of external directories to search.
 		"""
-		self.settingsOverrides["extraDirs"] = []
+		self._settingsOverrides["extraDirs"] = []
 
 	def EnableWarningsAsErrors( self ):
 		"""
 		Promote all warnings to errors.
 		"""
-		self.settingsOverrides["warnings_as_errors"] = True
+		self._settingsOverrides["warningsAsErrors"] = True
 
 
 	def DisableWarningsAsErrors(self):
 		"""
 		Disable the promotion of warnings to errors.
 		"""
-		self.settingsOverrides["warnings_as_errors"] = False
+		self._settingsOverrides["warningsAsErrors"] = False
 
 	def DoNotChunkTogether(self, pattern, *additionalPatterns):
 		"""
@@ -776,13 +841,13 @@ class SettingsOverrider( object ):
 		File1 and File2 will never appear together in the same chunk. If you specify more than two files,
 		or a pattern that matches more than two files, no two files in the list will ever appear together.
 
-		@type pattern: string
-		@param pattern: Pattern to search for files with (i.e., Source/*_Unchunkable.cpp)
-		@type additionalPatterns: arbitrary number of optional strings
-		@param additionalPatterns: Additional patterns to compile the list of mutually exclusive files with
+		:type pattern: string
+		:param pattern: Pattern to search for files with (i.e., Source/*_Unchunkable.cpp)
+		:type additionalPatterns: arbitrary number of optional strings
+		:param additionalPatterns: Additional patterns to compile the list of mutually exclusive files with
 		"""
-		if "chunkMutexes" not in self.settingsOverrides:
-			self.settingsOverrides["chunkMutexes"] = {}
+		if "chunkMutexes" not in self._settingsOverrides:
+			self._settingsOverrides["chunkMutexes"] = {}
 		patterns = [pattern] + list(additionalPatterns)
 		mutexFiles = set()
 		for patternToMatch in patterns:
@@ -793,34 +858,77 @@ class SettingsOverrider( object ):
 			for file2 in mutexFiles:
 				if file1 == file2:
 					continue
-				if file1 not in self.settingsOverrides["chunkMutexes"]:
-					self.settingsOverrides["chunkMutexes"][file1] = set( [file2] )
+				if file1 not in self._settingsOverrides["chunkMutexes"]:
+					self._settingsOverrides["chunkMutexes"][file1] = set( [file2] )
 				else:
-					self.settingsOverrides["chunkMutexes"][file1].add(file2)
+					self._settingsOverrides["chunkMutexes"][file1].add(file2)
 
 	def DoNotChunk(self, *files):
 		"""
 		Prevents the listed files (or files matching the listed patterns) from ever being placed
 		in a chunk, ever.
 
-		@type files: arbitrary number of strings
-		@param files: filenames or patterns to exclude from chunking
+		:type files: arbitrary number of strings
+		:param files: filenames or patterns to exclude from chunking
 		"""
 
-		if "chunkExcludes" not in self.settingsOverrides:
-			self.settingsOverrides["chunkExcludes"] = set()
+		if "chunkExcludes" not in self._settingsOverrides:
+			self._settingsOverrides["chunkExcludes"] = set()
 
 		for pattern in list(files):
 			for filename in glob.glob(pattern):
-				self.settingsOverrides["chunkExcludes"].add(os.path.abspath(filename))
+				self._settingsOverrides["chunkExcludes"].add(os.path.abspath(filename))
 
-	def SupportedArchitectures(self, *architectures):
+
+	def SetStaticLinkMode(self, mode):
+		"""
+		Determines how static links are handled. With the msvc toolchain, iterative link times of a project with many libraries
+		can be significantly improved by setting this to :StaticLinkMode.LinkIntermediateObjects:. This will cause the linker to link
+		the .obj files used to make a library directly into the dependent project. Link times for full builds may be slightly slower,
+		but this will allow incremental linking to function when libraries are being changed. (Usually, changing a .lib results
+		in a full link.)
+
+		On most toolchains, this defaults to :StaticLinkMode.LinkLibs:. In debug mode only for the msvc toolchain, this defaults
+		to :StaticLinkMode.LinkIntermediateObjects:.
+
+		:type mode: :StaticLinkMode:
+		:param mode: The link mode to set
+		"""
+		self._settingsOverrides["linkMode"] = mode
+		self._settingsOverrides["linkModeSet"] = True
+
+
+	def SetUserData(self, key, value):
+		"""
+		Adds miscellaneous data to a project. This can be used later in a build event or in a format string.
+
+		This becomes an attribute on the project's userData member variable. As an example, to set a value:
+
+		csbuild.SetUserData("someData", "someValue")
+
+		Then to access it later:
+
+		project.userData.someData
+
+		:type key: str
+		:param key: name of the variable to set
+		:type value: any
+		:param value: value to set to that variable
+		"""
+		if "userData" not in self._settingsOverrides:
+			self._settingsOverrides["userData"] = csbuild.projectSettings.projectSettings.UserData()
+
+		self._settingsOverrides["userData"].dataDict[key] = value
+
+
+	def SetSupportedArchitectures(self, *architectures):
 		"""
 		Specifies the architectures that this project supports. This can be used to limit
 		--all-architectures from building everything supported by the toolchain, if the project
 		is not set up to support all of the toolchain's architectures.
 		"""
-		self.settingsOverrides["supportedArchitectures"] = set(architectures)
+		self._settingsOverrides["supportedArchitectures"] = set(architectures)
+
 
 @_shared_globals.MetaClass(ABCMeta)
 class linkerBase( SettingsOverrider ):
@@ -856,23 +964,23 @@ class linkerBase( SettingsOverrider ):
 		return SettingsOverrider.copy(self)
 
 	@staticmethod
-	def additional_args( parser ):
+	def AdditionalArgs( parser ):
 		"""
 		Asks for additional command-line arguments to be added by the toolchain.
 
-		@param parser: A parser for these arguments to be added to
-		@type parser: argparse.argument_parser
+		:param parser: A parser for these arguments to be added to
+		:type parser: argparse.argument_parser
 		"""
 		pass
 
 
 	@abstractmethod
-	def interrupt_exit_code( self ):
+	def InterruptExitCode( self ):
 		"""
 		Get the exit code that the compiler returns if the compile process is interrupted.
 
-		@return: The linker's interrupt exit code
-		@rtype: int
+		:return: The linker's interrupt exit code
+		:rtype: int
 		"""
 		pass
 
@@ -881,66 +989,66 @@ class linkerBase( SettingsOverrider ):
 		"""
 		Get the list of architectures supported by this linker.
 
-		@return: List of architectures
-		@rtype: list[str]
+		:return: List of architectures
+		:rtype: list[str]
 		"""
 		pass
 
 	@abstractmethod
-	def get_link_command( self, project, outputFile, objList ):
+	def GetLinkCommand( self, project, outputFile, objList ):
 		"""
 		Retrieves the command to be used for linking for this toolchain.
 
-		@param project: The project currently being linked, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being linked, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@param outputFile: The file that will be the result of the link operation.
-		@type outputFile: str
+		:param outputFile: The file that will be the result of the link operation.
+		:type outputFile: str
 
-		@param objList: List of objects being linked
-		@type objList: list[str]
+		:param objList: List of objects being linked
+		:type objList: list[str]
 
-		@return: The fully formatted link command
-		@rtype: str
+		:return: The fully formatted link command
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def find_library( self, project, library, library_dirs, force_static, force_shared ):
+	def FindLibrary( self, project, library, libraryDirs, force_static, force_shared ):
 		"""
 		Search for a library and verify that it is installed.
 
-		@param project: The project currently being checked, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being checked, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@param library: The library being searched for
-		@type library: str
+		:param library: The library being searched for
+		:type library: str
 
-		@param library_dirs: The directories to search for the library in
-		@type library_dirs: list[str]
+		:param libraryDirs: The directories to search for the library in
+		:type libraryDirs: list[str]
 
-		@param force_static: Whether or not this library should be forced to link statically
-		@type force_static: bool
+		:param force_static: Whether or not this library should be forced to link statically
+		:type force_static: bool
 
-		@param force_shared: Whether or not this library should be forced to link dynamically
-		@type force_shared: bool
+		:param force_shared: Whether or not this library should be forced to link dynamically
+		:type force_shared: bool
 
-		@return: The location to the library if found, or None
-		@rtype: str or None
+		:return: The location to the library if found, or None
+		:rtype: str or None
 		"""
 		pass
 
 	@abstractmethod
-	def get_default_extension( self, projectType ):
+	def GetDefaultOutputExtension( self, projectType ):
 		"""
-		Get the default extension for a given L{csbuild.ProjectType} value.
+		Get the default extension for a given :class:`csbuild.ProjectType` value.
 
-		@param projectType: The requested output type
-		@type projectType: L{csbuild.ProjectType}
+		:param projectType: The requested output type
+		:type projectType: :class:`csbuild.ProjectType`
 
-		@return: The extension, including the . (i.e., .so, .a, .lib, .exe)
-		@rtype: str
+		:return: The extension, including the . (i.e., .so, .a, .lib, .exe)
+		:rtype: str
 		"""
 		pass
 
@@ -986,23 +1094,23 @@ class compilerBase( SettingsOverrider ):
 		return SettingsOverrider.copy(self)
 
 	@staticmethod
-	def additional_args( parser ):
+	def AdditionalArgs( parser ):
 		"""
 		Asks for additional command-line arguments to be added by the toolchain.
 
-		@param parser: A parser for these arguments to be added to
-		@type parser: argparse.argument_parser
+		:param parser: A parser for these arguments to be added to
+		:type parser: argparse.argument_parser
 		"""
 		pass
 
 
 	@abstractmethod
-	def interrupt_exit_code( self ):
+	def InterruptExitCode( self ):
 		"""
 		Get the exit code that the compiler returns if the compile process is interrupted.
 
-		@return: The compiler's interrupt exit code
-		@rtype: int
+		:return: The compiler's interrupt exit code
+		:rtype: int
 		"""
 		pass
 
@@ -1011,14 +1119,14 @@ class compilerBase( SettingsOverrider ):
 		"""
 		Get the list of architectures supported by this compiler.
 
-		@return: List of architectures
-		@rtype: list[str]
+		:return: List of architectures
+		:rtype: list[str]
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_base_cxx_command( self, project ):
+	def GetBaseCxxCommand( self, project ):
 		"""
 		Retrieves the BASE C++ compiler command for this project.
 
@@ -1030,17 +1138,17 @@ class compilerBase( SettingsOverrider ):
 
 		Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.
 
-		@param project: The project currently being compiled, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being compiled, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@return: The base command string
-		@rtype: str
+		:return: The base command string
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_base_cc_command( self, project ):
+	def GetBaseCcCommand( self, project ):
 		"""
 		Retrieves the BASE C compiler command for this project.
 
@@ -1052,17 +1160,17 @@ class compilerBase( SettingsOverrider ):
 
 		Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.
 
-		@param project: The project currently being compiled, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being compiled, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@return: The base command string
-		@rtype: str
+		:return: The base command string
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_extended_command( self, baseCmd, project, forceIncludeFile, outObj, inFile ):
+	def GetExtendedCommand( self, baseCmd, project, forceIncludeFile, outObj, inFile ):
 		"""
 		Retrieves the EXTENDED C/C++ compiler command for compiling a specific file
 
@@ -1074,30 +1182,30 @@ class compilerBase( SettingsOverrider ):
 
 		Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.
 
-		@param baseCmd: The project's base command as returned from L{get_base_cxx_command} or L{get_base_cc_command},
+		:param baseCmd: The project's base command as returned from :get_base_cxx_command: or :get_base_cc_command:,
 		as is appropriate for the file being compiled.
-		@type baseCmd: str
+		:type baseCmd: str
 
-		@param project: The project currently being compiled, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being compiled, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@param forceIncludeFile: A precompiled header that's being forcefully included.
-		@type forceIncludeFile: str
+		:param forceIncludeFile: A precompiled header that's being forcefully included.
+		:type forceIncludeFile: str
 
-		@param outObj: The object file to be generated by this command
-		@type outObj: str
+		:param outObj: The object file to be generated by this command
+		:type outObj: str
 
-		@param inFile: The file being compiled
-		@type inFile: str
+		:param inFile: The file being compiled
+		:type inFile: str
 
-		@return: The extended command string, including the base command string
-		@rtype: str
+		:return: The extended command string, including the base command string
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_base_cxx_precompile_command( self, project ):
+	def GetBaseCxxPrecompileCommand( self, project ):
 		"""
 		Retrieves the BASE C++ compiler command for precompiling headers in this project.
 
@@ -1109,17 +1217,17 @@ class compilerBase( SettingsOverrider ):
 
 		Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.
 
-		@param project: The project currently being compiled, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being compiled, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@return: The base command string
-		@rtype: str
+		:return: The base command string
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_base_cc_precompile_command( self, project ):
+	def GetBaseCcPrecompileCommand( self, project ):
 		"""
 		Retrieves the BASE C compiler command for precompiling headers in this project.
 
@@ -1131,17 +1239,17 @@ class compilerBase( SettingsOverrider ):
 
 		Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.
 
-		@param project: The project currently being compiled, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being compiled, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@return: The base command string
-		@rtype: str
+		:return: The base command string
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_extended_precompile_command( self, baseCmd, project, forceIncludeFile, outObj, inFile ):
+	def GetExtendedPrecompileCommand( self, baseCmd, project, forceIncludeFile, outObj, inFile ):
 		"""
 		Retrieves the EXTENDED C/C++ compiler command for compiling a specific precompiled header
 
@@ -1153,79 +1261,79 @@ class compilerBase( SettingsOverrider ):
 
 		Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.
 
-		@param baseCmd: The project's base command as returned from L{get_base_cxx_command} or L{get_base_cc_command},
+		:param baseCmd: The project's base command as returned from :get_base_cxx_command: or :get_base_cc_command:,
 		as is appropriate for the file being compiled.
-		@type baseCmd: str
+		:type baseCmd: str
 
-		@param project: The project currently being compiled, which can be used to retrieve any needed information.
-		@type project: L{csbuild.projectSettings.projectSettings}
+		:param project: The project currently being compiled, which can be used to retrieve any needed information.
+		:type project: :class:`csbuild.projectSettings.projectSettings`
 
-		@param forceIncludeFile: Currently unused for precompiled headers.
-		@type forceIncludeFile: str
+		:param forceIncludeFile: Currently unused for precompiled headers.
+		:type forceIncludeFile: str
 
-		@param outObj: The object file to be generated by this command
-		@type outObj: str
+		:param outObj: The object file to be generated by this command
+		:type outObj: str
 
-		@param inFile: The file being compiled
-		@type inFile: str
+		:param inFile: The file being compiled
+		:type inFile: str
 
-		@return: The extended command string, including the base command string
-		@rtype: str
+		:return: The extended command string, including the base command string
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_pch_file( self, fileName ):
+	def GetPchFile( self, fileName ):
 		"""
 		Get the properly formatted precompiled header output file for a given header input.
 
-		@param fileName: The input header
-		@type fileName: str
+		:param fileName: The input header
+		:type fileName: str
 
-		@return: The formatted output file (i.e., "header.pch" or "header.gch")
-		@rtype: str
+		:return: The formatted output file (i.e., "header.pch" or "header.gch")
+		:rtype: str
 		"""
 		pass
 
 
 	@abstractmethod
-	def get_preprocess_command(self, baseCmd, project, inFile ):
+	def GetPreprocessCommand(self, baseCmd, project, inFile ):
 		return ""
 
 
 	@abstractmethod
-	def pragma_message(self, message):
+	def PragmaMessage(self, message):
 		return ""
 
 
-	def get_extra_post_preprocess_flags(self):
+	def GetExtraPostPreprocessorFlags(self):
 		return ""
 
 
-	def get_post_preprocess_sanitation_lines(self):
+	def GetPostPreprocessorSanitationLines(self):
 		return []
 
 	@abstractmethod
-	def get_obj_ext(self):
+	def GetObjExt(self):
 		"""
 		Get the extension for intermediate object files, including the .
 		"""
 		pass
 
 
-class toolchain( SettingsOverrider ):
+class toolchain( object ):
 	"""
 	Base class used for custom toolchains
 	To create a new toolchain, inherit from this class, and then use
-	L{csbuild.RegisterToolchain()<csbuild.RegisterToolchain>}
+	:func:`csbuild.RegisterToolchain`
 	"""
 	def __init__( self ):
 		"""
 		Default constructor
 		"""
 
-		self.settingsOverrides = { }
+		self._settingsOverrides = { }
 		self.tools = {}
 		self.activeTool = None
 		self.activeToolName = ""
@@ -1249,10 +1357,10 @@ class toolchain( SettingsOverrider ):
 
 		csbuild.Toolchain("msvc").Tool("compiler", "linker").SetMsvcVersion(110)
 
-		@type args: arbitrary number of strings
-		@param args: The list of tools to act on
+		:type args: arbitrary number of strings
+		:param args: The list of tools to act on
 
-		@return: A proxy object that enables functions to be applied to one or more specific tools.
+		:return: A proxy object that enables functions to be applied to one or more specific tools.
 		"""
 		tools = []
 		for arg in list( args ):
@@ -1328,10 +1436,10 @@ class toolchain( SettingsOverrider ):
 		"""
 		Create a deep copy of this toolchain.
 
-		@return: a copy of this toolchain
-		@rtype: toolchain
+		:return: a copy of this toolchain
+		:rtype: toolchain
 		"""
-		ret = SettingsOverrider.copy(self)
+		ret = toolchain()
 
 		for kvp in self.tools.items():
 			ret.tools[kvp[0]] = kvp[1].copy()

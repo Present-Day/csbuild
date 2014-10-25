@@ -1,0 +1,332 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>csbuild.toolchain_msvc module &mdash; csbuild 1.0.0b1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-csbuild.toolchain_msvc">
+<span id="csbuild-toolchain-msvc-module"></span><h1>csbuild.toolchain_msvc module<a class="headerlink" href="#module-csbuild.toolchain_msvc" title="Permalink to this headline">¶</a></h1>
+<p>Contains a plugin class for interfacing with MSVC</p>
+<dl class="class">
+<dt id="csbuild.toolchain_msvc.MsvcBase">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_msvc.</tt><tt class="descname">MsvcBase</tt><a class="headerlink" href="#csbuild.toolchain_msvc.MsvcBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.MsvcBase.GetMsvcBinPath">
+<tt class="descname">GetMsvcBinPath</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.MsvcBase.GetMsvcBinPath" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.MsvcBase.GetValidArchitectures">
+<tt class="descname">GetValidArchitectures</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.MsvcBase.GetValidArchitectures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.MsvcBase.InterruptExitCode">
+<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.MsvcBase.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.MsvcBase.SetMsvcVersion">
+<tt class="descname">SetMsvcVersion</tt><big>(</big><em>msvc_version</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.MsvcBase.SetMsvcVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the MSVC version</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>msvc_version</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; The version to compile with</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain_msvc.SubSystem">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_msvc.</tt><tt class="descname">SubSystem</tt><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enum to define the subsystem to compile against.</p>
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.BOOT_APPLICATION">
+<tt class="descname">BOOT_APPLICATION</tt><em class="property"> = 6</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.BOOT_APPLICATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.CONSOLE">
+<tt class="descname">CONSOLE</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.CONSOLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.DEFAULT">
+<tt class="descname">DEFAULT</tt><em class="property"> = 0</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.DEFAULT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.EFI_APPLICATION">
+<tt class="descname">EFI_APPLICATION</tt><em class="property"> = 7</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.EFI_APPLICATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.EFI_BOOT_SERVICE_DRIVER">
+<tt class="descname">EFI_BOOT_SERVICE_DRIVER</tt><em class="property"> = 8</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.EFI_BOOT_SERVICE_DRIVER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.EFI_ROM">
+<tt class="descname">EFI_ROM</tt><em class="property"> = 9</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.EFI_ROM" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.EFI_RUNTIME_DRIVER">
+<tt class="descname">EFI_RUNTIME_DRIVER</tt><em class="property"> = 10</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.EFI_RUNTIME_DRIVER" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.NATIVE">
+<tt class="descname">NATIVE</tt><em class="property"> = 4</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.NATIVE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.POSIX">
+<tt class="descname">POSIX</tt><em class="property"> = 5</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.POSIX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.WINDOWS">
+<tt class="descname">WINDOWS</tt><em class="property"> = 2</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.WINDOWS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.SubSystem.WINDOWS_CE">
+<tt class="descname">WINDOWS_CE</tt><em class="property"> = 3</em><a class="headerlink" href="#csbuild.toolchain_msvc.SubSystem.WINDOWS_CE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain_msvc.VisualStudioPackage">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_msvc.</tt><tt class="descname">VisualStudioPackage</tt><a class="headerlink" href="#csbuild.toolchain_msvc.VisualStudioPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper enum for filling in the MSVC version based on specific versions of Visual Studio.</p>
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.VisualStudioPackage.Vs2010">
+<tt class="descname">Vs2010</tt><em class="property"> = 100</em><a class="headerlink" href="#csbuild.toolchain_msvc.VisualStudioPackage.Vs2010" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.VisualStudioPackage.Vs2012">
+<tt class="descname">Vs2012</tt><em class="property"> = 110</em><a class="headerlink" href="#csbuild.toolchain_msvc.VisualStudioPackage.Vs2012" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_msvc.VisualStudioPackage.Vs2013">
+<tt class="descname">Vs2013</tt><em class="property"> = 120</em><a class="headerlink" href="#csbuild.toolchain_msvc.VisualStudioPackage.Vs2013" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain_msvc.compiler_msvc">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_msvc.</tt><tt class="descname">compiler_msvc</tt><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_msvc.MsvcBase" title="csbuild.toolchain_msvc.MsvcBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_msvc.MsvcBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.compilerBase" title="csbuild.toolchain.compilerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.compilerBase</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetBaseCcCommand">
+<tt class="descname">GetBaseCcCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetBaseCcCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetBaseCcPrecompileCommand">
+<tt class="descname">GetBaseCcPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetBaseCcPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetBaseCxxCommand">
+<tt class="descname">GetBaseCxxCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetBaseCxxCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetBaseCxxPrecompileCommand">
+<tt class="descname">GetBaseCxxPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetBaseCxxPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetExtendedCommand">
+<tt class="descname">GetExtendedCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetExtendedCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetExtendedPrecompileCommand">
+<tt class="descname">GetExtendedPrecompileCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetExtendedPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetObjExt">
+<tt class="descname">GetObjExt</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetObjExt" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetPchFile">
+<tt class="descname">GetPchFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetPchFile" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.GetPreprocessCommand">
+<tt class="descname">GetPreprocessCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.GetPreprocessCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.PragmaMessage">
+<tt class="descname">PragmaMessage</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.PragmaMessage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.compiler_msvc.preLinkStep">
+<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.compiler_msvc.preLinkStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain_msvc.linker_msvc">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_msvc.</tt><tt class="descname">linker_msvc</tt><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_msvc.MsvcBase" title="csbuild.toolchain_msvc.MsvcBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_msvc.MsvcBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.linkerBase" title="csbuild.toolchain.linkerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.linkerBase</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.FindLibrary">
+<tt class="descname">FindLibrary</tt><big>(</big><em>project</em>, <em>library</em>, <em>libraryDirs</em>, <em>force_static</em>, <em>force_shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.FindLibrary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.GetDefaultOutputExtension">
+<tt class="descname">GetDefaultOutputExtension</tt><big>(</big><em>projectType</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.GetDefaultOutputExtension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.GetLinkCommand">
+<tt class="descname">GetLinkCommand</tt><big>(</big><em>project</em>, <em>outputFile</em>, <em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.GetLinkCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.LinkDebugRuntime">
+<tt class="descname">LinkDebugRuntime</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.LinkDebugRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link with debug runtime</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.LinkReleaseRuntime">
+<tt class="descname">LinkReleaseRuntime</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.LinkReleaseRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link with release runtime</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.SetOutputSubSystem">
+<tt class="descname">SetOutputSubSystem</tt><big>(</big><em>subsystem</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.SetOutputSubSystem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the subsystem to compile against</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>subsystem</strong> (<em>A SubSystem enum value</em>) &#8211; The subsystem to be used to compile</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_msvc.linker_msvc.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_msvc.linker_msvc.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/csbuild.toolchain_msvc.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
