@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 """
-B{Project Generator Module}
+**Project Generator Module**
 
 Defines the base class for project generation.
 """
@@ -34,18 +34,18 @@ class project_generator( object ):
 	"""
 	Base class used for project generation.
 	To create a new project generator, inherit from this class, and then use
-	L{csbuild.RegisterProjectGenerator()<csbuild.RegisterProjectGenerator>}
+	:func:`csbuild.RegisterProjectGenerator`
 	"""
 	def __init__( self, path, solutionname, extraargs ):
 		"""
-		@param path: The output path for the solution
-		@type path: str
+		:param path: The output path for the solution
+		:type path: str
 
-		@param solutionname: The name for the output solution file
-		@type solutionname: str
+		:param solutionname: The name for the output solution file
+		:type solutionname: str
 
-		@param extraargs: Additional arguments specified by the user to be used in the solution's build command
-		@type extraargs: str
+		:param extraargs: Additional arguments specified by the user to be used in the solution's build command
+		:type extraargs: str
 		"""
 		self.rootpath = os.path.abspath( path )
 		self.solutionname = solutionname
@@ -53,19 +53,19 @@ class project_generator( object ):
 
 
 	@staticmethod
-	def additional_args( parser ):
+	def AdditionalArgs( parser ):
 		"""
 		Asks for additional command-line arguments to be added by the generator.
 
-		@param parser: A parser for these arguments to be added to
-		@type parser: argparse.argument_parser
+		:param parser: A parser for these arguments to be added to
+		:type parser: argparse.argument_parser
 		"""
 		pass
 
 
 	@abstractmethod
-	def write_solution( self ):
+	def WriteProjectFiles( self ):
 		"""
-		Actually performs the work of writing the solution
+		Actually performs the work of writing the project files to disk.
 		"""
 		pass

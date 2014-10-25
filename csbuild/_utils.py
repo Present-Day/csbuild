@@ -58,7 +58,7 @@ def remove_comments( text ):
 	return re.sub( pattern, replacer, text )
 
 
-def remove_whitespace( text ):
+def RemoveWhitespace( text ):
 	#This isn't working correctly, turning it off.
 	return text
 	#shlexer = shlex.shlex(text)
@@ -72,14 +72,14 @@ def remove_whitespace( text ):
 	#return "".join(out)
 
 
-def get_md5( inFile ):
+def GetMd5( inFile ):
 	if sys.version_info >= (3, 0):
-		return hashlib.md5( remove_whitespace( remove_comments( inFile.read( ) ) ).encode( 'utf-8' ) ).digest( )
+		return hashlib.md5( RemoveWhitespace( remove_comments( inFile.read( ) ) ).encode( 'utf-8' ) ).digest( )
 	else:
-		return hashlib.md5( remove_whitespace( remove_comments( inFile.read( ) ) ) ).digest( )
+		return hashlib.md5( RemoveWhitespace( remove_comments( inFile.read( ) ) ) ).digest( )
 
 
-def get_size( chunk ):
+def GetSize( chunk ):
 	size = 0
 	if type( chunk ) == list:
 		for source in chunk:
@@ -89,7 +89,7 @@ def get_size( chunk ):
 		return os.path.getsize( chunk )
 
 
-class threaded_build( threading.Thread ):
+class ThreadedBuild( threading.Thread ):
 	"""Multithreaded build system, launches a new thread to run the compiler in.
 	Uses a threading.BoundedSemaphore object to keep the number of threads equal to the number of processors on the
 	machine.
@@ -122,10 +122,10 @@ class threaded_build( threading.Thread ):
 			inc = ""
 			headerfile = ""
 			extension = "." + self.file.rsplit(".", 1)[1]
-			if extension in self.project.cExtensions or self.file == self.project.cheaderfile:
-				if( (self.project.chunk_precompile and self.project.cheaders) or self.project.precompileAsC )\
+			if extension in self.project.cExtensions or self.file == self.project.cHeaderFile:
+				if( (self.project.chunkedPrecompile and self.project.cHeaders) or self.project.precompileAsC )\
 					and not self.forPrecompiledHeader:
-					headerfile = self.project.cheaderfile
+					headerfile = self.project.cHeaderFile
 
 				if self.forPrecompiledHeader:
 					if self.originalIn in self.project.ccpcOverrideCmds:
@@ -136,11 +136,11 @@ class threaded_build( threading.Thread ):
 					if self.originalIn in self.project.ccOverrideCmds:
 						baseCommand = self.project.ccOverrideCmds[self.originalIn]
 					else:
-						baseCommand = self.project.cccmd
+						baseCommand = self.project.ccCmd
 			else:
-				if (self.project.precompile or self.project.chunk_precompile) \
+				if (self.project.precompile or self.project.chunkedPrecompile) \
 					and not self.forPrecompiledHeader:
-					headerfile = self.project.cppheaderfile
+					headerfile = self.project.cppHeaderFile
 
 				if self.forPrecompiledHeader:
 					if self.originalIn in self.project.cxxpcOverrideCmds:
@@ -151,7 +151,7 @@ class threaded_build( threading.Thread ):
 					if self.originalIn in self.project.cxxOverrideCmds:
 						baseCommand = self.project.cxxOverrideCmds[self.originalIn]
 					else:
-						baseCommand = self.project.cxxcmd
+						baseCommand = self.project.cxxCmd
 
 			indexes = {}
 			reverseIndexes = {}
@@ -162,12 +162,12 @@ class threaded_build( threading.Thread ):
 				project = self.project
 
 			if _shared_globals.profile:
-				profileIn = os.path.join( self.project.csbuild_dir, "profileIn")
+				profileIn = os.path.join( self.project.csbuildDir, "profileIn")
 				if not os.access(profileIn, os.F_OK):
 					os.makedirs(profileIn)
 				self.file = os.path.join( profileIn, "{}.{}".format(hashlib.md5(self.file).hexdigest(), self.file.rsplit(".", 1)[1]) )
 
-				preprocessCmd = self.project.activeToolchain.Compiler().get_preprocess_command( baseCommand, project, os.path.abspath( self.originalIn ))
+				preprocessCmd = self.project.activeToolchain.Compiler().GetPreprocessCommand( baseCommand, project, os.path.abspath( self.originalIn ))
 				if _shared_globals.show_commands:
 					print(preprocessCmd)
 
@@ -213,10 +213,10 @@ class threaded_build( threading.Thread ):
 								filename = filename.replace("\\\\", "\\")
 								reverseIndexes[highIndex] = filename
 
-							data.write(self.project.activeToolchain.Compiler().pragma_message("CSBPF[{}][{}]".format(lastFile, lastLine)))
+							data.write(self.project.activeToolchain.Compiler().PragmaMessage("CSBPF[{}][{}]".format(lastFile, lastLine)))
 							data.write("\n")
 						else:
-							data.write(self.project.activeToolchain.Compiler().pragma_message("CSBPL[{}][{}]".format(lastFile, lastLine)))
+							data.write(self.project.activeToolchain.Compiler().PragmaMessage("CSBPL[{}][{}]".format(lastFile, lastLine)))
 							data.write("\n")
 							lastLine += 1
 					if platform.system() == "Windows":
@@ -234,14 +234,14 @@ class threaded_build( threading.Thread ):
 			if headerfile:
 				inc += headerfile
 			if self.forPrecompiledHeader:
-				cmd = self.project.activeToolchain.Compiler().get_extended_precompile_command( baseCommand,
+				cmd = self.project.activeToolchain.Compiler().GetExtendedPrecompileCommand( baseCommand,
 					project, inc, self.obj, os.path.abspath( self.file ) )
 			else:
-				cmd = self.project.activeToolchain.Compiler().get_extended_command( baseCommand,
+				cmd = self.project.activeToolchain.Compiler().GetExtendedCommand( baseCommand,
 					project, inc, self.obj, os.path.abspath( self.file ) )
 
 			if _shared_globals.profile:
-				cmd += self.project.activeToolchain.Compiler().get_extra_post_preprocess_flags()
+				cmd += self.project.activeToolchain.Compiler().GetExtraPostPreprocessorFlags()
 
 			self.project.compileCommands[self.originalIn] = cmd
 			if _shared_globals.show_commands:
@@ -269,7 +269,7 @@ class threaded_build( threading.Thread ):
 			else:
 				timeFunc = time.time
 
-			sanitation_lines = self.project.activeToolchain.Compiler().get_post_preprocess_sanitation_lines()
+			sanitation_lines = self.project.activeToolchain.Compiler().GetPostPreprocessorSanitationLines()
 			ansi_escape = re.compile(r'\x1b[^m]*m')
 
 			summedTimes = {}
@@ -368,8 +368,8 @@ class threaded_build( threading.Thread ):
 				stripped_errors = re.sub(ansi_escape, '', errors.str)
 				self.project.compileOutput[self.originalIn] = output.str
 				self.project.compileErrors[self.originalIn] = stripped_errors
-				errorlist = self.project.activeToolchain.Compiler().parseOutput(output.str)
-				errorlist2 = self.project.activeToolchain.Compiler().parseOutput(stripped_errors)
+				errorlist = self.project.activeToolchain.Compiler()._parseOutput(output.str)
+				errorlist2 = self.project.activeToolchain.Compiler()._parseOutput(stripped_errors)
 				if errorlist is None:
 					errorlist = errorlist2
 				elif errorlist2 is not None:
@@ -403,7 +403,7 @@ class threaded_build( threading.Thread ):
 				_shared_globals.errorcount += errorcount
 
 			if ret:
-				if str( ret ) == str( self.project.activeToolchain.Compiler().interrupt_exit_code( ) ):
+				if str( ret ) == str( self.project.activeToolchain.Compiler().InterruptExitCode( ) ):
 					_shared_globals.lock.acquire( )
 					if not _shared_globals.interrupted:
 						log.LOG_ERROR( "Keyboard interrupt received. Aborting build." )
@@ -418,7 +418,7 @@ class threaded_build( threading.Thread ):
 				_shared_globals.build_success = False
 
 				self.project.mutex.acquire( )
-				self.project.compile_failed = True
+				self.project.compilationFailed = True
 				self.project.fileStatus[self.originalIn] = _shared_globals.ProjectState.FAILED
 				self.project.updated = True
 				self.project.mutex.release( )
@@ -427,13 +427,13 @@ class threaded_build( threading.Thread ):
 			# release...
 			#Meaning the build will hang. And for whatever reason ctrl+c won't fix it.
 			#ABSOLUTELY HAVE TO release the semaphore on ANY exception.
-			#if os.path.dirname(self.originalIn) == _csbuild_dir:
+			#if os.path.dirname(self.originalIn) == _csbuildDir:
 			#   os.remove(self.originalIn)
 			_shared_globals.semaphore.release( )
 
 			self.project.mutex.acquire( )
-			self.project.compile_failed = True
-			self.project.compiles_completed += 1
+			self.project.compilationFailed = True
+			self.project.compilationCompleted += 1
 			self.project.fileStatus[self.originalIn] = _shared_globals.ProjectState.FAILED
 			self.project.fileEnd[self.originalIn] = time.time()
 			self.project.updated = True
@@ -442,9 +442,9 @@ class threaded_build( threading.Thread ):
 			traceback.print_exc()
 			raise e
 		else:
-			#if os.path.dirname(self.originalIn) == _csbuild_dir:
+			#if os.path.dirname(self.originalIn) == _csbuildDir:
 			#   os.remove(self.originalIn)
-			#if inc or (not self.project.precompile and not self.project.chunk_precompile):
+			#if inc or (not self.project.precompile and not self.project.chunkedPrecompile):
 			#endtime = time.time( )
 			#_shared_globals.sgmutex.acquire( )
 			#_shared_globals.times.append( endtime - starttime )
@@ -453,20 +453,20 @@ class threaded_build( threading.Thread ):
 			_shared_globals.semaphore.release( )
 
 			self.project.mutex.acquire( )
-			self.project.compiles_completed += 1
+			self.project.compilationCompleted += 1
 			self.project.fileEnd[self.originalIn] = time.time()
 			self.project.updated = True
 			self.project.mutex.release( )
 
 
-def base_names( l ):
+def BaseNames( l ):
 	ret = []
 	for srcFile in l:
-		ret.append( os.path.basename( srcFile ).split( "." )[0] )
+		ret.append( os.path.basename( srcFile ) )
 	return ret
 
 
-def get_base_name( name ):
+def GetBaseName( name ):
 	"""This converts an output name into a directory name. It removes extensions, and also removes the prefix 'lib'"""
 	ret = name.split( "." )[0]
 	if ret.startswith( "lib" ):
@@ -474,10 +474,10 @@ def get_base_name( name ):
 	return ret
 
 
-def check_version( ):
+def CheckVersion( ):
 	"""Checks the currently installed version against the latest version, and logs a warning if the current version
 	is out of date."""
-	if "-Dev-" in csbuild.__version__:
+	if "Dev-" in csbuild.__version__:
 		return
 
 	if not os.access(os.path.expanduser( "~/.csbuild/check" ) , os.F_OK):
@@ -516,7 +516,7 @@ def check_version( ):
 			log.LOG_WARN( "Use 'sudo pip install csbuild --upgrade' to get the latest version." )
 
 
-def sortProjects( projects_to_sort ):
+def SortProjects( projects_to_sort ):
 	ret = []
 
 	already_errored_link = { }
@@ -576,7 +576,7 @@ def sortProjects( projects_to_sort ):
 	return sorted(dependencyFreeProjects, key=lambda proj: proj.priority, reverse=True) + ret
 
 
-def prepare_precompiles( ):
+def PreparePrecompiles( ):
 	if _shared_globals.disable_precompile:
 		return
 
@@ -584,13 +584,13 @@ def prepare_precompiles( ):
 	for project in _shared_globals.projects.values( ):
 		os.chdir( project.workingDirectory )
 
-		precompile_exclude = set( )
-		for exclude in project.precompile_exclude:
-			precompile_exclude |= set( glob.glob( exclude ) )
+		precompileExcludeFiles = set( )
+		for exclude in project.precompileExcludeFiles:
+			precompileExcludeFiles |= set( glob.glob( exclude ) )
 
 
 		def handleHeaderFile( headerfile, allheaders, forCpp ):
-			obj = project.activeToolchain.Compiler().get_pch_file( headerfile )
+			obj = project.activeToolchain.Compiler().GetPchFile( headerfile )
 
 			precompile = False
 			if not os.access(headerfile, os.F_OK ) or project.should_recompile( headerfile, obj, True ):
@@ -606,13 +606,13 @@ def prepare_precompiles( ):
 
 			with open( headerfile, "w" ) as f:
 				for header in allheaders:
-					if header in precompile_exclude:
+					if header in precompileExcludeFiles:
 						continue
 					externed = False
 
 					#TODO: This may no longer be relevant due to other changes, needs review.
 					isPlainC = False
-					if header in project.cheaders:
+					if header in project.cHeaders:
 						isPlainC = True
 					else:
 						extension = "." + header.rsplit(".", 1)[1]
@@ -626,55 +626,55 @@ def prepare_precompiles( ):
 						externed = True
 					f.write( '#include "{0}"\n'.format( os.path.abspath( header ) ) )
 					if forCpp:
-						project.cpppchcontents.append( header )
+						project.cppPchContents.append( header )
 					else:
-						project.cpchcontents.append( header )
+						project.cPchContents.append( header )
 					if externed:
 						f.write( "}\n" )
 			return True, headerfile
 
 
-		if project.chunk_precompile or project.precompile or project.precompileAsC:
+		if project.chunkedPrecompile or project.precompile or project.precompileAsC:
 
-			if project.chunk_precompile:
-				cppheaders = project.cppheaders
-				cheaders = project.cheaders
+			if project.chunkedPrecompile:
+				cppHeaders = project.cppHeaders
+				cHeaders = project.cHeaders
 			else:
 				if not project.hasCppFiles:
-					cppheaders = []
-					cheaders = project.precompile + project.precompileAsC
+					cppHeaders = []
+					cHeaders = project.precompile + project.precompileAsC
 				else:
-					cppheaders = project.precompile
-					cheaders = project.precompileAsC
+					cppHeaders = project.precompile
+					cHeaders = project.precompileAsC
 
-			if cppheaders:
-				project.cppheaderfile = os.path.join( project.csbuild_dir, "{}_cpp_precompiled_headers_{}.hpp".format(
-					project.output_name.split( '.' )[0],
+			if cppHeaders:
+				project.cppHeaderFile = os.path.join( project.csbuildDir, "{}_cpp_precompiled_headers_{}.hpp".format(
+					project.outputName.split( '.' )[0],
 					project.targetName ))
 
-				project.needs_cpp_precompile, project.cppheaderfile = handleHeaderFile( project.cppheaderfile, cppheaders, True )
+				project.needsPrecompileCpp, project.cppHeaderFile = handleHeaderFile( project.cppHeaderFile, cppHeaders, True )
 
-				_shared_globals.total_precompiles += int( project.needs_cpp_precompile )
+				_shared_globals.total_precompiles += int( project.needsPrecompileCpp )
 			else:
-				project.needs_cpp_precompile = False
+				project.needsPrecompileCpp = False
 
-			if cheaders:
-				project.cheaderfile = os.path.join(project.csbuild_dir, "{}_c_precompiled_headers_{}.h".format(
-					project.output_name.split( '.' )[0],
+			if cHeaders:
+				project.cHeaderFile = os.path.join(project.csbuildDir, "{}_c_precompiled_headers_{}.h".format(
+					project.outputName.split( '.' )[0],
 					project.targetName ))
 
-				project.needs_c_precompile, project.cheaderfile = handleHeaderFile( project.cheaderfile, cheaders, False )
+				project.needsPrecompileC, project.cHeaderFile = handleHeaderFile( project.cHeaderFile, cHeaders, False )
 
-				_shared_globals.total_precompiles += int( project.needs_c_precompile )
+				_shared_globals.total_precompiles += int( project.needsPrecompileC )
 			else:
-				project.needs_c_precompile = False
+				project.needsPrecompileC = False
 
 
 
 	os.chdir( wd )
 
 
-def chunked_build( ):
+def ChunkedBuild( ):
 	"""Prepares the files for a chunked build.
 	This function steps through all of the sources that are on the slate for compilation and determines whether each
 	needs to be compiled individually or as a chunk. If it is to be compiled as a chunk, this function also creates
@@ -703,10 +703,9 @@ def chunked_build( ):
 	if len(chunks_to_build) == 1 and not owningProject.unity:
 		chunkname = list(chunks_to_build)[0][1]
 
-		obj = os.path.join(owningProject.obj_dir, "{}_{}{}".format( chunkname,
-			owningProject.targetName, owningProject.activeToolchain.Compiler().get_obj_ext() ))
+		obj = GetSourceObjPath( owningProject, chunkname, sourceIsChunkPath=owningProject.ContainsChunk( chunkname ) )
 		for chunk in owningProject.chunks:
-			if get_chunk_name(owningProject.output_name, chunk ) == chunkname:
+			if GetChunkName( owningProject.outputName, chunk ) == chunkname:
 				if os.access(obj , os.F_OK):
 					os.remove(obj)
 					log.LOG_WARN_NOPUSH(
@@ -716,10 +715,10 @@ def chunked_build( ):
 					)
 					for filename in chunk:
 						owningProject.splitChunks[filename] = chunkname
-					owningProject.final_chunk_set = chunk
+					owningProject._finalChunkSet = chunk
 					return
 				else:
-					owningProject.final_chunk_set = owningProject.sources
+					owningProject._finalChunkSet = owningProject.sources
 					return
 		return
 
@@ -730,7 +729,7 @@ def chunked_build( ):
 				if source in chunk:
 					sources_in_this_chunk.append( source )
 
-			chunksize = get_size( sources_in_this_chunk )
+			chunksize = GetSize( sources_in_this_chunk )
 
 			extension = "." + chunk[0].rsplit(".", 1)[1]
 
@@ -740,13 +739,13 @@ def chunked_build( ):
 				extension = ".cpp"
 
 			if project.unity:
-				outFile = os.path.join( project.csbuild_dir, "{}_unity{}".format(
-					project.output_name,
+				outFile = os.path.join( project.csbuildDir, "{}_unity{}".format(
+					project.outputName,
 					extension
 				))
 			else:
-				outFile = os.path.join( project.csbuild_dir, "{}{}".format(
-					get_chunk_name( project.output_name, chunk ),
+				outFile = os.path.join( project.csbuildDir, "{}{}".format(
+					GetChunkName( project.outputName, chunk ),
 					extension
 				))
 
@@ -754,7 +753,7 @@ def chunked_build( ):
 			# ALWAYS SPLIT if we're building fewer total translation units than the number of threads available to us.
 			# Otherwise, follow the rules set by the project for chunk size, chunk filesize, etc.
 			if(
-				project.use_chunks
+				project.useChunks
 				and not _shared_globals.disable_chunks
 				and len( chunk ) > 1
 				and (
@@ -763,11 +762,11 @@ def chunked_build( ):
 				)
 				and (
 					(
-						project.chunk_size > 0
-						and len( sources_in_this_chunk ) > project.chunk_tolerance
+						project.chunkSize > 0
+						and len( sources_in_this_chunk ) > project.chunkTolerance
 					) or (
-						project.chunk_filesize > 0
-						and chunksize > project.chunk_size_tolerance
+						project.chunkFilesize > 0
+						and chunksize > project.chunkSizeTolerance
 					) or (
 						(
 							project.unity
@@ -783,20 +782,17 @@ def chunked_build( ):
 						f.write(
 							'#include "{0}" // {1} bytes\n'.format( os.path.abspath( source ),
 								os.path.getsize( source ) ) )
-						obj = os.path.join( project.obj_dir, "{}_{}{}".format(
-							os.path.basename( source ).split( '.' )[0],
-							project.targetName, project.activeToolchain.Compiler().get_obj_ext() ))
+						obj = GetSourceObjPath( project, source )
 						if os.access(obj , os.F_OK):
 							os.remove( obj )
 					f.write( "//Total size: {0} bytes".format( chunksize ) )
 
-				project.final_chunk_set.append( outFile )
+				project._finalChunkSet.append( outFile )
 				project.chunksByFile.update( { outFile : chunk } )
 			elif len( sources_in_this_chunk ) > 0:
-				chunkname = get_chunk_name( project.output_name, chunk )
-
-				obj = os.path.join( project.obj_dir, "{}_{}{}".format( chunkname,
-					project.targetName, project.activeToolchain.Compiler().get_obj_ext() ) )
+				chunkname = GetChunkName( project.outputName, chunk )
+				
+				obj = GetSourceObjPath( project, chunkname, sourceIsChunkPath=project.ContainsChunk( chunkname ) )
 				if os.access(obj , os.F_OK):
 					#If the chunk object exists, the last build of these files was the full chunk.
 					#We're now splitting the chunk to speed things up for future incremental builds,
@@ -807,7 +803,7 @@ def chunked_build( ):
 					#incremental builds (except on the first build after the chunk)
 					os.remove( obj )
 					add_chunk = chunk
-					if project.use_chunks and not _shared_globals.disable_chunks:
+					if project.useChunks and not _shared_globals.disable_chunks:
 						log.LOG_WARN_NOPUSH(
 							"Breaking chunk ({0}) into individual files to improve future iteration turnaround.".format(
 								chunk ) )
@@ -816,7 +812,7 @@ def chunked_build( ):
 							owningProject.splitChunks[filename] = chunkname
 				else:
 					add_chunk = sources_in_this_chunk
-					if project.use_chunks and not _shared_globals.disable_chunks:
+					if project.useChunks and not _shared_globals.disable_chunks:
 						log.LOG_INFO(
 							"Keeping chunk ({0}) broken up because chunking has been disabled for this project".format(
 								chunk ) )
@@ -829,14 +825,43 @@ def chunked_build( ):
 						log.LOG_INFO( "Going to build {0} as an individual file.".format( add_chunk ) )
 				else:
 					log.LOG_INFO( "Going to build chunk {0} as individual files.".format( add_chunk ) )
-				project.final_chunk_set += add_chunk
+				project._finalChunkSet += add_chunk
 				totalBuildThreads += len(add_chunk) - 1 #Subtract one because we're removing the chunk and adding its contents
 
-def get_chunk_name( projectName, chunk ):
-	chunk_names = "__".join( base_names( chunk ) )
+def GetChunkName( projectName, chunk ):
+	chunk_names = "__".join( BaseNames( chunk ) )
 	if sys.version_info >= (3, 0):
 		chunk_names = chunk_names.encode()
 	return "{}_chunk_{}".format(
 		projectName.split( '.' )[0],
 		hashlib.md5( chunk_names ).hexdigest()
 	)
+
+
+def GetChunkedObjPath(project, chunk):
+	if isinstance(chunk, list):
+		chunk = GetChunkName(project.outputName, chunk)
+	return os.path.join(project.objDir, "{}_{}{}".format(
+		chunk,
+		project.targetName,
+		project.activeToolchain.Compiler().GetObjExt()
+	))
+
+
+def GetSourceObjPath(project, source, sourceIsChunkPath=False):
+	if not sourceIsChunkPath:
+		objSubPath = os.path.dirname(os.path.relpath(os.path.abspath(source), project.workingDirectory))
+	else:
+		objSubPath = ""
+	return os.path.join(project.objDir, objSubPath, "{}_{}{}".format(
+		os.path.basename( source ).split( '.' )[0],
+		project.targetName,
+		project.activeToolchain.Compiler().GetObjExt() ) )
+
+
+def GetUnityChunkObjPath(project):
+	return os.path.join(project.objDir, "{}_unity_{}{}".format(
+		project.outputName,
+		project.targetName,
+		project.activeToolchain.Compiler().GetObjExt()
+	))

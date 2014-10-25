@@ -19,10 +19,7 @@
 # SOFTWARE.
 
 """
-B{Logging Module}
-
-@undocumented: LOG_MSG
-@undocumented: stdoutWriter
+**Logging Module**
 """
 
 import threading
@@ -57,8 +54,8 @@ def LOG_ERROR( msg ):
 	"""
 	Log an error message
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.RED, "ERROR", msg, 3 )
 	_shared_globals.errors.append( msg )
@@ -68,8 +65,8 @@ def LOG_WARN( msg ):
 	"""
 	Log a warning
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_WARN_NOPUSH( msg )
 	_shared_globals.warnings.append( msg )
@@ -79,8 +76,8 @@ def LOG_WARN_NOPUSH( msg ):
 	"""
 	Log a warning, don't push it to the list of warnings to be echoed at the end of compilation.
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.YELLOW, "WARN", msg, 3 )
 
@@ -89,8 +86,8 @@ def LOG_INFO( msg ):
 	"""
 	Log general info. This info only appears with -v specified.
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.CYAN, "INFO", msg, 1 )
 
@@ -99,8 +96,8 @@ def LOG_BUILD( msg ):
 	"""
 	Log info related to building
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.MAGENTA, "BUILD", msg, 2 )
 
@@ -109,8 +106,8 @@ def LOG_LINKER( msg ):
 	"""
 	Log info related to linking
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.GREEN, "LINKER", msg, 2 )
 
@@ -119,8 +116,8 @@ def LOG_THREAD( msg ):
 	"""
 	Log info related to threads, particularly stalls caused by waiting on another thread to finish
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.BLUE, "THREAD", msg, 2 )
 
@@ -129,8 +126,8 @@ def LOG_INSTALL( msg ):
 	"""
 	Log info related to the installer
 
-	@param msg: Text to log
-	@type msg: str
+	:param msg: Text to log
+	:type msg: str
 	"""
 	LOG_MSG( terminfo.TermColor.WHITE, "INSTALL", msg, 2 )
 
@@ -171,7 +168,7 @@ class stdoutWriter( object ):
 
 					totalCompletedCompiles = 0
 					for project in _shared_globals.sortedProjects:
-						totalCompletedCompiles += project.compiles_completed
+						totalCompletedCompiles += project.compilationCompleted
 
 					perc = 1 if _shared_globals.total_compiles == 0 else float(totalCompletedCompiles)/float(_shared_globals.total_compiles)
 					num = int( math.floor( perc * (_shared_globals.columns - 10) ) )

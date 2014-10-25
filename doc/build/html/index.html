@@ -1,0 +1,133 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>CSBuild Documentation &mdash; csbuild 1.0.0b1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="csbuild 1.0.0b1 documentation" href="#" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="csbuild-documentation">
+<h1>CSBuild Documentation<a class="headerlink" href="#csbuild-documentation" title="Permalink to this headline">¶</a></h1>
+<p>This is the API documentation for <a class="reference internal" href="csbuild.html#module-csbuild" title="csbuild"><tt class="xref py py-mod docutils literal"><span class="pre">csbuild</span></tt></a>. &lt;&#8211; Click here to begin exploring!</p>
+<p>CSBuild is a C/C++-oriented cross-platform build and project generation system written in Python. CSBuild attempts to address a number of issues with existing build systems, including performance, maintainability, and usability. CSBuild focuses on providing an easy, understandable, readable syntax for defining a build structure, and then providing your builds to you in the shortest possible amount of time.</p>
+<p>CSBuild uses a number of techniques to accomplish these goals.</p>
+<p>To achieve better build performance, CSBuild uses:</p>
+<ul class="simple">
+<li>&#8220;Chunked&#8221; builds with intelligent chunking and un-chunking to provide efficient builds for both full and incremental build types</li>
+<li>Effective parallel building, including parallelism between projects, between targets, between platforms - as long as there&#8217;s something for CSBuild to do, it will make maximum use of the number of threads you give it (which, by default, is the number of CPU cores available to your system)</li>
+<li>Incremental links with static libraries in the msvc toolchain - by linking in the intermediate .obj files instead of the .lib file, CSBuild is able to take advantage of incremental links even when static libraries have been changed</li>
+<li>Better change detection - CSBuild uses MD5 checksums in addition to modification dates to determine whether or not to recompile a translation unit</li>
+<li>Manual build order adjustments - CSBuild attempts to build things in an appropriate order for the dependency structure set up in the makefile, but sometimes this order isn&#8217;t the most ideal. To solve this problem, CSBuild allows you to set project build priorities to move long builds earlier in the process.</li>
+</ul>
+<p>To improve maintainability and usability:</p>
+<ul class="simple">
+<li>CSBuild makefiles themselves are written in Python, which for many developers provides an already-familiar syntax, and also provides the power of a full programming language to handle any special project needs</li>
+<li>Abstraction of compiler functionality - in many cases, setting a flag for all your project&#8217;s supported toolchains can be accomplished with a single function call</li>
+<li>Easy, human-readable organization - projects exist within clearly visible blocks of code, and if desired, can even be separated into their own individual files</li>
+<li>Source file discovery - instead of specifying your files (requiring maintanence every time your file structure changes), CSBuild searches a specified directory (or directories) to find files. Adding a new file is as simple as dropping it into the right folder.</li>
+</ul>
+<p>Beyond this, though, CSBuild also provides a number of powerful tools for build analysis.</p>
+<ul class="simple">
+<li>When compiling on the command line, CSBuild provides easily readable, color-coded output, with multiple levels of verbosity, so you can easily see and comprehend everything CSBuild does.</li>
+<li>In interactive terminals, CSBuild also provides a progress bar so you can watch your build and understand approximately how much build time is left. Even in non-interactive terminals, each file that is compiled includes in its output the current and total file counts, so you know where you are in your build process even without the progress bar.</li>
+<li>Each action presents calculated times associated with it, so you can see how long each project takes to build and link, and how long your total build process takes to complete, as well.</li>
+<li>Dependency graph generation - CSBuild can generate a dependency graph that can be opened with graphvis to see all the connections between your projects, and even the external libraries being linked into them. With the python &#8216;graphvis&#8217; module installed, CSBuild will also additionally take the extra step of converting this dependency graph directly to a .png image, so you can view it immediately without the intermediate step of opening it with graphvis.</li>
+</ul>
+<p>Even more powerful, however, are the GUI tools included with CSBuild (gui requires PyQt 4 to be present on your system). The GUI displays an unprecedented amount of information about your build process, providing you the tools and understanding needed to diagnose and improve build problems. Among the features of the CSBuild GUI are:</p>
+<ul class="simple">
+<li>Progress bars for every project, color-coded to show exactly what&#8217;s happening and when</li>
+<li>Expandable projects so you can see what files are pending, compiling, and finished at the micro level</li>
+<li>Readouts of build times for each project and file</li>
+<li>A timeline view that allows you to look back on the history of a build even after it finished and see what was happening at any given point in the build, and what items in the build took particularly long times to complete</li>
+<li>Error and warning parsing, with all output from the compiler and linker being organized into a hierarchical, expandable/collapsible view</li>
+<li>A built-in text editor for fixing build problems, which opens at the right line and column when you double-click any error</li>
+<li>A line-by-line build profiler, giving you minute detail about the compile costs of every line of code in your codebase, including costs of each #include, enabling you to find opportunities to shorten your build times by rearranging your code</li>
+</ul>
+<p>CSBuild is also cross-platform compatible (comes stock with toolchains to build using msvc, gcc, clang, or the android NDK, and provides easy and straight-forward methods of extending that support to additional toolchains, and has been tested to function on windows, mac, and linux, though it currently does not have support for frameworks on mac), and capable of generating project files that you can open with your favorite IDE, which will then execute csbuild to maintain optimal build speed. (Currently, CSBuild comes stock with generators for Visual Studio, SlickEdit, and QtCreator; Eclipse, XCode, NetBeans, and other additional IDEs will be added over time. As with toolchains, CSBuild also provides methods to extend the types of projects it can generate.)</p>
+<p>For an example CSBuild makefile, check out <a class="reference external" href="https://github.com/Present-Day/Sprawl/blob/master/make.py">https://github.com/Present-Day/Sprawl/blob/master/make.py</a></p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/index.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="#">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

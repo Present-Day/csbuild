@@ -1,0 +1,1627 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>csbuild.toolchain module &mdash; csbuild 1.0.0b1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0b1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-csbuild.toolchain">
+<span id="csbuild-toolchain-module"></span><h1>csbuild.toolchain module<a class="headerlink" href="#module-csbuild.toolchain" title="Permalink to this headline">¶</a></h1>
+<p><strong>Toolchain Module</strong></p>
+<p>Defines the base class for creating custom toolchains</p>
+<dl class="class">
+<dt id="csbuild.toolchain.ClassCombiner">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">ClassCombiner</tt><big>(</big><em>objs</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.ClassCombiner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Represents the combined return value of a multi-object accessor.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Variables:</th><td class="field-body"><strong>objs</strong> &#8211; The objects contained within the combined class</td>
+</tr>
+</tbody>
+</table>
+<p>&#64;itype objs: list[object]</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain.SettingsOverrider">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">SettingsOverrider</tt><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddCcCompilerFlags">
+<tt class="descname">AddCcCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the C compiler. As this is toolchain-specific, it should be
+called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddCompilerFlags">
+<tt class="descname">AddCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the both the C compiler and the C++ compiler.
+As this is toolchain-specific, it should be called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddCxxCompilerFlags">
+<tt class="descname">AddCxxCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddCxxCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the C++ compiler. As this is toolchain-specific, it should be
+called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddDefines">
+<tt class="descname">AddDefines</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddDefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add additionally defined preprocessor directives, as if each file had a #define directive at the very top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of preprocessor directives to define</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddExcludeDirectories">
+<tt class="descname">AddExcludeDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddExcludeDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude the given directories from the project. This may be called multiple times to add additional excludes.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be excluded.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddExcludeFiles">
+<tt class="descname">AddExcludeFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddExcludeFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exclude the given files from the project. This may be called multiple times to add additional excludes.
+Files are relative to the location of the script itself, not the specified project working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of files to be excluded.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddExtraDirectories">
+<tt class="descname">AddExtraDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddExtraDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds additional directories to search for files in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of directories to search.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddExtraFiles">
+<tt class="descname">AddExtraFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddExtraFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds additional files to be compiled that are not in the project directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of files to add.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddExtraObjects">
+<tt class="descname">AddExtraObjects</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddExtraObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds additional objects to be passed to the linker that are not in the project directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of objects to add.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddFrameworkDirectories">
+<tt class="descname">AddFrameworkDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddFrameworkDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the given directories for frameworks. This may be called multiple times to add additional directories.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be searched.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddFrameworks">
+<tt class="descname">AddFrameworks</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddFrameworks" title="Permalink to this definition">¶</a></dt>
+<dd><p>When linking the project, link against the given frameworks. This may be called multiple times to add additional frameworks.</p>
+<p>These will have no effect on toolchains that do not support frameworks.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of frameworks to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddIncludeDirectories">
+<tt class="descname">AddIncludeDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddIncludeDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the given directories for include headers. This may be called multiple times to add additional directories.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<p>In the gcc toolchain, /usr/include and /usr/local/include (or the platform appropriate equivalents) will always
+be appended to the end of this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be searched.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddLibraries">
+<tt class="descname">AddLibraries</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>When linking the project, link in the given libraries. This may be called multiple times to add additional libraries.</p>
+<p>In the gcc toolchain, these will all be prefixed with &#8220;lib&#8221; when looking for the file to link. I.e.,
+csbuild.Libraries(&#8220;MyLib&#8221;) will link libMyLib.so or libMyLib.a.</p>
+<p>For compatibility, the msvc toolchain will search for the library exactly as specified, and if it can&#8217;t find it,
+will then search for it with the lib prefix. I.e., csbuild.Libraries(&#8220;MyLib&#8221;) will first search for MyLib.lib,
+and if that isn&#8217;t found, will then search for libMyLib.lib.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddLibraryDirectories">
+<tt class="descname">AddLibraryDirectories</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddLibraryDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search the given directories for libraries to link. This may be called multiple times to add additional directories.
+Directories are relative to the location of the script itself, not the specified project working directory.</p>
+<p>In the gcc toolchain, /usr/lib and /usr/local/lib (or the platform appropriate equivalents) will always
+be appended to the end of this list.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of directories to be searched.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddLinkerFlags">
+<tt class="descname">AddLinkerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddLinkerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a list of literal strings to be passed to the linker. As this is toolchain-specific, it should be
+called on a per-toolchain basis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of flags to be passed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddSharedLibraries">
+<tt class="descname">AddSharedLibraries</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddSharedLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to csbuild.toolchain.Libraries, but forces these libraries to be linked dynamically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddStaticLibraries">
+<tt class="descname">AddStaticLibraries</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddStaticLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Similar to csbuild.toolchain.Libraries, but forces these libraries to be linked statically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of libraries to link in.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddUndefines">
+<tt class="descname">AddUndefines</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddUndefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add explicitly undefined preprocessor directives, as if each file had a #undef directive at the very top.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The list of preprocessor directives to undefine</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearCcCompilerFlags">
+<tt class="descname">ClearCcCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal C compiler flags.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearChunks">
+<tt class="descname">ClearChunks</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearChunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the explicitly set list of chunks and returns the behavior to the default.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearCompilerFlags">
+<tt class="descname">ClearCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal compiler flags.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearCxxCompilerFlags">
+<tt class="descname">ClearCxxCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearCxxCompilerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal C++ compiler flags.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearDefines">
+<tt class="descname">ClearDefines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearDefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>clears the list of defines</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearExtraDirectories">
+<tt class="descname">ClearExtraDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearExtraDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of external directories to search.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearExtraFiles">
+<tt class="descname">ClearExtraFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearExtraFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of external files to compile.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearExtraObjects">
+<tt class="descname">ClearExtraObjects</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearExtraObjects" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the list of external objects to link.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearFrameworkDirectories">
+<tt class="descname">ClearFrameworkDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearFrameworkDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the framework directories, including the defaults.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearFrameworks">
+<tt class="descname">ClearFrameworks</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearFrameworks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of framworks</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearIncludeDirectories">
+<tt class="descname">ClearIncludeDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearIncludeDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the include directories, including the defaults.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearLibDirectories">
+<tt class="descname">ClearLibDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearLibDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the library directories, including the defaults</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearLibraries">
+<tt class="descname">ClearLibraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of libraries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearLinkerFlags">
+<tt class="descname">ClearLinkerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearLinkerFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of literal linker flags.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearSharedLibraries">
+<tt class="descname">ClearSharedLibraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearSharedLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of libraries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearStaticLibraries">
+<tt class="descname">ClearStaticLibraries</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearStaticLibraries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of libraries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearUndefines">
+<tt class="descname">ClearUndefines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearUndefines" title="Permalink to this definition">¶</a></dt>
+<dd><p>clears the list of undefines</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DisableChunkedBuild">
+<tt class="descname">DisableChunkedBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DisableChunkedBuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn off the chunked/unity build system and build using individual files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DisablePrecompile">
+<tt class="descname">DisablePrecompile</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DisablePrecompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables precompilation and handles headers as usual.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; A list of files to disable precompilation for.</td>
+</tr>
+</tbody>
+</table>
+<p>If this list is empty, it will disable precompilation entirely.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DisableProfiling">
+<tt class="descname">DisableProfiling</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DisableProfiling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns profiling optimizations back off</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DisableWarnings">
+<tt class="descname">DisableWarnings</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DisableWarnings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disables all warnings.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DisableWarningsAsErrors">
+<tt class="descname">DisableWarningsAsErrors</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DisableWarningsAsErrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable the promotion of warnings to errors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DoNotChunk">
+<tt class="descname">DoNotChunk</tt><big>(</big><em>*files</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DoNotChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prevents the listed files (or files matching the listed patterns) from ever being placed
+in a chunk, ever.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>files</strong> (<em>arbitrary number of strings</em>) &#8211; filenames or patterns to exclude from chunking</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.DoNotChunkTogether">
+<tt class="descname">DoNotChunkTogether</tt><big>(</big><em>pattern</em>, <em>*additionalPatterns</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.DoNotChunkTogether" title="Permalink to this definition">¶</a></dt>
+<dd><p>Makes files matching the given patterns mutually exclusive for chunking.
+I.e., if you call this with DoNotChunkTogether(&#8220;File1.cpp&#8221;, &#8220;File2.cpp&#8221;), it guarantees
+File1 and File2 will never appear together in the same chunk. If you specify more than two files,
+or a pattern that matches more than two files, no two files in the list will ever appear together.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>pattern</strong> (<a class="reference external" href="http://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Pattern to search for files with (i.e., Source/<a href="#id1"><span class="problematic" id="id2">*</span></a>_Unchunkable.cpp)</li>
+<li><strong>additionalPatterns</strong> (<em>arbitrary number of optional strings</em>) &#8211; Additional patterns to compile the list of mutually exclusive files with</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableChunkedBuild">
+<tt class="descname">EnableChunkedBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableChunkedBuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turn chunked/unity build on and build using larger compilation units. This is the default.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableChunkedPrecompile">
+<tt class="descname">EnableChunkedPrecompile</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableChunkedPrecompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>When this is enabled, all header files will be precompiled into a single &#8220;superheader&#8221; and included in all files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableHeaderInstall">
+<tt class="descname">EnableHeaderInstall</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableHeaderInstall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables installation of the project&#8217;s headers
+Default target is /usr/local/include, unless the &#8211;prefix option is specified.
+If &#8211;prefix is specified, the target will be <em>{prefix</em>}/include</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Override directory - i.e., if you specify this as &#8220;headers&#8221;, the headers will be installed</td>
+</tr>
+</tbody>
+</table>
+<p>to <em>{prefix</em>}/headers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableOutputInstall">
+<tt class="descname">EnableOutputInstall</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableOutputInstall" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enables installation of the compiled output file.
+Default target is /usr/local/lib, unless the &#8211;prefix option is specified.
+If &#8211;prefix is specified, the target will be <em>{prefix</em>}/lib</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Override directory - i.e., if you specify this as &#8220;libraries&#8221;, the libraries will be installed</td>
+</tr>
+</tbody>
+</table>
+<p>to <em>{prefix</em>}/libraries.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableProfiling">
+<tt class="descname">EnableProfiling</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableProfiling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Optimize output for profiling</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableUnityBuild">
+<tt class="descname">EnableUnityBuild</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableUnityBuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Turns on true unity builds, combining all files into only one compilation unit.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableWarningsAsErrors">
+<tt class="descname">EnableWarningsAsErrors</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableWarningsAsErrors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Promote all warnings to errors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.IgnoreExternalHeaders">
+<tt class="descname">IgnoreExternalHeaders</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.IgnoreExternalHeaders" title="Permalink to this definition">¶</a></dt>
+<dd><p>If this option is set, external headers will not be checked or followed when building. Only headers within the
+base project&#8217;s directory and its subdirectories will be checked. This will speed up header checking, but if you
+modify any external headers, you will need to manually &#8211;clean or &#8211;rebuild the project.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.LinkSharedRuntime">
+<tt class="descname">LinkSharedRuntime</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.LinkSharedRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link against a dynamic C/C++ runtime library.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.LinkStaticRuntime">
+<tt class="descname">LinkStaticRuntime</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.LinkStaticRuntime" title="Permalink to this definition">¶</a></dt>
+<dd><p>Link against a static C/C++ runtime library.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.Precompile">
+<tt class="descname">Precompile</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.Precompile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicit list of header files to precompile. Disables chunk precompile when called.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The files to precompile.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.PrecompileAsC">
+<tt class="descname">PrecompileAsC</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.PrecompileAsC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies header files that should be compiled as C headers instead of C++ headers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>an arbitrary number of strings</em>) &#8211; The files to specify as C files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetCcCommand">
+<tt class="descname">SetCcCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetCcCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the compiler executable to be used for compiling C files. Ignored by the msvc toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Path to the executable to use for compilation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetChunkTolerance">
+<tt class="descname">SetChunkTolerance</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetChunkTolerance" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>If building using ChunkSize():</strong></p>
+<p>Set the number of modified files below which a chunk will be split into individual files.</p>
+<p>For example, if you set this to 3 (the default), then a chunk will be built as a chunk
+if more than three of its files need to be built; if three or less need to be built, they will
+be built individually to save build time.</p>
+<p><strong>If building using ChunkFilesize():</strong></p>
+<p>Sets the total combined filesize of modified files within a chunk below which the chunk will be split into
+individual files.</p>
+<p>For example, if you set this to 150000 (the default), then a chunk will be built as a chunk if the total
+filesize of the files needing to be built exceeds 150kb. If less than 150kb worth of data needs to be built,
+they will be built individually to save time.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of files required to trigger chunk building.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetChunks">
+<tt class="descname">SetChunks</tt><big>(</big><em>*chunks</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetChunks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Explicitly set the chunks used as compilation units.</p>
+<p>NOTE that setting this will disable the automatic file gathering, so any files in the project directory that
+are not specified here will not be built.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>chunks</strong> (<em>an arbitrary number of lists of strings</em>) &#8211; Lists containing filenames of files to be built,</td>
+</tr>
+</tbody>
+</table>
+<p>relativel to the script&#8217;s location, NOT the project working directory. Each list will be built as one chunk.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetCxxCommand">
+<tt class="descname">SetCxxCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetCxxCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify the compiler executable to be used for compiling C++ files. Ignored by the msvc toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Path to the executable to use for compilation</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetDebugLevel">
+<tt class="descname">SetDebugLevel</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetDebugLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the debug level. Due to toolchain differences, this should be called per-toolchain, usually.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>either str or int</em>) &#8211; A toolchain-appropriate debug level.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetDefaultTarget">
+<tt class="descname">SetDefaultTarget</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetDefaultTarget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the default target if none is specified. The default value for this is release.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Name of the target to build for this project if none is specified.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetHeaderInstallSubdirectory">
+<tt class="descname">SetHeaderInstallSubdirectory</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetHeaderInstallSubdirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies a subdirectory of <em>{prefix</em>}/include in which to install the headers.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The desired subdirectory; i.e., if you specify this as &#8220;myLib&#8221;, the headers will be</td>
+</tr>
+</tbody>
+</table>
+<p>installed under <em>{prefix</em>}/include/myLib.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetHeaderRecursionDepth">
+<tt class="descname">SetHeaderRecursionDepth</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetHeaderRecursionDepth" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the depth to search for header files. If set to 0, it will search with unlimited recursion to find included
+headers. Otherwise, it will travel to a depth of i to check headers. If set to 1, this will only check first-level
+headers and not check headers included in other headers; if set to 2, this will check headers included in headers,
+but not headers included by <em>those</em> headers; etc.</p>
+<p>This is very useful if you&#8217;re using a large library (such as boost) or a very large project and are experiencing
+long waits prior to compilation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Recursion depth for header examination</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetIntermediateDirectory">
+<tt class="descname">SetIntermediateDirectory</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetIntermediateDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the directory in which to place the intermediate .o or .obj files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The object directory, relative to the current script location, NOT to the project working directory.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetMaxChunkFileSize">
+<tt class="descname">SetMaxChunkFileSize</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetMaxChunkFileSize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the maximum combined filesize for a chunk. The default is 500000, and this is the default behavior.</p>
+<p>This value is ignored if SetChunks is called.</p>
+<p>Mutually exclusive with ChunkNumFiles()</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Maximum size per chunk in bytes.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetNumFilesPerChunk">
+<tt class="descname">SetNumFilesPerChunk</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetNumFilesPerChunk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the size of the chunks used in the chunked build. This indicates the number of files per compilation unit.
+The default is 10.</p>
+<p>This value is ignored if SetChunks is called.</p>
+<p>Mutually exclusive with ChunkFilesize().</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of files per chunk</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetOptimizationLevel">
+<tt class="descname">SetOptimizationLevel</tt><big>(</big><em>i</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetOptimizationLevel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the optimization level. Due to toolchain differences, this should be called per-toolchain, usually.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>i</strong> (<em>either str or int</em>) &#8211; A toolchain-appropriate optimization level.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetOutput">
+<tt class="descname">SetOutput</tt><big>(</big><em>name</em>, <em>projectType=0</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetOutput" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the output options for this project.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The output name. Do not include an extension, and do not include the &#8220;lib&#8221; prefix for libraries on</td>
+</tr>
+</tbody>
+</table>
+<p>Linux. These are added automatically.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>projectType</strong> (<a class="reference internal" href="csbuild.html#csbuild.ProjectType" title="csbuild.ProjectType"><em>csbuild.ProjectType</em></a>) &#8211; The type of project to compile. The options are:
+- ProjectType.Application - on Windows, this will be built with a .exe extension. On Linux, there is no extension.
+- ProjectType.SharedLibrary - on Windows, this will generate a .lib and a .dll.
+On Linux, this will generate a .so and prefix &#8220;lib&#8221; to the output name.
+- ProjectType.StaticLibrary - on Windows, this will generate a .lib. On Linux, this will generate a .a and prefix
+&#8220;lib&#8221; to the output name.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetOutputArchitecture">
+<tt class="descname">SetOutputArchitecture</tt><big>(</big><em>arch</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetOutputArchitecture" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the output architecture.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arch</strong> (<em>ArchitectureType</em>) &#8211; The desired architecture.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetOutputDirectory">
+<tt class="descname">SetOutputDirectory</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetOutputDirectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the directory in which to place the output file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The output directory, relative to the current script location, NOT to the project working directory.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetOutputExtension">
+<tt class="descname">SetOutputExtension</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetOutputExtension" title="Permalink to this definition">¶</a></dt>
+<dd><p>This allows you to override the extension used for the output file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The desired extension, including the .; i.e., csbuild.Extension( &#8221;.exe&#8221; )</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetStaticLinkMode">
+<tt class="descname">SetStaticLinkMode</tt><big>(</big><em>mode</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetStaticLinkMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines how static links are handled. With the msvc toolchain, iterative link times of a project with many libraries
+can be significantly improved by setting this to :StaticLinkMode.LinkIntermediateObjects:. This will cause the linker to link
+the .obj files used to make a library directly into the dependent project. Link times for full builds may be slightly slower,
+but this will allow incremental linking to function when libraries are being changed. (Usually, changing a .lib results
+in a full link.)</p>
+<p>On most toolchains, this defaults to :StaticLinkMode.LinkLibs:. In debug mode only for the msvc toolchain, this defaults
+to :StaticLinkMode.LinkIntermediateObjects:.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mode</strong> &#8211; The link mode to set</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetSupportedArchitectures">
+<tt class="descname">SetSupportedArchitectures</tt><big>(</big><em>*architectures</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetSupportedArchitectures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies the architectures that this project supports. This can be used to limit
+&#8211;all-architectures from building everything supported by the toolchain, if the project
+is not set up to support all of the toolchain&#8217;s architectures.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetUserData">
+<tt class="descname">SetUserData</tt><big>(</big><em>key</em>, <em>value</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetUserData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds miscellaneous data to a project. This can be used later in a build event or in a format string.</p>
+<p>This becomes an attribute on the project&#8217;s userData member variable. As an example, to set a value:</p>
+<p>csbuild.SetUserData(&#8220;someData&#8221;, &#8220;someValue&#8221;)</p>
+<p>Then to access it later:</p>
+<p>project.userData.someData</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>key</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; name of the variable to set</li>
+<li><strong>value</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#any" title="(in Python v2.7)"><em>any</em></a>) &#8211; value to set to that variable</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain.compilerBase">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">compilerBase</tt><a class="headerlink" href="#csbuild.toolchain.compilerBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.SettingsOverrider" title="csbuild.toolchain.SettingsOverrider"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.SettingsOverrider</span></tt></a></p>
+<dl class="staticmethod">
+<dt id="csbuild.toolchain.compilerBase.AdditionalArgs">
+<em class="property">static </em><tt class="descname">AdditionalArgs</tt><big>(</big><em>parser</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.AdditionalArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asks for additional command-line arguments to be added by the toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parser</strong> (<em>argparse.argument_parser</em>) &#8211; A parser for these arguments to be added to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetBaseCcCommand">
+<tt class="descname">GetBaseCcCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetBaseCcCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the BASE C compiler command for this project.</p>
+<dl class="docutils">
+<dt>The difference between the base command and the extended command is as follows:</dt>
+<dd><ol class="first arabic simple">
+<li>The base command does not include any specific files in it</li>
+</ol>
+<p class="last">2. The base command should be seen as the full list of compiler settings that will force a full recompile
+if ANY of them are changed. For example, optimization settings should be included here because a change to
+that setting should cause all object files to be regenerated.</p>
+</dd>
+</dl>
+<p>Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being compiled, which can be used to retrieve any needed information.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The base command string</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetBaseCcPrecompileCommand">
+<tt class="descname">GetBaseCcPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetBaseCcPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the BASE C compiler command for precompiling headers in this project.</p>
+<dl class="docutils">
+<dt>The difference between the base command and the extended command is as follows:</dt>
+<dd><ol class="first arabic simple">
+<li>The base command does not include any specific files in it</li>
+</ol>
+<p class="last">2. The base command should be seen as the full list of compiler settings that will force a full recompile
+if ANY of them are changed. For example, optimization settings should be included here because a change to
+that setting should cause all object files to be regenerated.</p>
+</dd>
+</dl>
+<p>Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being compiled, which can be used to retrieve any needed information.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The base command string</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetBaseCxxCommand">
+<tt class="descname">GetBaseCxxCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetBaseCxxCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the BASE C++ compiler command for this project.</p>
+<dl class="docutils">
+<dt>The difference between the base command and the extended command is as follows:</dt>
+<dd><ol class="first arabic simple">
+<li>The base command does not include any specific files in it</li>
+</ol>
+<p class="last">2. The base command should be seen as the full list of compiler settings that will force a full recompile
+if ANY of them are changed. For example, optimization settings should be included here because a change to
+that setting should cause all object files to be regenerated.</p>
+</dd>
+</dl>
+<p>Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being compiled, which can be used to retrieve any needed information.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The base command string</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetBaseCxxPrecompileCommand">
+<tt class="descname">GetBaseCxxPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetBaseCxxPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the BASE C++ compiler command for precompiling headers in this project.</p>
+<dl class="docutils">
+<dt>The difference between the base command and the extended command is as follows:</dt>
+<dd><ol class="first arabic simple">
+<li>The base command does not include any specific files in it</li>
+</ol>
+<p class="last">2. The base command should be seen as the full list of compiler settings that will force a full recompile
+if ANY of them are changed. For example, optimization settings should be included here because a change to
+that setting should cause all object files to be regenerated.</p>
+</dd>
+</dl>
+<p>Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being compiled, which can be used to retrieve any needed information.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The base command string</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetDefaultArchitecture">
+<tt class="descname">GetDefaultArchitecture</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetDefaultArchitecture" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetExtendedCommand">
+<tt class="descname">GetExtendedCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetExtendedCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the EXTENDED C/C++ compiler command for compiling a specific file</p>
+<dl class="docutils">
+<dt>The difference between the base command and the extended command is as follows:</dt>
+<dd><ol class="first arabic simple">
+<li>The base command does not include any specific files in it</li>
+</ol>
+<p class="last">2. The base command should be seen as the full list of compiler settings that will force a full recompile
+if ANY of them are changed. For example, optimization settings should be included here because a change to
+that setting should cause all object files to be regenerated.</p>
+</dd>
+</dl>
+<p>Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>baseCmd</strong> &#8211; The project&#8217;s base command as returned from :get_base_cxx_command: or :get_base_cc_command:,</td>
+</tr>
+</tbody>
+</table>
+<p>as is appropriate for the file being compiled.
+:type baseCmd: str</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being compiled, which can be used to retrieve any needed information.</li>
+<li><strong>forceIncludeFile</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; A precompiled header that&#8217;s being forcefully included.</li>
+<li><strong>outObj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The object file to be generated by this command</li>
+<li><strong>inFile</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The file being compiled</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The extended command string, including the base command string</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetExtendedPrecompileCommand">
+<tt class="descname">GetExtendedPrecompileCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetExtendedPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the EXTENDED C/C++ compiler command for compiling a specific precompiled header</p>
+<dl class="docutils">
+<dt>The difference between the base command and the extended command is as follows:</dt>
+<dd><ol class="first arabic simple">
+<li>The base command does not include any specific files in it</li>
+</ol>
+<p class="last">2. The base command should be seen as the full list of compiler settings that will force a full recompile
+if ANY of them are changed. For example, optimization settings should be included here because a change to
+that setting should cause all object files to be regenerated.</p>
+</dd>
+</dl>
+<p>Thus, anything that can be changed without forcing a clean rebuild should be in the extended command, not the base.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>baseCmd</strong> &#8211; The project&#8217;s base command as returned from :get_base_cxx_command: or :get_base_cc_command:,</td>
+</tr>
+</tbody>
+</table>
+<p>as is appropriate for the file being compiled.
+:type baseCmd: str</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being compiled, which can be used to retrieve any needed information.</li>
+<li><strong>forceIncludeFile</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Currently unused for precompiled headers.</li>
+<li><strong>outObj</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The object file to be generated by this command</li>
+<li><strong>inFile</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The file being compiled</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The extended command string, including the base command string</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetExtraPostPreprocessorFlags">
+<tt class="descname">GetExtraPostPreprocessorFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetExtraPostPreprocessorFlags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetObjExt">
+<tt class="descname">GetObjExt</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetObjExt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the extension for intermediate object files, including the .</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetPchFile">
+<tt class="descname">GetPchFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetPchFile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the properly formatted precompiled header output file for a given header input.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>fileName</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The input header</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The formatted output file (i.e., &#8220;header.pch&#8221; or &#8220;header.gch&#8221;)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetPostPreprocessorSanitationLines">
+<tt class="descname">GetPostPreprocessorSanitationLines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetPostPreprocessorSanitationLines" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetPreprocessCommand">
+<tt class="descname">GetPreprocessCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetPreprocessCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetValidArchitectures">
+<tt class="descname">GetValidArchitectures</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetValidArchitectures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of architectures supported by this compiler.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of architectures</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.InterruptExitCode">
+<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exit code that the compiler returns if the compile process is interrupted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The compiler&#8217;s interrupt exit code</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.PragmaMessage">
+<tt class="descname">PragmaMessage</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.PragmaMessage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.parseOutput">
+<tt class="descname">parseOutput</tt><big>(</big><em>outputStr</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.parseOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.postBuildStep">
+<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.postBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.postMakeStep">
+<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.postMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.postPrepareBuildStep">
+<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.preBuildStep">
+<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.preBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.preLinkStep">
+<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.preLinkStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.preMakeStep">
+<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.preMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.compilerBase.prePrepareBuildStep">
+<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain.linkerBase">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">linkerBase</tt><a class="headerlink" href="#csbuild.toolchain.linkerBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.SettingsOverrider" title="csbuild.toolchain.SettingsOverrider"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.SettingsOverrider</span></tt></a></p>
+<dl class="staticmethod">
+<dt id="csbuild.toolchain.linkerBase.AdditionalArgs">
+<em class="property">static </em><tt class="descname">AdditionalArgs</tt><big>(</big><em>parser</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.AdditionalArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Asks for additional command-line arguments to be added by the toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>parser</strong> (<em>argparse.argument_parser</em>) &#8211; A parser for these arguments to be added to</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.FindLibrary">
+<tt class="descname">FindLibrary</tt><big>(</big><em>project</em>, <em>library</em>, <em>libraryDirs</em>, <em>force_static</em>, <em>force_shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.FindLibrary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Search for a library and verify that it is installed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being checked, which can be used to retrieve any needed information.</li>
+<li><strong>library</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The library being searched for</li>
+<li><strong>libraryDirs</strong> (<em>list[str]</em>) &#8211; The directories to search for the library in</li>
+<li><strong>force_static</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether or not this library should be forced to link statically</li>
+<li><strong>force_shared</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a>) &#8211; Whether or not this library should be forced to link dynamically</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The location to the library if found, or None</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str or None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.GetDefaultOutputExtension">
+<tt class="descname">GetDefaultOutputExtension</tt><big>(</big><em>projectType</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.GetDefaultOutputExtension" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the default extension for a given <a class="reference internal" href="csbuild.html#csbuild.ProjectType" title="csbuild.ProjectType"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.ProjectType</span></tt></a> value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>projectType</strong> (<a class="reference internal" href="csbuild.html#csbuild.ProjectType" title="csbuild.ProjectType"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.ProjectType</span></tt></a>) &#8211; The requested output type</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The extension, including the . (i.e., .so, .a, .lib, .exe)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.GetLinkCommand">
+<tt class="descname">GetLinkCommand</tt><big>(</big><em>project</em>, <em>outputFile</em>, <em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.GetLinkCommand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves the command to be used for linking for this toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>project</strong> (<a class="reference internal" href="csbuild.projectSettings.html#csbuild.projectSettings.projectSettings" title="csbuild.projectSettings.projectSettings"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.projectSettings.projectSettings</span></tt></a>) &#8211; The project currently being linked, which can be used to retrieve any needed information.</li>
+<li><strong>outputFile</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; The file that will be the result of the link operation.</li>
+<li><strong>objList</strong> (<em>list[str]</em>) &#8211; List of objects being linked</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The fully formatted link command</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.GetValidArchitectures">
+<tt class="descname">GetValidArchitectures</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.GetValidArchitectures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the list of architectures supported by this linker.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">List of architectures</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">list[str]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.InterruptExitCode">
+<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the exit code that the compiler returns if the compile process is interrupted.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The linker&#8217;s interrupt exit code</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.parseOutput">
+<tt class="descname">parseOutput</tt><big>(</big><em>outputStr</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.parseOutput" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.postBuildStep">
+<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.postBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.postMakeStep">
+<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.postMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.postPrepareBuildStep">
+<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.preBuildStep">
+<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.preBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.preLinkStep">
+<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.preLinkStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.preMakeStep">
+<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.preMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.linkerBase.prePrepareBuildStep">
+<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain.toolchain">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">toolchain</tt><a class="headerlink" href="#csbuild.toolchain.toolchain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<p>Base class used for custom toolchains
+To create a new toolchain, inherit from this class, and then use
+<a class="reference internal" href="csbuild.html#csbuild.RegisterToolchain" title="csbuild.RegisterToolchain"><tt class="xref py py-func docutils literal"><span class="pre">csbuild.RegisterToolchain()</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.AddCustomTool">
+<tt class="descname">AddCustomTool</tt><big>(</big><em>name</em>, <em>tool</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.AddCustomTool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.Assembler">
+<tt class="descname">Assembler</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.Assembler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.Compiler">
+<tt class="descname">Compiler</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.Compiler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.GetValidArchitectures">
+<tt class="descname">GetValidArchitectures</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.GetValidArchitectures" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.Linker">
+<tt class="descname">Linker</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.Linker" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.SetActiveTool">
+<tt class="descname">SetActiveTool</tt><big>(</big><em>name</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.SetActiveTool" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.Tool">
+<tt class="descname">Tool</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.Tool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform actions on the listed tools. Examples:</p>
+<p>csbuild.Toolchain(&#8220;msvc&#8221;).Tool(&#8220;compiler&#8221;, &#8220;linker&#8221;).SetMsvcVersion(110)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>arbitrary number of strings</em>) &#8211; The list of tools to act on</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">A proxy object that enables functions to be applied to one or more specific tools.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.copy">
+<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a deep copy of this toolchain.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">a copy of this toolchain</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">toolchain</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.postBuildStep">
+<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.postBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.postMakeStep">
+<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.postMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.postPrepareBuildStep">
+<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.preBuildStep">
+<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.preBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.preLinkStep">
+<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.preLinkStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.preMakeStep">
+<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.preMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.prePrepareBuildStep">
+<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/csbuild.toolchain.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

@@ -646,7 +646,7 @@ class CodeProfileDisplay(CodeEditor):
 				absPath = os.path.abspath(os.path.join(self.directory, includeFile))
 				if not os.access(absPath, os.F_OK):
 					#Second try: Look in the project's include directories.
-					for directory in project.include_dirs:
+					for directory in project.includeDirs:
 						absPath = os.path.abspath(os.path.join(directory, includeFile))
 						if os.access(absPath, os.F_OK):
 							break
@@ -1613,18 +1613,18 @@ class MainWindow( QMainWindow ):
 
 
 						idx = 0
-						if project.needs_cpp_precompile:
-							HandleChild( idx, project.cppheaderfile )
+						if project.needsPrecompileCpp:
+							HandleChild( idx, project.cppHeaderFile )
 							idx += 1
 
-						if project.needs_c_precompile:
-							HandleChild( idx, project.cheaderfile )
+						if project.needsPrecompileC:
+							HandleChild( idx, project.cHeaderFile )
 							idx += 1
 
 						used_chunks = set()
 						for source in project.allsources:
 							inThisBuild = False
-							if source not in project.final_chunk_set:
+							if source not in project._finalChunkSet:
 								chunk = project.get_chunk( source )
 								if not chunk:
 									continue
@@ -1635,11 +1635,11 @@ class MainWindow( QMainWindow ):
 								else:
 									extension = ".cpp"
 
-								chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+								chunk = os.path.join( project.csbuildDir, "{}{}".format( chunk, extension ) )
 
 								if chunk in used_chunks:
 									continue
-								if chunk in project.final_chunk_set:
+								if chunk in project._finalChunkSet:
 									inThisBuild = True
 									source = chunk
 									used_chunks.add(chunk)
@@ -1672,18 +1672,18 @@ class MainWindow( QMainWindow ):
 
 
 						idx = 0
-						if project.needs_cpp_precompile:
-							HandleChild( idx, project.cppheaderfile )
+						if project.needsPrecompileCpp:
+							HandleChild( idx, project.cppHeaderFile )
 							idx += 1
 
-						if project.needs_c_precompile:
-							HandleChild( idx, project.cheaderfile )
+						if project.needsPrecompileC:
+							HandleChild( idx, project.cHeaderFile )
 							idx += 1
 
 						used_chunks = set()
 						for source in project.allsources:
 							inThisBuild = False
-							if source not in project.final_chunk_set:
+							if source not in project._finalChunkSet:
 								chunk = project.get_chunk( source )
 								if not chunk:
 									continue
@@ -1694,11 +1694,11 @@ class MainWindow( QMainWindow ):
 								else:
 									extension = ".cpp"
 
-								chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+								chunk = os.path.join( project.csbuildDir, "{}{}".format( chunk, extension ) )
 
 								if chunk in used_chunks:
 									continue
-								if chunk in project.final_chunk_set:
+								if chunk in project._finalChunkSet:
 									inThisBuild = True
 									source = chunk
 									used_chunks.add(chunk)
@@ -1842,18 +1842,18 @@ class MainWindow( QMainWindow ):
 										HandleError(project.parsedErrors[file])
 
 						idx = 0
-						if project.needs_cpp_precompile:
-							HandleChild( idx, project.cppheaderfile )
+						if project.needsPrecompileCpp:
+							HandleChild( idx, project.cppHeaderFile )
 							idx += 1
 
-						if project.needs_c_precompile:
-							HandleChild( idx, project.cheaderfile )
+						if project.needsPrecompileC:
+							HandleChild( idx, project.cHeaderFile )
 							idx += 1
 
 						used_chunks = set()
 						for source in project.allsources:
 							inThisBuild = False
-							if source not in project.final_chunk_set:
+							if source not in project._finalChunkSet:
 								chunk = project.get_chunk( source )
 								if not chunk:
 									continue
@@ -1864,11 +1864,11 @@ class MainWindow( QMainWindow ):
 								else:
 									extension = ".cpp"
 
-								chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+								chunk = os.path.join( project.csbuildDir, "{}{}".format( chunk, extension ) )
 
 								if chunk in used_chunks:
 									continue
-								if chunk in project.final_chunk_set:
+								if chunk in project._finalChunkSet:
 									inThisBuild = True
 									source = chunk
 									used_chunks.add(chunk)
@@ -1955,18 +1955,18 @@ class MainWindow( QMainWindow ):
 
 
 				idx2 = 0
-				if project.needs_cpp_precompile:
-					HandleChildTimeline( idx2, project.cppheaderfile )
+				if project.needsPrecompileCpp:
+					HandleChildTimeline( idx2, project.cppHeaderFile )
 					idx2 += 1
 
-				if project.needs_c_precompile:
-					HandleChildTimeline( idx2, project.cheaderfile )
+				if project.needsPrecompileC:
+					HandleChildTimeline( idx2, project.cHeaderFile )
 					idx2 += 1
 
 				used_chunks = set()
 				for source in project.allsources:
 					inThisBuild = False
-					if source not in project.final_chunk_set:
+					if source not in project._finalChunkSet:
 						chunk = project.get_chunk( source )
 						if not chunk:
 							continue
@@ -1977,11 +1977,11 @@ class MainWindow( QMainWindow ):
 						else:
 							extension = ".cpp"
 
-						chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+						chunk = os.path.join( project.csbuildDir, "{}{}".format( chunk, extension ) )
 
 						if chunk in used_chunks:
 							continue
-						if chunk in project.final_chunk_set:
+						if chunk in project._finalChunkSet:
 							inThisBuild = True
 							source = chunk
 							used_chunks.add(chunk)
@@ -2279,12 +2279,12 @@ class MainWindow( QMainWindow ):
 				progressBar = self.m_buildTree.itemWidget(widget, 1)
 
 				project.mutex.acquire( )
-				complete = project.compiles_completed
+				complete = project.compilationCompleted
 				project.mutex.release( )
 
-				total = len( project.final_chunk_set ) + int(
-						project.needs_c_precompile ) + int(
-						project.needs_cpp_precompile )
+				total = len( project._finalChunkSet ) + int(
+						project.needsPrecompileC ) + int(
+						project.needsPrecompileCpp )
 				percent = 100 if total == 0 else ( float(complete) / float(total) ) * 100
 				if percent == 100 and project.state < _shared_globals.ProjectState.FINISHED:
 					percent = 99
@@ -2340,18 +2340,18 @@ class MainWindow( QMainWindow ):
 
 
 					idx = 0
-					if project.needs_cpp_precompile:
-						HandleChildProgressBar( idx, project.cppheaderfile )
+					if project.needsPrecompileCpp:
+						HandleChildProgressBar( idx, project.cppHeaderFile )
 						idx += 1
 
-					if project.needs_c_precompile:
-						HandleChildProgressBar( idx, project.cheaderfile )
+					if project.needsPrecompileC:
+						HandleChildProgressBar( idx, project.cHeaderFile )
 						idx += 1
 
 					used_chunks = set()
 					for source in project.allsources:
 						inThisBuild = False
-						if source not in project.final_chunk_set:
+						if source not in project._finalChunkSet:
 							chunk = project.get_chunk( source )
 							if not chunk:
 								continue
@@ -2362,11 +2362,11 @@ class MainWindow( QMainWindow ):
 							else:
 								extension = ".cpp"
 
-							chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+							chunk = os.path.join( project.csbuildDir, "{}{}".format( chunk, extension ) )
 
 							if chunk in used_chunks:
 								continue
-							if chunk in project.final_chunk_set:
+							if chunk in project._finalChunkSet:
 								inThisBuild = True
 								source = chunk
 								used_chunks.add(chunk)
@@ -2503,7 +2503,7 @@ class MainWindow( QMainWindow ):
 
 		totalCompletedCompiles = 0
 		for project in _shared_globals.sortedProjects:
-			totalCompletedCompiles += project.compiles_completed
+			totalCompletedCompiles += project.compilationCompleted
 
 		perc = 100 if _shared_globals.total_compiles == 0 else float(totalCompletedCompiles)/float(_shared_globals.total_compiles) * 100
 		if perc == 100 and not self.readyToClose:
@@ -2682,14 +2682,14 @@ class GuiThread( threading.Thread ):
 			font = QtGui.QFont()
 			font.setItalic(True)
 
-			if project.needs_cpp_precompile:
+			if project.needsPrecompileCpp:
 				idx += 1
 				childItem = TreeWidgetItem( widgetItem )
 				childItem.setText(0, "{}.{}".format(row, idx))
 				childItem.setText(1, "1000")
 				childItem.setText(2, "Pending...")
-				childItem.setText(3, os.path.basename(project.cppheaderfile))
-				childItem.setToolTip(3, project.cppheaderfile)
+				childItem.setText(3, os.path.basename(project.cppHeaderFile))
+				childItem.setToolTip(3, project.cppHeaderFile)
 				childItem.setText(4, project.targetName)
 				childItem.setToolTip(4, project.targetName)
 				childItem.setText(5, project.outputArchitecture)
@@ -2716,11 +2716,11 @@ class GuiThread( threading.Thread ):
 				widgetItem.addChild(childItem)
 
 				timelineChild = TreeWidgetWithBarGraph(widgetItem2, window.timelineWidget, True)
-				timelineChild.setText(0, os.path.basename(project.cppheaderfile))
-				timelineChild.setToolTip(0, project.cppheaderfile)
+				timelineChild.setText(0, os.path.basename(project.cppHeaderFile))
+				timelineChild.setToolTip(0, project.cppHeaderFile)
 				widgetItem2.addChild(timelineChild)
 
-				for header in project.cpppchcontents:
+				for header in project.cppPchContents:
 					subChildItem = TreeWidgetItem( childItem )
 					subChildItem.setText( 0, os.path.basename(header) )
 					subChildItem.setFirstColumnSpanned(True)
@@ -2734,14 +2734,14 @@ class GuiThread( threading.Thread ):
 					timelineChild.addChild(timelineSubChild)
 
 
-			if project.needs_c_precompile:
+			if project.needsPrecompileC:
 				idx += 1
 				childItem = TreeWidgetItem( widgetItem )
 				childItem.setText(0, "{}.{}".format(row, idx))
 				childItem.setText(1, "1000")
 				childItem.setText(2, "Pending...")
-				childItem.setText(3, os.path.basename(project.cheaderfile))
-				childItem.setToolTip(3, project.cheaderfile)
+				childItem.setText(3, os.path.basename(project.cHeaderFile))
+				childItem.setToolTip(3, project.cHeaderFile)
 				childItem.setText(4, project.targetName)
 				childItem.setToolTip(4, project.targetName)
 				childItem.setText(5, project.outputArchitecture)
@@ -2768,11 +2768,11 @@ class GuiThread( threading.Thread ):
 				widgetItem.addChild(childItem)
 
 				timelineChild = TreeWidgetItem(widgetItem2)
-				timelineChild.setText(0, os.path.basename(project.cheaderfile))
-				timelineChild.setToolTip(0, project.cheaderfile)
+				timelineChild.setText(0, os.path.basename(project.cHeaderFile))
+				timelineChild.setToolTip(0, project.cHeaderFile)
 				widgetItem2.addChild(timelineChild)
 
-				for header in project.cpchcontents:
+				for header in project.cPchContents:
 					subChildItem = TreeWidgetItem( childItem )
 					subChildItem.setText( 0, os.path.basename(header) )
 					subChildItem.setFirstColumnSpanned(True)
@@ -2788,7 +2788,7 @@ class GuiThread( threading.Thread ):
 			used_chunks = set()
 			for source in project.allsources:
 				inThisBuild = False
-				if source not in project.final_chunk_set:
+				if source not in project._finalChunkSet:
 					chunk = project.get_chunk( source )
 					if not chunk:
 						continue
@@ -2799,11 +2799,11 @@ class GuiThread( threading.Thread ):
 					else:
 						extension = ".cpp"
 
-					chunk = os.path.join( project.csbuild_dir, "{}{}".format( chunk, extension ) )
+					chunk = os.path.join( project.csbuildDir, "{}{}".format( chunk, extension ) )
 
 					if chunk in used_chunks:
 						continue
-					if chunk in project.final_chunk_set:
+					if chunk in project._finalChunkSet:
 						inThisBuild = True
 						source = chunk
 						used_chunks.add(chunk)

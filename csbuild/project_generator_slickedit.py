@@ -42,12 +42,6 @@ class OutputType:
 class project_generator_slickedit(project_generator.project_generator):
 	"""
 	Generator used to create a SlickEdit project files.
-
-	@undocumented: __init__
-	@undocumented: _WriteWorkspace
-	@undocumented: _WriteSubGroup
-	@undocumented: _WriteProject
-	@undocumented: _SaveXmlFile
 	"""
 
 	def __init__(self, path, solutionName, extraArgs):
@@ -57,12 +51,12 @@ class project_generator_slickedit(project_generator.project_generator):
 	# Base class methods.
 
 	@staticmethod
-	def additional_args(parser):
+	def AdditionalArgs(parser):
 		# No additional command line arguments at this time.
 		pass
 
 
-	def write_solution(self):
+	def WriteProjectFiles(self):
 		log.LOG_BUILD("Writing SlickEdit workspace {}...".format(self.solutionname))
 
 		# Create the workspace root path if it doesn't exist.

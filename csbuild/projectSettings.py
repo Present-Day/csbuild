@@ -19,20 +19,20 @@
 # SOFTWARE.
 
 """
-B{ProjectSettings module}
+**ProjectSettings module**
 
 Defines the projectSettings class.
 
-@var currentProject: The current project being built. Note that if this is accessed outside of an @project
+:var currentProject: The current project being built. Note that if this is accessed outside of an @project
 block, the project returned will only be a temporary variable that will not be valid for compilation
-@type currentProject: projectSettings
+:type currentProject: projectSettings
 
-@var rootGroup: This is the top-level project group that all projects and project groups fall under.
+:var rootGroup: This is the top-level project group that all projects and project groups fall under.
 It has no name and is NOT itself a valid or "real" group.
-@type rootGroup: ProjectGroup
+:type rootGroup: ProjectGroup
 
-@var currentGroup: The current group that's being populated
-@type currentGroup: ProjectGroup
+:var currentGroup: The current group that's being populated
+:type currentGroup: ProjectGroup
 """
 
 import csbuild
@@ -48,308 +48,293 @@ import platform
 import glob
 import itertools
 import threading
+import types
 
 from . import log
 from . import _shared_globals
 from . import _utils
+from . import toolchain
 
 class projectSettings( object ):
 	"""
 	Contains settings for the project
 
-	@ivar name: The project's name
-	@type name: str
+	:ivar name: The project's name
+	:type name: str
 
-	@ivar key: A unique key made by combining project name and target
-	@type key: str
+	:ivar key: A unique key made by combining project name and target
+	:type key: str
 
-	@ivar workingDirectory: The directory containing all of the project's files
-	@type workingDirectory: str
+	:ivar workingDirectory: The directory containing all of the project's files
+	:type workingDirectory: str
 
-	@ivar linkDepends: The projects that this one depends on for linking
-	@type linkDepends: list[str]
+	:ivar linkDepends: The projects that this one depends on for linking
+	:type linkDepends: list[str]
 
-	@ivar srcDepends: The projects that this one depends on for compiling
-	@type srcDepends: str
+	:ivar srcDepends: The projects that this one depends on for compiling
+	:type srcDepends: str
 
-	@ivar func: The project's settings function - the function wrapped in the @project decorator
-	@type func: function
+	:ivar func: The project's settings function - the function wrapped in the @project decorator
+	:type func: function
 
-	@ivar libraries: The libraries the project will link against
-	@type libraries: list[str]
+	:ivar libraries: The libraries the project will link against
+	:type libraries: list[str]
 
-	@ivar static_libraries: The libraries the project will forcibly statically link against
-	@type static_libraries: list[str]
+	:ivar staticLibraries: The libraries the project will forcibly statically link against
+	:type staticLibraries: list[str]
 
-	@ivar shared_libraries: The libraries the project will forcibly statically link against
-	@type shared_libraries: list[str]
+	:ivar sharedLibraries: The libraries the project will forcibly statically link against
+	:type sharedLibraries: list[str]
 
-	@ivar include_dirs: Directories to search for included headers in
-	@type include_dirs: list[str]
+	:ivar includeDirs: Directories to search for included headers in
+	:type includeDirs: list[str]
 
-	@ivar library_dirs: Directories to search for libraries in
-	@type library_dirs: list[str]
+	:ivar libraryDirs: Directories to search for libraries in
+	:type libraryDirs: list[str]
 
-	@ivar opt_level: Optimization level for this project
-	@type opt_level: csbuild.OptimizationLevel
+	:ivar optLevel: Optimization level for this project
+	:type optLevel: csbuild.OptimizationLevel
 
-	@ivar debug_level: Debug level for this project
-	@type debug_level: csbuild.DebugLevel
+	:ivar debugLevel: Debug level for this project
+	:type debugLevel: csbuild.DebugLevel
 
-	@ivar defines: #define declarations for this project
-	@type defines: list[str]
+	:ivar defines: #define declarations for this project
+	:type defines: list[str]
 
-	@ivar undefines: #undef declarations for this project
-	@type undefines: list[str]
+	:ivar undefines: #undef declarations for this project
+	:type undefines: list[str]
 
-	@ivar cxx: C++ compiler executable for this project
-	@type cxx: str
+	:ivar cxx: C++ compiler executable for this project
+	:type cxx: str
 
-	@ivar cc: C compiler executable for this project
-	@type cc: str
+	:ivar cc: C compiler executable for this project
+	:type cc: str
 
-	@ivar hasCppFiles: Whether or not the project includes C++ files
-	@type hasCppFiles: bool
+	:ivar hasCppFiles: Whether or not the project includes C++ files
+	:type hasCppFiles: bool
 
-	@ivar obj_dir: Output directory for intermediate object files
-	@type obj_dir: str
+	:ivar objDir: Output directory for intermediate object files
+	:type objDir: str
 
-	@ivar output_dir: Output directory for the final output file
-	@type output_dir: str
+	:ivar outputDir: Output directory for the final output file
+	:type outputDir: str
 
-	@ivar csbuild_dir: Output directory for csbuild internal data, subdir of obj_dir
-	@type csbuild_dir: str
+	:ivar csbuildDir: Output directory for csbuild internal data, subdir of objDir
+	:type csbuildDir: str
 
-	@ivar output_name: Final filename to be generated for this project
-	@type output_name: str
+	:ivar outputName: Final filename to be generated for this project
+	:type outputName: str
 
-	@ivar header_subdir: Subdirectory that headers live in for this project
-	@type header_subdir: str
+	:ivar headerInstallSubdir: Subdirectory that headers live in for this project
+	:type headerInstallSubdir: str
 
-	@ivar sources: Source files within this project that are being compiled during this run
-	@type sources: list[str]
+	:ivar sources: Source files within this project that are being compiled during this run
+	:type sources: list[str]
 
-	@ivar allsources: All source files within this project
-	@type allsources: list[str]
+	:ivar allsources: All source files within this project
+	:type allsources: list[str]
 
-	@ivar allheaders: Headers within this project
-	@type allheaders: list[str]
+	:ivar allheaders: Headers within this project
+	:type allheaders: list[str]
 
-	@ivar type: Project type
-	@type type: L{csbuild.ProjectType}
+	:ivar type: Project type
+	:type type: :class:`csbuild.ProjectType`
 
-	@ivar ext: Extension override for output
-	@type ext: str or None
+	:ivar ext: Extension override for output
+	:type ext: str or None
 
-	@ivar profile: Whether or not to optimize for profiling
-	@type profile: bool
+	:ivar profile: Whether or not to optimize for profiling
+	:type profile: bool
 
-	@ivar cpp_compiler_flags: Literal flags to pass to the C++ compiler
-	@type cpp_compiler_flags: list[str]
+	:ivar cxxCompilerFlags: Literal flags to pass to the C++ compiler
+	:type cxxCompilerFlags: list[str]
 
-	@ivar c_compiler_flags: Literal flags to pass to the C compiler
-	@type c_compiler_flags: list[str]
+	:ivar ccCompilerFlags: Literal flags to pass to the C compiler
+	:type ccCompilerFlags: list[str]
 
-	@ivar linker_flags: Literal flags to pass to the linker
-	@type linker_flags: list[str]
+	:ivar linkerFlags: Literal flags to pass to the linker
+	:type linkerFlags: list[str]
 
-	@ivar exclude_dirs: Directories excluded from source file discovery
-	@type exclude_dirs: list[str]
+	:ivar excludeDirs: Directories excluded from source file discovery
+	:type excludeDirs: list[str]
 
-	@ivar exclude_files: Files excluded from source file discovery
-	@type exclude_files: list[str]
+	:ivar excludeFiles: Files excluded from source file discovery
+	:type excludeFiles: list[str]
 
-	@ivar output_dir_set: Whether or not the output directory has been set
-	@type output_dir_set: bool
+	:ivar _outputDir_set: Whether or not the output directory has been set
+	:type _outputDir_set: bool
 
-	@ivar obj_dir_set: Whether or not the object directory has been set
-	@type obj_dir_set: bool
+	:ivar _objDir_set: Whether or not the object directory has been set
+	:type _objDir_set: bool
 
-	@ivar debug_set: Whether or not debug settings have been set
-	@type debug_set: bool
+	:ivar _debugLevel_set: Whether or not debug settings have been set
+	:type _debugLevel_set: bool
 
-	@ivar opt_set: Whether or not optimization settings have been set
-	@type opt_set: bool
+	:ivar _optLevel_set: Whether or not optimization settings have been set
+	:type _optLevel_set: bool
 
-	@ivar allpaths: All the paths used to contain all headers included by this project
-	@type allpaths: list[str]
+	:ivar allPaths: All the paths used to contain all headers included by this project
+	:type allPaths: list[str]
 
-	@ivar chunks: Compiled list of chunks to be compiled in this project
-	@type chunks: list[str]
+	:ivar chunks: Compiled list of chunks to be compiled in this project
+	:type chunks: list[str]
 
-	@ivar chunksByFile: Dictionary to get the list of files in a chunk from its filename
-	@type chunksByFile: dict[str, list[str]]
+	:ivar chunksByFile: Dictionary to get the list of files in a chunk from its filename
+	:type chunksByFile: dict[str, list[str]]
 
-	@ivar use_chunks: Whether or not to use chunks
-	@type use_chunks: bool
+	:ivar useChunks: Whether or not to use chunks
+	:type useChunks: bool
 
-	@ivar chunk_tolerance: minimum number of modified files needed to build a chunk as a chunk
-	@type chunk_tolerance: int
+	:ivar chunkTolerance: minimum number of modified files needed to build a chunk as a chunk
+	:type chunkTolerance: int
 
-	@ivar chunk_size: number of files per chunk
-	@type chunk_size: int
+	:ivar chunkSize: number of files per chunk
+	:type chunkSize: int
 
-	@ivar chunk_filesize: maximum file size of a built chunk, in bytes
-	@type chunk_filesize: int
+	:ivar chunkFilesize: maximum file size of a built chunk, in bytes
+	:type chunkFilesize: int
 
-	@ivar chunk_size_tolerance: minimum total filesize of modified files needed to build a chunk as a chunk
-	@type chunk_size_tolerance: int
+	:ivar chunkSizeTolerance: minimum total filesize of modified files needed to build a chunk as a chunk
+	:type chunkSizeTolerance: int
 
-	@ivar header_recursion: Depth to recurse when building header information
-	@type header_recursion: int
+	:ivar headerRecursionDepth: Depth to recurse when building header information
+	:type headerRecursionDepth: int
 
-	@ivar ignore_external_headers: Whether or not to ignore external headers when building header information
-	@type ignore_external_headers: bool
+	:ivar ignoreExternalHeaders: Whether or not to ignore external headers when building header information
+	:type ignoreExternalHeaders: bool
 
-	@ivar default_target: The target to be built when none is specified
-	@type default_target: str
+	:ivar defaultTarget: The target to be built when none is specified
+	:type defaultTarget: str
 
-	@ivar chunk_precompile: Whether or not to precompile all headers in the project
-	@type chunk_precompile: bool
+	:ivar chunkedPrecompile: Whether or not to precompile all headers in the project
+	:type chunkedPrecompile: bool
 
-	@ivar precompile: List of files to precompile
-	@type precompile: list[str]
+	:ivar precompile: List of files to precompile
+	:type precompile: list[str]
 
-	@ivar precompile_exclude: List of files NOT to precompile
-	@type precompile_exclude: list[str]
+	:ivar precompileExcludeFiles: List of files NOT to precompile
+	:type precompileExcludeFiles: list[str]
 
-	@ivar cppheaderfile: The C++ precompiled header that's been built (if any)
-	@type cppheaderfile: str
+	:ivar cppHeaderFile: The C++ precompiled header that's been built (if any)
+	:type cppHeaderFile: str
 
-	@ivar cheaderfile: The C precompiled header that's been built (if any)
-	@type cheaderfile: str
+	:ivar cHeaderFile: The C precompiled header that's been built (if any)
+	:type cHeaderFile: str
 
-	@ivar needs_cpp_precompile: Whether or not the C++ precompiled header needs to be rebuilt during this compile
-	@type needs_cpp_precompile: bool
+	:ivar needsPrecompileCpp: Whether or not the C++ precompiled header needs to be rebuilt during this compile
+	:type needsPrecompileCpp: bool
 
-	@ivar needs_c_precompile: Whether or not the C++ precompiled header needs to be rebuilt during this compile
-	@type needs_c_precompile: bool
+	:ivar needsPrecompileC: Whether or not the C++ precompiled header needs to be rebuilt during this compile
+	:type needsPrecompileC: bool
 
-	@ivar unity: Whether or not to build in full unity mode (all files included in one translation unit)
-	@type unity: bool
+	:ivar unity: Whether or not to build in full unity mode (all files included in one translation unit)
+	:type unity: bool
 
-	@ivar precompile_done: Whether or not the project's precompile step has been completed
-	@type precompile_done: bool
+	:ivar precompileDone: Whether or not the project's precompile step has been completed
+	:type precompileDone: bool
 
-	@ivar no_warnings: Whether or not to disable all warnings for this project
-	@type no_warnings: bool
+	:ivar noWarnings: Whether or not to disable all warnings for this project
+	:type noWarnings: bool
 
-	@ivar toolchains: All toolchains enabled for this project
-	@type toolchains: dict[str, csbuild.toolchain.toolchain]
+	:ivar toolchains: All toolchains enabled for this project
+	:type toolchains: dict[str, csbuild.toolchain.toolchain]
 
-	@ivar cxxcmd: Base C++ compile command, returned from toolchain.get_base_cxx_command
-	@type cxxcmd: str
+	:ivar cxxCmd: Base C++ compile command, returned from toolchain.get_base_cxx_command
+	:type cxxCmd: str
 
-	@ivar cccmd: Base C compile command, returned from toolchain.get_base_cc_command
-	@type cccmd: str
+	:ivar ccCmd: Base C compile command, returned from toolchain.get_base_cc_command
+	:type ccCmd: str
 
-	@ivar cxxpccmd: Base C++ precompile command, returned from toolchain.get_base_cxx_precompile_command
-	@type cxxpccmd: str
+	:ivar cxxpccmd: Base C++ precompile command, returned from toolchain.get_base_cxx_precompile_command
+	:type cxxpccmd: str
 
-	@ivar ccpccmd: Base C precompile command, returned from toolchain.get_base_cc_precompile_command
-	@type ccpccmd: str
+	:ivar ccpccmd: Base C precompile command, returned from toolchain.get_base_cc_precompile_command
+	:type ccpccmd: str
 
-	@ivar recompile_all: Whether or not conditions have caused the entire project to need recompilation
-	@type recompile_all: bool
+	:ivar recompileAll: Whether or not conditions have caused the entire project to need recompilation
+	:type recompileAll: bool
 
-	@ivar targets: List of targets in this project with their associated settings functions, decorated with @target
-	@type targets: dict[str, list[function]]
+	:ivar targets: List of targets in this project with their associated settings functions, decorated with @target
+	:type targets: dict[str, list[function]]
 
-	@ivar targetName: The target name for this project as it's currently being built
-	@type targetName: str
+	:ivar targetName: The target name for this project as it's currently being built
+	:type targetName: str
 
-	@ivar final_chunk_set: The list of chunks to be built after building all chunks, determining whether or not to build
-	them as chunks, etc.
-	@type final_chunk_set: list[str]
+	:ivar _finalChunkSet: The list of chunks to be built after building all chunks, determining whether or not to build
+		them as chunks, etc.
+	:type _finalChunkSet: list[str]
 
-	@ivar compiles_completed: The number of files that have been compiled (successfully or not) at this point in the
-	compile process. Note that this variable is modified in multiple threads and should be handled within project.mutex
-	@type compiles_completed: int
+	:ivar compilationCompleted: The number of files that have been compiled (successfully or not) at this point in the
+		compile process. Note that this variable is modified in multiple threads and should be handled within project.mutex
+	:type compilationCompleted: int
 
-	@ivar compile_failed: Whether or not ANY compilation unit has failed to successfully compile in this build
-	@type compile_failed: bool
+	:ivar compilationFailed: Whether or not ANY compilation unit has failed to successfully compile in this build
+	:type compilationFailed: bool
 
-	@ivar static_runtime: Whether or not to link against a static runtime
-	@type static_runtime: bool
+	:ivar useStaticRuntime: Whether or not to link against a static runtime
+	:type useStaticRuntime: bool
 
-	@ivar cppheaders: List of C++ headers
-	@type cppheaders: list[str]
+	:ivar cppHeaders: List of C++ headers
+	:type cppHeaders: list[str]
 
-	@ivar cheaders: List of C headers
-	@type cheaders: list[str]
+	:ivar cHeaders: List of C headers
+	:type cHeaders: list[str]
 
-	@ivar activeToolchainName: The name of the currently active toolchain
-	@type activeToolchainName: str
+	:ivar activeToolchainName: The name of the currently active toolchain
+	:type activeToolchainName: str
 
-	@ivar activeToolchain: The actual currently active toolchain
-	@type activeToolchain: csbuild.toolchain.toolchain
+	:ivar activeToolchain: The actual currently active toolchain
+	:type activeToolchain: csbuild.toolchain.toolchain
 
-	@ivar warnings_as_errors: Whether all warnings should be treated as errors
-	@type warnings_as_errors: bool
+	:ivar warningsAsErrors: Whether all warnings should be treated as errors
+	:type warningsAsErrors: bool
 
-	@ivar built_something: Whether or not ANY file has been compiled in this build
-	@type built_something: bool
+	:ivar _builtSomething: Whether or not ANY file has been compiled in this build
+	:type _builtSomething: bool
 
-	@ivar outputArchitecture: The architecture to build against
-	@type outputArchitecture: csbuild.ArchitectureType
+	:ivar outputArchitecture: The architecture to build against
+	:type outputArchitecture: csbuild.ArchitectureType
 
-	@ivar library_locs: evaluated locations of the project's libraries
-	@type library_locs: list[str]
+	:ivar libraryLocations: evaluated locations of the project's libraries
+	:type libraryLocations: list[str]
 
-	@ivar scriptPath: The location of the script file this project is defined in
-	@type scriptPath: str
+	:ivar scriptPath: The location of the script file this project is defined in
+	:type scriptPath: str
 
-	@ivar mutex: A mutex used to control modification of project data across multiple threads
-	@type mutex: threading.Lock
+	:ivar mutex: A mutex used to control modification of project data across multiple threads
+	:type mutex: threading.Lock
 
-	@ivar preBuildStep: A function that will be executed before compile of this project begins
-	@type preBuildStep: function
+	:ivar preBuildStep: A function that will be executed before compile of this project begins
+	:type preBuildStep: function
 
-	@ivar postBuildStep: A function that will be executed after compile of this project ends
-	@type postBuildStep: function
+	:ivar postBuildStep: A function that will be executed after compile of this project ends
+	:type postBuildStep: function
 
-	@ivar parentGroup: The group this project is contained within
-	@type parentGroup: ProjectGroup
+	:ivar parentGroup: The group this project is contained within
+	:type parentGroup: ProjectGroup
 
-	@ivar state: Current state of the project
-	@type state: L{_shared_globals.ProjectState}
+	:ivar state: Current state of the project
+	:type state: :_shared_globals.ProjectState:
 
-	@ivar startTime: The time the project build started
-	@type startTime: float
+	:ivar startTime: The time the project build started
+	:type startTime: float
 
-	@ivar endTime: The time the project build ended
-	@type endTime: float
+	:ivar endTime: The time the project build ended
+	:type endTime: float
 
-	@type extraFiles: list[str]
-	@ivar extraFiles: Extra files being compiled, these will be rolled into project.sources, so use that instead
+	:type extraFiles: list[str]
+	:ivar extraFiles: Extra files being compiled, these will be rolled into project.sources, so use that instead
 
-	@type extraDirs: list[str]
-	@ivar extraDirs: Extra directories used to search for files
+	:type extraDirs: list[str]
+	:ivar extraDirs: Extra directories used to search for files
 
-	@type extraObjs: list[str]
-	@ivar extraObjs: Extra objects to pass to the linker
+	:type extraObjs: set[str]
+	:ivar extraObjs: Extra objects to pass to the linker
 
-	@undocumented: prepareBuild
-	@undocumented: __getattribute__
-	@undocumented: __setattr__
-	@undocumented: get_files
-	@undocumented: get_full_path
-	@undocumented: get_included_files
-	@undocumented: follow_headers
-	@undocumented: follow_headers2
-	@undocumented: should_recompile
-	@undocumented: check_libraries
-	@undocumented: make_chunks
-	@undocumented: get_chunk
-	@undocumented: save_md5
-	@undocumented: save_md5s
-	@undocumented: precompile_headers
-	@undocumented: copy
-	@undocumented: CanJoinChunk
+	.. note:: Toolchains can define additional variables that will show up on this class's
+		instance variable list when that toolchain is active. See toolchain documentation for
+		more details on what additional instance variables are available.
 
-	@note: Toolchains can define additional variables that will show up on this class's
-	instance variable list when that toolchain is active. See toolchain documentation for
-	more details on what additional instance variables are available.
 	"""
 
 	class UserData(object):
@@ -368,7 +353,14 @@ class projectSettings( object ):
 		"""
 		Default projectSettings constructor
 		"""
+		self._currentScope = csbuild.ScopeDef.Self
+
 		self.name = ""
+		"""
+		:type: :class:`str`
+		Project name
+		"""
+
 		self.priority = -1
 		self.ignoreDependencyOrdering = False
 		self.key = ""
@@ -377,32 +369,35 @@ class projectSettings( object ):
 		self.linkDependsIntermediate = []
 		self.linkDependsFinal = []
 		self.reconciledLinkDepends = set()
+		self.flattenedDepends = set()
 		self.srcDepends = []
 		self.srcDependsIntermediate = []
 		self.srcDependsFinal = []
 		self.func = None
 
 		self.libraries = set()
-		self.static_libraries = set()
-		self.shared_libraries = set()
-		self.include_dirs = []
-		self.library_dirs = []
+		self.staticLibraries = set()
+		self.sharedLibraries = set()
+		self.frameworks = set()
+		self.includeDirs = []
+		self.libraryDirs = []
+		self.frameworkDirs = set()
 
-		self.opt_level = csbuild.OptimizationLevel.Disabled
-		self.debug_level = csbuild.DebugLevel.Disabled
+		self.optLevel = csbuild.OptimizationLevel.Disabled
+		self.debugLevel = csbuild.DebugLevel.Disabled
 		self.defines = []
 		self.undefines = []
 		self.cxx = ""
 		self.cc = ""
 		self.hasCppFiles = False
 
-		self.obj_dir = "."
-		self.output_dir = "."
-		self.csbuild_dir = ".csbuild"
-		self.output_name = ""
-		self.install_output = False
-		self.install_headers = False
-		self.header_subdir = ""
+		self.objDir = "."
+		self.outputDir = "."
+		self.csbuildDir = ".csbuild"
+		self.outputName = ""
+		self.installOutput = False
+		self.installHeaders = False
+		self.headerInstallSubdir = ""
 
 		self.sources = []
 		self.allsources = []
@@ -412,86 +407,88 @@ class projectSettings( object ):
 		self.ext = None
 		self.profile = False
 
-		self.cpp_compiler_flags = []
-		self.c_compiler_flags = []
-		self.linker_flags = []
+		self.cxxCompilerFlags = []
+		self.ccCompilerFlags = []
+		self.linkerFlags = []
 
-		self.exclude_dirs = []
-		self.exclude_files = []
+		self.excludeDirs = []
+		self.excludeFiles = []
 
-		self.output_dir_set = False
-		self.obj_dir_set = False
-		self.debug_set = False
-		self.opt_set = False
+		self._outputDir_set = False
+		self._objDir_set = False
+		self._debugLevel_set = False
+		self._optLevel_set = False
 
-		self.allpaths = []
+		self.allPaths = []
 		self.chunks = []
 		self.forceChunks = []
 		self.chunksByFile = {}
 
-		self.use_chunks = True
-		self.chunk_tolerance = 3
-		self.chunk_size = 0
-		self.chunk_filesize = 512000
-		self.chunk_size_tolerance = 128000
+		self.useChunks = True
+		self.chunkTolerance = 3
+		self.chunkSize = 0
+		self.chunkFilesize = 512000
+		self.chunkSizeTolerance = 128000
 
-		self.header_recursion = 0
-		self.ignore_external_headers = False
+		self.headerRecursionDepth = 0
+		self.ignoreExternalHeaders = False
 
-		self.default_target = "release"
+		self.defaultTarget = "release"
 
-		self.chunk_precompile = True
+		self.chunkedPrecompile = False
 		self.precompile = []
 		self.precompileAsC = []
-		self.precompile_exclude = []
-		self.cppheaderfile = ""
-		self.cheaderfile = ""
-		self.needs_cpp_precompile = False
-		self.needs_c_precompile = False
+		self.precompileExcludeFiles = []
+		self.cppHeaderFile = ""
+		self.cHeaderFile = ""
+		self.needsPrecompileCpp = False
+		self.needsPrecompileC = False
 
 		self.unity = False
 
-		self.precompile_done = False
-		self.precompile_started = True
+		self.precompileDone = False
+		self.precompileStarted = True
 
-		self.no_warnings = False
+		self.noWarnings = False
 
 		self.toolchains = { }
+		self.intermediateToolchains = {}
+		self.finalToolchains = {}
 
-		self.cxxcmd = ""  # return value of get_base_cxx_command
-		self.cccmd = ""  # return value of get_base_cc_command
+		self.cxxCmd = ""  # return value of get_base_cxx_command
+		self.ccCmd = ""  # return value of get_base_cc_command
 		self.cxxpccmd = ""  # return value of get_base_cxx_precompile_command
 		self.ccpccmd = ""  # return value of get_base_cc_precompile_command
 
-		self.recompile_all = False
+		self.recompileAll = False
 
 		self.targets = {}
 		self.archFuncs = {}
 
 		self.targetName = ""
 
-		self.final_chunk_set = []
+		self._finalChunkSet = []
 
-		self.compiles_completed = 0
+		self.compilationCompleted = 0
 
-		self.compile_failed = False
+		self.compilationFailed = False
 		self.precompileFailed = False
 
-		self.static_runtime = False
+		self.useStaticRuntime = False
 
-		self.cheaders = []
-		self.cppheaders = []
+		self.cHeaders = []
+		self.cppHeaders = []
 
 		self.activeToolchainName = None
 		self.activeToolchain = None
 
-		self.warnings_as_errors = False
+		self.warningsAsErrors = False
 
-		self.built_something = False
+		self._builtSomething = False
 
 		self.outputArchitecture = ""
 
-		self.library_locs = []
+		self.libraryLocations = []
 
 		self.scriptPath = ""
 		self.scriptFile = ""
@@ -510,7 +507,7 @@ class projectSettings( object ):
 
 		self.extraFiles = []
 		self.extraDirs = []
-		self.extraObjs = []
+		self.extraObjs = set()
 
 		self.cExtensions = {".c"}
 		self.cppExtensions = {".cpp", ".cxx", ".cc", ".cp", ".c++"}
@@ -518,6 +515,11 @@ class projectSettings( object ):
 		self.cHeaderExtensions = set()
 		self.cppHeaderExtensions = {".hpp", ".hxx", ".hh", ".hp", ".h++"}
 		self.ambiguousHeaderExtensions = {".h", ".inl"}
+
+		#TODO: Add proper Objective-C/C++ support for all platforms.
+		if platform.system() == "Darwin":
+			self.cExtensions.add(".m")
+			self.cppExtensions.add(".mm")
 
 		self.chunkMutexes = {}
 		self.chunkExcludes = set()
@@ -539,6 +541,9 @@ class projectSettings( object ):
 
 		self.userData = projectSettings.UserData()
 
+		self._intermediateScopeSettings = {}
+		self._finalScopeSettings = {}
+
 		#GUI support
 		self.state = _shared_globals.ProjectState.PENDING
 		self.startTime = 0
@@ -552,8 +557,8 @@ class projectSettings( object ):
 		self.fileStatus = {}
 		self.fileStart = {}
 		self.fileEnd = {}
-		self.cpchcontents = []
-		self.cpppchcontents = []
+		self.cPchContents = []
+		self.cppPchContents = []
 		self.updated = False
 		self.warnings = 0
 		self.errors = 0
@@ -569,32 +574,34 @@ class projectSettings( object ):
 		self.parsedLinkErrors = None
 
 	def prepareBuild( self ):
-		log.LOG_BUILD( "Preparing tasks for {} ({} {}/{})...".format( self.output_name, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
 		wd = os.getcwd( )
 		os.chdir( self.workingDirectory )
 
-		self.activeToolchain = self.toolchains[self.activeToolchainName]
+		self.activeToolchain.SetActiveTool("linker")
+
+		log.LOG_BUILD( "Preparing tasks for {} ({} {}/{})...".format( self.outputName, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
 
 		global currentProject
 		currentProject = self
 
 		self.activeToolchain.prePrepareBuildStep(self)
 		if self.prePrepareBuildStep:
-			log.LOG_BUILD( "Running pre-PrepareBuild step for {} ({} {}/{})".format( self.output_name, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
+			log.LOG_BUILD( "Running pre-PrepareBuild step for {} ({} {}/{})".format( self.outputName, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
 			self.prePrepareBuildStep(self)
 
-		self.activeToolchain.SetActiveTool("linker")
-		self.output_dir = os.path.abspath( self.output_dir ).format(project=self)
-		if not os.access(self.output_dir, os.F_OK):
-			os.makedirs(self.output_dir)
+		self.outputDir = os.path.abspath( self.outputDir ).format(project=self)
+
+		# Create the executable/library output directory if it doesn't exist.
+		if not os.access(self.outputDir, os.F_OK):
+			os.makedirs(self.outputDir)
 
 		alteredLibraryDirs = []
-		for directory in self.library_dirs:
+		for directory in self.libraryDirs:
 			directory = directory.format(project=self)
 			if not os.access(directory, os.F_OK):
 				log.LOG_WARN("Library path {} does not exist!".format(directory))
 			alteredLibraryDirs.append(directory)
-		self.library_dirs = alteredLibraryDirs
+		self.libraryDirs = alteredLibraryDirs
 
 		#Kind of hacky. The libraries returned here are a temporary object that's been created by combining
 		#base, toolchain, and architecture information. We need to bind it to something more permanent so we
@@ -603,21 +610,25 @@ class projectSettings( object ):
 
 		for dep in self.reconciledLinkDepends:
 			proj = _shared_globals.projects[dep]
+			proj.activeToolchain.SetActiveTool("linker")
 			if proj.type == csbuild.ProjectType.StaticLibrary and self.linkMode == csbuild.StaticLinkMode.LinkIntermediateObjects:
 				continue
-			self.libraries.add(proj.output_name.split(".")[0])
+			self.libraries.add(proj.outputName.split(".")[0])
+			dir = proj.outputDir.format(project=proj)
+			if dir not in self.libraryDirs:
+				self.libraryDirs.append(dir)
 
 		self.activeToolchain.SetActiveTool("compiler")
-		self.obj_dir = os.path.abspath( self.obj_dir ).format(project=self)
-		self.csbuild_dir = os.path.join( self.obj_dir, ".csbuild" )
+		self.objDir = os.path.abspath( self.objDir ).format(project=self)
+		self.csbuildDir = os.path.join( self.objDir, ".csbuild" )
 
 		alteredIncludeDirs = []
-		for directory in self.include_dirs:
+		for directory in self.includeDirs:
 			directory = directory.format(project=self)
 			if not os.access(directory, os.F_OK):
 				log.LOG_WARN("Include path {} does not exist!".format(directory))
 			alteredIncludeDirs.append(directory)
-		self.include_dirs = alteredIncludeDirs
+		self.includeDirs = alteredIncludeDirs
 
 		def apply_macro(l):
 			alteredList = []
@@ -626,52 +637,63 @@ class projectSettings( object ):
 				alteredList.append(s)
 			return alteredList
 
-		self.exclude_dirs = apply_macro(self.exclude_dirs)
+		self.excludeDirs = apply_macro(self.excludeDirs)
 
 		self.extraFiles = apply_macro(self.extraFiles)
 		self.extraDirs = apply_macro(self.extraDirs)
-		self.extraObjs = apply_macro(self.extraObjs)
-		self.exclude_files = apply_macro(self.exclude_files)
+		self.extraObjs = set(apply_macro(list(self.extraObjs)))
+		self.excludeFiles = apply_macro(self.excludeFiles)
 		self.precompile = apply_macro(self.precompile)
 		self.precompileAsC = apply_macro(self.precompileAsC)
-		self.precompile_exclude = apply_macro(self.precompile_exclude)
+		self.precompileExcludeFiles = apply_macro(self.precompileExcludeFiles)
 
-		self.header_subdir = self.header_subdir.format(project=self)
+		self.headerInstallSubdir = self.headerInstallSubdir.format(project=self)
 
-		self.exclude_dirs.append( self.csbuild_dir )
+		self.excludeDirs.append( self.csbuildDir )
 
 		self.activeToolchain.SetActiveTool("linker")
 		if self.ext is None:
-			self.ext = self.activeToolchain.Linker().get_default_extension( self.type )
+			self.ext = self.activeToolchain.Linker().GetDefaultOutputExtension( self.type )
 
-		self.output_name += self.ext
+		self.outputName += self.ext
 		self.activeToolchain.SetActiveTool("compiler")
 
-		if not os.access(self.csbuild_dir , os.F_OK):
-			os.makedirs( self.csbuild_dir )
+		if not os.access(self.csbuildDir , os.F_OK):
+			os.makedirs( self.csbuildDir )
+
+		# Walk the source directory and construct the paths to each possible intermediate object file.
+		# Make sure the paths exist, and if they don't, create them.
+		for root, _, _ in os.walk(self.workingDirectory):
+			# Exclude the intermediate and output paths in case they're in the working directory.
+			if ".csbuild" in root or self.outputDir in root or self.objDir in root:
+				continue
+			tempFilename = os.path.join(root, "not_a_real.file")
+			objFilePath = os.path.dirname(_utils.GetSourceObjPath(self, tempFilename))
+			if not os.access(objFilePath, os.F_OK):
+				os.makedirs(objFilePath)
 
 		for item in self.fileOverrideSettings.items():
 			item[1].activeToolchain = item[1].toolchains[self.activeToolchainName]
-			self.ccOverrideCmds[item[0]] = self.activeToolchain.Compiler().get_base_cc_command( item[1] )
-			self.cxxOverrideCmds[item[0]] = self.activeToolchain.Compiler().get_base_cxx_command( item[1] )
-			self.ccpcOverrideCmds[item[0]] = self.activeToolchain.Compiler().get_base_cc_precompile_command( item[1] )
-			self.cxxpcOverrideCmds[item[0]] = self.activeToolchain.Compiler().get_base_cxx_precompile_command( item[1] )
+			self.ccOverrideCmds[item[0]] = self.activeToolchain.Compiler().GetBaseCcCommand( item[1] )
+			self.cxxOverrideCmds[item[0]] = self.activeToolchain.Compiler().GetBaseCxxCommand( item[1] )
+			self.ccpcOverrideCmds[item[0]] = self.activeToolchain.Compiler().GetBaseCcPrecompileCommand( item[1] )
+			self.cxxpcOverrideCmds[item[0]] = self.activeToolchain.Compiler().GetBaseCxxPrecompileCommand( item[1] )
 
-		self.cccmd = self.activeToolchain.Compiler().get_base_cc_command( self )
-		self.cxxcmd = self.activeToolchain.Compiler().get_base_cxx_command( self )
-		self.ccpccmd = self.activeToolchain.Compiler().get_base_cc_precompile_command( self )
-		self.cxxpccmd = self.activeToolchain.Compiler().get_base_cxx_precompile_command( self )
+		self.ccCmd = self.activeToolchain.Compiler().GetBaseCcCommand( self )
+		self.cxxCmd = self.activeToolchain.Compiler().GetBaseCxxCommand( self )
+		self.ccpccmd = self.activeToolchain.Compiler().GetBaseCcPrecompileCommand( self )
+		self.cxxpccmd = self.activeToolchain.Compiler().GetBaseCxxPrecompileCommand( self )
 
-		cmdfile = os.path.join( self.csbuild_dir, "{}.csbuild".format( self.targetName ) )
+		cmdfile = os.path.join( self.csbuildDir, "{}.csbuild".format( self.targetName ) )
 		cmd = ""
 		if os.access(cmdfile , os.F_OK):
 			with open( cmdfile, "r" ) as f:
 				cmd = f.read( )
 
-		if self.cxxcmd + self.cccmd != cmd or _shared_globals.rebuild:
-			self.recompile_all = True
+		if self.cxxCmd + self.ccCmd != cmd or _shared_globals.rebuild:
+			self.recompileAll = True
 			with open( cmdfile, "w" ) as f:
-				f.write( self.cxxcmd + self.cccmd )
+				f.write( self.cxxCmd + self.ccCmd )
 
 
 		self.RediscoverFiles()
@@ -689,7 +711,7 @@ class projectSettings( object ):
 
 		self.activeToolchain.postPrepareBuildStep(self)
 		if self.postPrepareBuildStep:
-			log.LOG_BUILD( "Running post-PrepareBuild step for {} ({} {}/{})".format( self.output_name, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
+			log.LOG_BUILD( "Running post-PrepareBuild step for {} ({} {}/{})".format( self.outputName, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
 			self.postPrepareBuildStep(self)
 
 		os.chdir( wd )
@@ -703,14 +725,14 @@ class projectSettings( object ):
 		if not self.forceChunks:
 			self.allsources = []
 			self.allheaders = []
-			self.cppheaders = []
-			self.cheaders = []
+			self.cppHeaders = []
+			self.cHeaders = []
 
-			self.get_files( self.allsources, self.cppheaders, self.cheaders )
+			self.get_files( self.allsources, self.cppHeaders, self.cHeaders )
 			if self.extraFiles:
 				log.LOG_INFO("Appending extra files {}".format(self.extraFiles))
 				self.allsources += self.extraFiles
-			self.allheaders = self.cppheaders + self.cheaders
+			self.allheaders = self.cppHeaders + self.cHeaders
 
 			if not self.allsources:
 				return
@@ -720,7 +742,7 @@ class projectSettings( object ):
 		else:
 			self.allsources = list( itertools.chain( *self.forceChunks ) )
 
-		if not _shared_globals.CleanBuild and not _shared_globals.do_install and csbuild.get_option(
+		if not _shared_globals.CleanBuild and not _shared_globals.do_install and csbuild.GetOption(
 				"generate_solution" ) is None:
 			for source in self.allsources:
 				if self.should_recompile( source ):
@@ -730,68 +752,228 @@ class projectSettings( object ):
 
 		_shared_globals.allfiles |= set(self.sources)
 
-	def __getattribute__( self, name ):
-		activeToolchain = object.__getattribute__( self, "activeToolchain" )
-		if activeToolchain:
-			if activeToolchain.activeTool and name in activeToolchain.activeTool.settingsOverrides:
-				ret = activeToolchain.activeTool.settingsOverrides[name]
+	def SetValue(self, key, value):
+		scope = self._currentScope
+		if scope & csbuild.ScopeDef.Self:
+			setattr(self, key, value)
+		if scope & csbuild.ScopeDef.Intermediate:
+			self._intermediateScopeSettings[key] = value
+		if scope & csbuild.ScopeDef.Final:
+			self._finalScopeSettings[key] = value
 
-				if ret:
-					if isinstance( ret, dict ):
-						ret2 = object.__getattribute__( self, name )
-						ret2.update( ret )
-						return ret2
-					elif isinstance( ret, list ):
-						return ret + object.__getattribute__( self, name )
-					elif isinstance( ret, set ):
-						return ret | object.__getattribute__( self, name )
-					elif isinstance( ret, csbuild.projectSettings.projectSettings.UserData ):
-						ret2 = object.__getattribute__( self, name )
-						ret2.dataDict.update( ret.dataDict )
-						return ret2
+	def ExtendList(self, key, value):
+		scope = self._currentScope
+		if scope & csbuild.ScopeDef.Self:
+			setattr(self, key, getattr(self, key) + value)
+		if scope & csbuild.ScopeDef.Intermediate:
+			if key not in self._intermediateScopeSettings:
+				self._intermediateScopeSettings[key] = []
+			self._intermediateScopeSettings[key] += value
+		if scope & csbuild.ScopeDef.Final:
+			if key not in self._finalScopeSettings:
+				self._finalScopeSettings[key] = []
+			self._finalScopeSettings[key] += value
 
-				return ret
-			elif name in activeToolchain.settingsOverrides:
-				ret = activeToolchain.settingsOverrides[name]
+	def AppendList(self, key, value):
+		scope = self._currentScope
+		if scope & csbuild.ScopeDef.Self:
+			getattr(self, key).append(value)
+		if scope & csbuild.ScopeDef.Intermediate:
+			if key not in self._intermediateScopeSettings:
+				self._intermediateScopeSettings[key] = []
+			self._intermediateScopeSettings[key].append(value)
+		if scope & csbuild.ScopeDef.Final:
+			if key not in self._finalScopeSettings:
+				self._finalScopeSettings[key] = []
+			self._finalScopeSettings[key].append(value)
 
-				if ret:
-					if isinstance( ret, dict ):
-						ret2 = object.__getattribute__( self, name )
-						ret2.update( ret )
-						return ret2
-					elif isinstance( ret, list ):
-						return ret + object.__getattribute__( self, name )
-					elif isinstance( ret, set ):
-						return ret | object.__getattribute__( self, name )
-					elif isinstance( ret, csbuild.projectSettings.projectSettings.UserData ):
-						ret2 = object.__getattribute__( self, name )
-						ret2.dataDict.update( ret.dataDict )
-						return ret2
+	def UpdateDict(self, key, value):
+		scope = self._currentScope
+		if scope & csbuild.ScopeDef.Self:
+			getattr(self, key).update(value)
+		if scope & csbuild.ScopeDef.Intermediate:
+			if key not in self._intermediateScopeSettings:
+				self._intermediateScopeSettings[key] = {}
+			self._intermediateScopeSettings[key].update(value)
+		if scope & csbuild.ScopeDef.Final:
+			if key not in self._finalScopeSettings:
+				self._finalScopeSettings[key] = {}
+			self._finalScopeSettings[key].update(value)
 
-				return ret
-		return object.__getattribute__( self, name )
+	def UnionSet(self, key, value):
+		scope = self._currentScope
+		if scope & csbuild.ScopeDef.Self:
+			setattr(self, key, getattr(self, key) | value)
+		if scope & csbuild.ScopeDef.Intermediate:
+			if key not in self._intermediateScopeSettings:
+				self._intermediateScopeSettings[key] = set()
+			self._intermediateScopeSettings[key] |= value
+		if scope & csbuild.ScopeDef.Final:
+			if key not in self._finalScopeSettings:
+				self._finalScopeSettings[key] = set()
+			self._finalScopeSettings[key] |= value
+
+	def AddToSet(self, key, value):
+		scope = self._currentScope
+		if scope & csbuild.ScopeDef.Self:
+			getattr(self, key).add(value)
+		if scope & csbuild.ScopeDef.Intermediate:
+			if key not in self._intermediateScopeSettings:
+				self._intermediateScopeSettings[key] = set()
+			self._intermediateScopeSettings[key].add(value)
+		if scope & csbuild.ScopeDef.Final:
+			if key not in self._finalScopeSettings:
+				self._finalScopeSettings[key] = set()
+			self._finalScopeSettings[key].add(value)
 
 
-	def __setattr__( self, name, value ):
+	def GetAttr(self, name):
+		return object.__getattribute__(self, name)
+
+
+	def SetAttr(self, name, value):
+		object.__setattr__(self, name, value)
+
+
+	def __getattribute__(self, item):
+		return object.__getattribute__(self, "GetAttr")(item)
+
+
+	def __setattr__(self, key, value):
+		object.__getattribute__(self, "SetAttr")(key, value)
+
+
+	def GetAttrNext(self, name):
+		settings = object.__getattribute__(self, "_finalizedSettings")
+		if name == "_finalizedSettings":
+			return settings
+
+		tool = object.__getattribute__(self, "activeToolchain").activeToolName
+
+		try:
+			return settings[tool][name]
+		except:
+			return object.__getattribute__(self, name)
+
+	def SetAttrNext(self, name, value):
 		if name == "state":
 			with self.mutex:
 				self.updated = True
 
-		if hasattr( self, "activeToolchain" ):
-			activeToolchain = object.__getattribute__( self, "activeToolchain" )
-			if activeToolchain:
-				if activeToolchain.activeTool and name in activeToolchain.activeTool.settingsOverrides:
-					del activeToolchain.activeTool.settingsOverrides[name]
-				if name in activeToolchain.settingsOverrides:
-					del activeToolchain.settingsOverrides[name]
-		object.__setattr__( self, name, value )
+		settings = object.__getattribute__(self, "_finalizedSettings")
+		toolchain = object.__getattribute__(self, "activeToolchain")
+
+		wasSet = False
+		for tool in toolchain.tools:
+			if name in settings[tool]:
+				settings[tool][name] = value
+				wasSet = True
+
+		if not wasSet:
+			object.__setattr__(self, name, value)
+
+	@staticmethod
+	def _combineObjects(baseObj, newObj):
+		if newObj is None:
+			return
+
+		if isinstance( newObj, dict ):
+			baseObj["obj"].update( newObj )
+		elif isinstance( newObj, list ):
+			baseObj["obj"] += newObj
+		elif isinstance( newObj, set ):
+			baseObj["obj"] |= newObj
+		elif isinstance( newObj, csbuild.projectSettings.projectSettings.UserData ):
+			baseObj["obj"].dataDict.update( newObj.dataDict )
+		else:
+			baseObj["obj"] = newObj
+
+
+	@staticmethod
+	def _processToolchain(baseObj, toolchain, name):
+		if toolchain:
+			if toolchain.activeTool and name in toolchain.activeTool._settingsOverrides:
+				obj = toolchain.activeTool._settingsOverrides[name]
+				projectSettings._combineObjects(baseObj, obj)
+
+
+	def finalizeSettings(self):
+		"""
+		Finalize the settings by applying the settings from the selected toolchain and architecture
+		:return: None
+		"""
+
+		self._finalizedSettings = {}
+		self.activeToolchain = self.toolchains[self.activeToolchainName]
+
+		for tool in self.activeToolchain.tools:
+			self._finalizedSettings[tool] = {}
+			self.activeToolchain.SetActiveTool(tool)
+			for name in self.__dict__:
+				if name == "_finalizedSettings":
+					continue
+
+				base = { "obj" : object.__getattribute__(self, name) }
+
+				projectSettings._processToolchain(base, self.activeToolchain, name)
+
+				self._finalizedSettings[tool][name] = base["obj"]
+		self.activeToolchain.SetActiveTool("linker")
+		if sys.version_info >= (3,0):
+			self.GetAttr = types.MethodType(projectSettings.GetAttrNext, self)
+			self.SetAttr = types.MethodType(projectSettings.SetAttrNext, self)
+		else:
+			self.GetAttr = types.MethodType(projectSettings.GetAttrNext, self, projectSettings)
+			self.SetAttr = types.MethodType(projectSettings.SetAttrNext, self, projectSettings)
+
+
+	def finalizeSettings2(self):
+		"""
+		Extra-finalize the settings by pulling in settings from the project dependency tree
+		:return: None
+		"""
+
+		for tool in self.activeToolchain.tools:
+			self.activeToolchain.SetActiveTool(tool)
+			for name in self.__dict__:
+				if name not in self._finalizedSettings[tool]:
+					continue
+
+				base = { "obj" : self._finalizedSettings[tool][name] }
+
+				for depend in object.__getattribute__(self, "flattenedDepends"):
+					dependProj = _shared_globals.projects[depend]
+					if self.type == csbuild.ProjectType.Application:
+						settings = object.__getattribute__(dependProj, "_finalScopeSettings")
+						if name in settings:
+							obj = settings[name]
+							projectSettings._combineObjects(base, obj)
+						toolchain = object.__getattribute__(dependProj, "finalToolchains")[object.__getattribute__(self, "activeToolchainName")]
+						toolchain.SetActiveTool(tool)
+						projectSettings._processToolchain(base, toolchain, name)
+					else:
+						settings = object.__getattribute__(dependProj, "_intermediateScopeSettings")
+						if name in settings:
+							obj = settings[name]
+							projectSettings._combineObjects(base, obj)
+						toolchain = object.__getattribute__(dependProj, "intermediateToolchains")[object.__getattribute__(self, "activeToolchainName")]
+						toolchain.SetActiveTool(tool)
+						projectSettings._processToolchain(base, toolchain, name)
+
+				self._finalizedSettings[tool][name] = base["obj"]
 
 
 	def copy( self ):
 		ret = projectSettings( )
 		toolchains = { }
+		intermediateToolchains = {}
+		finalToolchains = {}
 		for kvp in self.toolchains.items( ):
 			toolchains[kvp[0]] = kvp[1].copy( )
+		for kvp in self.intermediateToolchains.items( ):
+			intermediateToolchains[kvp[0]] = kvp[1].copy( )
+		for kvp in self.finalToolchains.items( ):
+			finalToolchains[kvp[0]] = kvp[1].copy( )
 
 		ret.__dict__ = {
 			"name": self.name,
@@ -803,70 +985,75 @@ class projectSettings( object ):
 			"linkDependsIntermediate": list( self.linkDependsIntermediate ),
 			"linkDependsFinal": list( self.linkDependsFinal ),
 			"reconciledLinkDepends" : set( self.reconciledLinkDepends ),
+			"flattenedDepends" : set(self.flattenedDepends),
 			"srcDepends": list( self.srcDepends ),
 			"srcDependsIntermediate": list( self.srcDependsIntermediate ),
 			"srcDependsFinal": list( self.srcDependsFinal ),
 			"func": self.func,
 			"libraries": set( self.libraries ),
-			"static_libraries": set( self.static_libraries ),
-			"shared_libraries": set( self.shared_libraries ),
-			"include_dirs": list( self.include_dirs ),
-			"library_dirs": list( self.library_dirs ),
-			"opt_level": self.opt_level,
-			"debug_level": self.debug_level,
+			"staticLibraries": set( self.staticLibraries ),
+			"sharedLibraries": set( self.sharedLibraries ),
+			"frameworks": set( self.frameworks ),
+			"includeDirs": list( self.includeDirs ),
+			"libraryDirs": list( self.libraryDirs ),
+			"frameworkDirs": set( self.frameworkDirs ),
+			"optLevel": self.optLevel,
+			"debugLevel": self.debugLevel,
 			"defines": list( self.defines ),
 			"undefines": list( self.undefines ),
 			"cxx": self.cxx,
 			"cc": self.cc,
 			"hasCppFiles": self.hasCppFiles,
-			"obj_dir": self.obj_dir,
-			"output_dir": self.output_dir,
-			"csbuild_dir": self.csbuild_dir,
-			"output_name": self.output_name,
-			"install_output": self.install_output,
-			"install_headers": self.install_headers,
-			"header_subdir": self.header_subdir,
+			"objDir": self.objDir,
+			"outputDir": self.outputDir,
+			"csbuildDir": self.csbuildDir,
+			"outputName": self.outputName,
+			"installOutput": self.installOutput,
+			"installHeaders": self.installHeaders,
+			"headerInstallSubdir": self.headerInstallSubdir,
 			"sources": list( self.sources ),
 			"allsources": list( self.allsources ),
 			"allheaders": list( self.allheaders ),
 			"type": self.type,
 			"ext": self.ext,
 			"profile": self.profile,
-			"cpp_compiler_flags": list( self.cpp_compiler_flags ),
-			"c_compiler_flags": list( self.c_compiler_flags ),
-			"linker_flags": list( self.linker_flags ),
-			"exclude_dirs": list( self.exclude_dirs ),
-			"exclude_files": list( self.exclude_files ),
-			"output_dir_set": self.output_dir_set,
-			"obj_dir_set": self.obj_dir_set,
-			"debug_set": self.debug_set,
-			"opt_set": self.opt_set,
-			"allpaths": list( self.allpaths ),
+			"cxxCompilerFlags": list( self.cxxCompilerFlags ),
+			"ccCompilerFlags": list( self.ccCompilerFlags ),
+			"linkerFlags": list( self.linkerFlags ),
+			"excludeDirs": list( self.excludeDirs ),
+			"excludeFiles": list( self.excludeFiles ),
+			"_outputDir_set": self._outputDir_set,
+			"_objDir_set": self._objDir_set,
+			"_debugLevel_set": self._debugLevel_set,
+			"_optLevel_set": self._optLevel_set,
+			"allPaths": list( self.allPaths ),
 			"chunks": list( self.chunks ),
 			"forceChunks": list( self.forceChunks ),
 			"chunksByFile" : dict( self.chunksByFile ),
-			"use_chunks": self.use_chunks,
-			"chunk_tolerance": self.chunk_tolerance,
-			"chunk_size": self.chunk_size,
-			"chunk_filesize": self.chunk_filesize,
-			"chunk_size_tolerance": self.chunk_size_tolerance,
-			"header_recursion": self.header_recursion,
-			"ignore_external_headers": self.ignore_external_headers,
-			"default_target": self.default_target,
-			"chunk_precompile": self.chunk_precompile,
+			"useChunks": self.useChunks,
+			"chunkTolerance": self.chunkTolerance,
+			"chunkSize": self.chunkSize,
+			"chunkFilesize": self.chunkFilesize,
+			"chunkSizeTolerance": self.chunkSizeTolerance,
+			"headerRecursionDepth": self.headerRecursionDepth,
+			"ignoreExternalHeaders": self.ignoreExternalHeaders,
+			"defaultTarget": self.defaultTarget,
+			"chunkedPrecompile": self.chunkedPrecompile,
 			"precompile": list( self.precompile ),
 			"precompileAsC": list( self.precompileAsC ),
-			"precompile_exclude": list( self.precompile_exclude ),
-			"cppheaderfile": self.cppheaderfile,
-			"cheaderfile": self.cheaderfile,
+			"precompileExcludeFiles": list( self.precompileExcludeFiles ),
+			"cppHeaderFile": self.cppHeaderFile,
+			"cHeaderFile": self.cHeaderFile,
 			"unity": self.unity,
-			"precompile_done": self.precompile_done,
-			"precompile_started": self.precompile_started,
-			"no_warnings": self.no_warnings,
+			"precompileDone": self.precompileDone,
+			"precompileStarted": self.precompileStarted,
+			"noWarnings": self.noWarnings,
 			"toolchains": toolchains,
-			"cxxcmd": self.cxxcmd,
-			"cccmd": self.cccmd,
-			"recompile_all": self.recompile_all,
+			"intermediateToolchains": intermediateToolchains,
+			"finalToolchains": finalToolchains,
+			"cxxCmd": self.cxxCmd,
+			"ccCmd": self.ccCmd,
+			"recompileAll": self.recompileAll,
 			"targets": {},
 			"archFuncs" : {},
 			"fileOverrides" : {},
@@ -876,21 +1063,21 @@ class projectSettings( object ):
 			"ccpcOverrideCmds" : dict(self.ccpcOverrideCmds),
 			"cxxpcOverrideCmds" : dict(self.cxxpcOverrideCmds),
 			"targetName": self.targetName,
-			"final_chunk_set": list( self.final_chunk_set ),
-			"needs_c_precompile": self.needs_c_precompile,
-			"needs_cpp_precompile": self.needs_cpp_precompile,
-			"compiles_completed": self.compiles_completed,
-			"compile_failed": self.compile_failed,
+			"_finalChunkSet": list( self._finalChunkSet ),
+			"needsPrecompileC": self.needsPrecompileC,
+			"needsPrecompileCpp": self.needsPrecompileCpp,
+			"compilationCompleted": self.compilationCompleted,
+			"compilationFailed": self.compilationFailed,
 			"precompileFailed": self.precompileFailed,
-			"static_runtime": self.static_runtime,
-			"cheaders": list( self.cheaders ),
-			"cppheaders": list( self.cppheaders ),
+			"useStaticRuntime": self.useStaticRuntime,
+			"cHeaders": list( self.cHeaders ),
+			"cppHeaders": list( self.cppHeaders ),
 			"activeToolchainName": self.activeToolchainName,
 			"activeToolchain": None,
-			"warnings_as_errors": self.warnings_as_errors,
-			"built_something": self.built_something,
+			"warningsAsErrors": self.warningsAsErrors,
+			"_builtSomething": self._builtSomething,
 			"outputArchitecture": self.outputArchitecture,
-			"library_locs": list( self.library_locs ),
+			"libraryLocations": list( self.libraryLocations ),
 			"scriptPath": self.scriptPath,
 			"scriptFile": self.scriptFile,
 			"mutex": threading.Lock( ),
@@ -904,10 +1091,13 @@ class projectSettings( object ):
 			"parentGroup" : self.parentGroup,
 			"extraFiles": list(self.extraFiles),
 			"extraDirs": list(self.extraDirs),
-			"extraObjs": list(self.extraObjs),
+			"extraObjs": set(self.extraObjs),
 			"linkMode" : self.linkMode,
 			"linkModeSet" : self.linkModeSet,
 			"splitChunks" : dict(self.splitChunks),
+			"_currentScope" : self._currentScope,
+			"_intermediateScopeSettings" : {},
+			"_finalScopeSettings" : {},
 			"state" : self.state,
 			"startTime" : self.startTime,
 			"buildEnd" : self.buildEnd,
@@ -920,8 +1110,8 @@ class projectSettings( object ):
 			"fileStatus" : dict(self.fileStatus),
 			"fileStart" : dict(self.fileStart),
 			"fileEnd" : dict(self.fileEnd),
-			"cpchcontents" : list(self.cpchcontents),
-			"cpppchcontents" : list(self.cpppchcontents),
+			"cPchContents" : list(self.cPchContents),
+			"cppPchContents" : list(self.cppPchContents),
 			"updated" : self.updated,
 			"warnings" : self.warnings,
 			"errors" : self.errors,
@@ -962,44 +1152,66 @@ class projectSettings( object ):
 		for file in self.fileOverrideSettings:
 			ret.fileOverrideSettings.update( { file : self.fileOverrideSettings[file].copy() } )
 
+		for key in self._intermediateScopeSettings:
+			val = self._intermediateScopeSettings[key]
+			if isinstance(val, list):
+				ret._intermediateScopeSettings[key] = list(val)
+			elif isinstance(val, set):
+				ret._intermediateScopeSettings[key] = set(val)
+			elif isinstance(val, dict):
+				ret._intermediateScopeSettings[key] = dict(val)
+			else:
+				ret._intermediateScopeSettings[key] = val
+
+		for key in self._finalScopeSettings:
+			val = self._finalScopeSettings[key]
+			if isinstance(val, list):
+				ret._finalScopeSettings[key] = list(val)
+			elif isinstance(val, set):
+				ret._finalScopeSettings[key] = set(val)
+			elif isinstance(val, dict):
+				ret._finalScopeSettings[key] = dict(val)
+			else:
+				ret._finalScopeSettings[key] = val
+
 		return ret
 
 
-	def get_files( self, sources = None, headers = None, cheaders = None ):
+	def get_files( self, sources = None, headers = None, cHeaders = None ):
 		"""
 		Steps through the current directory tree and finds all of the source and header files, and returns them as a list.
 		Accepts two lists as arguments, which it populates. If sources or headers are excluded from the parameters, it will
 		ignore files of the relevant types.
 		"""
 
-		exclude_files = set( )
-		exclude_dirs = set( )
+		excludeFiles = set( )
+		excludeDirs = set( )
 		ambiguousHeaders = set()
 
-		for exclude in self.exclude_files:
-			exclude_files |= set( glob.glob( exclude ) )
+		for exclude in self.excludeFiles:
+			excludeFiles |= set( glob.glob( exclude ) )
 
-		for exclude in self.exclude_dirs:
-			exclude_dirs |= set( glob.glob( exclude ) )
+		for exclude in self.excludeDirs:
+			excludeDirs |= set( glob.glob( exclude ) )
 
 		for sourceDir in [ '.' ] + self.extraDirs:
 			for root, dirnames, filenames in os.walk( sourceDir ):
 				absroot = os.path.abspath( root )
-				if absroot in exclude_dirs:
-					if absroot != self.csbuild_dir:
+				if absroot in excludeDirs:
+					if absroot != self.csbuildDir:
 						log.LOG_INFO( "Skipping dir {0}".format( root ) )
 					continue
-				if ".csbuild" in root:
+				if ".csbuild" in root or self.objDir in root or self.outputDir in root:
 					continue
-				if absroot == self.csbuild_dir or absroot.startswith( self.csbuild_dir ):
+				if absroot == self.csbuildDir or absroot.startswith( self.csbuildDir ):
 					continue
 				bFound = False
-				for testDir in exclude_dirs:
+				for testDir in excludeDirs:
 					if absroot.startswith( testDir ):
 						bFound = True
 						break
 				if bFound:
-					if not absroot.startswith( self.csbuild_dir ):
+					if not absroot.startswith( self.csbuildDir ):
 						log.LOG_INFO( "Skipping dir {0}".format( root ) )
 					continue
 				log.LOG_INFO( "Looking in directory {0}".format( root ) )
@@ -1007,13 +1219,13 @@ class projectSettings( object ):
 					for extension in self.cppExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
-							if path not in exclude_files:
+							if path not in excludeFiles:
 								sources.append( os.path.abspath( path ) )
 								self.hasCppFiles = True
 					for extension in self.cExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
-							if path not in exclude_files:
+							if path not in excludeFiles:
 								sources.append( os.path.abspath( path ) )
 
 					sources.sort( key = str.lower )
@@ -1022,27 +1234,27 @@ class projectSettings( object ):
 					for extension in self.cppHeaderExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
-							if path not in exclude_files:
+							if path not in excludeFiles:
 								headers.append( os.path.abspath( path ) )
 								self.hasCppFiles = True
-				if cheaders is not None:
+				if cHeaders is not None:
 					for extension in self.cHeaderExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
-							if path not in exclude_files:
-								cheaders.append( os.path.abspath( path ) )
+							if path not in excludeFiles:
+								cHeaders.append( os.path.abspath( path ) )
 
-				if headers is not None or cheaders is not None:
+				if headers is not None or cHeaders is not None:
 					for extension in self.ambiguousHeaderExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
-							if path not in exclude_files:
+							if path not in excludeFiles:
 								ambiguousHeaders.add( os.path.abspath( path ) )
 
 		if self.hasCppFiles:
 			headers += list(ambiguousHeaders)
 		else:
-			cheaders += list(ambiguousHeaders)
+			cHeaders += list(ambiguousHeaders)
 
 		headers.sort( key = str.lower )
 
@@ -1065,7 +1277,7 @@ class projectSettings( object ):
 				if os.access(path, os.F_OK):
 					return path
 
-			for incDir in self.include_dirs:
+			for incDir in self.includeDirs:
 				path = os.path.join( incDir, headerFile )
 				if os.access(path, os.F_OK):
 					_shared_globals.headerPaths[relativeDir][headerFile] = path
@@ -1127,7 +1339,7 @@ class projectSettings( object ):
 			#Find the header in the listed includes.
 			subpath = self.get_full_path( header, os.path.dirname( headerFile ) )
 
-			if self.ignore_external_headers and not subpath.startswith( self.workingDirectory ):
+			if self.ignoreExternalHeaders and not subpath.startswith( self.workingDirectory ):
 				continue
 
 			#If we've already looked at this header (i.e., it was included twice) just ignore it
@@ -1142,7 +1354,7 @@ class projectSettings( object ):
 
 			theseheaders = set( )
 
-			if self.header_recursion != 1:
+			if self.headerRecursionDepth != 1:
 				self.follow_headers2( subpath, theseheaders, 1, headerFile )
 
 			_shared_globals.allheaders.update( { subpath: theseheaders } )
@@ -1173,7 +1385,7 @@ class projectSettings( object ):
 		for header in headers:
 			subpath = self.get_full_path( header, os.path.dirname( headerFile ) )
 
-			if self.ignore_external_headers and not subpath.startswith( self.workingDirectory ):
+			if self.ignoreExternalHeaders and not subpath.startswith( self.workingDirectory ):
 				continue
 
 				#Check to see if we've already followed this header.
@@ -1189,7 +1401,7 @@ class projectSettings( object ):
 
 			theseheaders = set( allheaders )
 
-			if self.header_recursion == 0 or n < self.header_recursion:
+			if self.headerRecursionDepth == 0 or n < self.headerRecursionDepth:
 				self.follow_headers2( subpath, theseheaders, n + 1, headerFile )
 
 			_shared_globals.allheaders.update( { subpath: theseheaders } )
@@ -1201,25 +1413,26 @@ class projectSettings( object ):
 
 		log.LOG_INFO( "Checking whether to recompile {0}...".format( srcFile ) )
 
-		if self.recompile_all:
+		if self.recompileAll:
 			log.LOG_INFO(
 				"Going to recompile {0} because settings have changed in the makefile that will impact output.".format(
 					srcFile ) )
 			return True
 
-		basename = os.path.basename( srcFile ).split( '.' )[0]
 		if not ofile:
-			ofile = os.path.join( self.obj_dir, "{}_{}{}".format( basename,
-				self.targetName, self.activeToolchain.Compiler().get_obj_ext() ))
+			ofile = _utils.GetSourceObjPath( self, srcFile )
 
-		if self.use_chunks and not _shared_globals.disable_chunks:
+		if self.useChunks and not _shared_globals.disable_chunks:
 			chunk = self.get_chunk( srcFile )
-			chunkfile = os.path.join( self.obj_dir, "{}_{}{}".format( chunk,
-				self.targetName, self.activeToolchain.Compiler().get_obj_ext() ) )
+			if chunk:
+				log.LOG_INFO("{} belongs to chunk {}".format(srcFile, chunk))
 
-			#First check: If the object file doesn't exist, we obviously have to create it.
-			if not os.access(ofile , os.F_OK):
-				ofile = chunkfile
+				chunkfile = _utils.GetChunkedObjPath( self, chunk )
+
+				log.LOG_INFO("Checking for chunk file {}...".format(chunkfile))
+				#First check: If the object file doesn't exist, we obviously have to create it.
+				if not os.access(ofile , os.F_OK):
+					ofile = chunkfile
 
 		if not os.access(ofile , os.F_OK):
 			log.LOG_INFO(
@@ -1245,7 +1458,7 @@ class projectSettings( object ):
 				newmd5 = _shared_globals.newmd5s[srcFile]
 			except KeyError:
 				with open( srcFile, "r" ) as f:
-					newmd5 = _utils.get_md5( f )
+					newmd5 = _utils.GetMd5( f )
 				_shared_globals.newmd5s.update( { srcFile: newmd5 } )
 
 			if platform.system( ) == "Windows":
@@ -1259,7 +1472,7 @@ class projectSettings( object ):
 			else:
 				baseName = os.path.basename( src )
 
-			md5file = "{}.md5".format( os.path.join( self.csbuild_dir, "md5s", hashlib.md5( src ).hexdigest(), baseName ) )
+			md5file = "{}.md5".format( os.path.join( self.csbuildDir, "md5s", hashlib.md5( src ).hexdigest(), baseName ) )
 
 			if os.access(md5file , os.F_OK):
 				try:
@@ -1319,7 +1532,7 @@ class projectSettings( object ):
 				else:
 					baseName = os.path.basename( header )
 
-				md5file = "{}.md5".format( os.path.join( self.csbuild_dir, "md5s", hashlib.md5( header ).hexdigest(), baseName ) )
+				md5file = "{}.md5".format( os.path.join( self.csbuildDir, "md5s", hashlib.md5( header ).hexdigest(), baseName ) )
 
 				if os.access(md5file , os.F_OK):
 					try:
@@ -1330,7 +1543,7 @@ class projectSettings( object ):
 						else:
 							f = open( path )
 						with f:
-							newmd5 = _utils.get_md5( f )
+							newmd5 = _utils.GetMd5( f )
 						_shared_globals.newmd5s.update( { path: newmd5 } )
 					if os.access(md5file , os.F_OK):
 						try:
@@ -1352,8 +1565,8 @@ class projectSettings( object ):
 			for pair in updatedheaders:
 				files.append( pair[0] )
 				path = pair[1]
-				if path not in self.allpaths:
-					self.allpaths.append( os.path.abspath( path ) )
+				if path not in self.allPaths:
+					self.allPaths.append( os.path.abspath( path ) )
 			log.LOG_INFO(
 				"Going to recompile {0} because included headers {1} have been modified since the last successful build."
 				.format(
@@ -1379,8 +1592,8 @@ class projectSettings( object ):
 			for library in libraries:
 				bFound = False
 				for depend in self.reconciledLinkDepends:
-					if _shared_globals.projects[depend].output_name.startswith(library) or \
-							_shared_globals.projects[depend].output_name.startswith(
+					if _shared_globals.projects[depend].outputName.startswith(library) or \
+							_shared_globals.projects[depend].outputName.startswith(
 									"lib{}.".format( library ) ):
 						bFound = True
 						break
@@ -1388,11 +1601,11 @@ class projectSettings( object ):
 					continue
 
 				log.LOG_INFO( "Looking for lib{0}...".format( library ) )
-				lib = self.activeToolchain.Linker().find_library( self, library, self.library_dirs,
+				lib = self.activeToolchain.Linker().FindLibrary( self, library, self.libraryDirs,
 					force_static, force_shared )
 				if lib:
 					log.LOG_INFO( "Found library lib{0} at {1}".format( library, lib ) )
-					self.library_locs.append( lib )
+					self.libraryLocations.append( lib )
 				else:
 					log.LOG_ERROR( "Could not locate library: {0}".format( library ) )
 					libraries_ok = False
@@ -1400,8 +1613,8 @@ class projectSettings( object ):
 
 
 		libraries_ok = check_libraries( self.libraries, False, False )
-		libraries_ok = check_libraries( self.static_libraries, True, False ) and libraries_ok
-		libraries_ok = check_libraries( self.shared_libraries, False, True ) and libraries_ok
+		libraries_ok = check_libraries( self.staticLibraries, True, False ) and libraries_ok
+		libraries_ok = check_libraries( self.sharedLibraries, False, True ) and libraries_ok
 		if not libraries_ok:
 			log.LOG_ERROR( "Some dependencies are not met on your system." )
 			log.LOG_ERROR( "Check that all required libraries are installed." )
@@ -1418,6 +1631,12 @@ class projectSettings( object ):
 
 		extension = "." + chunk[0].rsplit(".", 1)[1]
 		newFileExtension = "." + newFile.rsplit(".", 1)[1]
+
+		#TODO: Remove this once the source file extension management has been reworked.
+		# Objective-C/C++ files should not be chunked since they won't play nice with C++.
+		if extension == ".m" or extension == ".mm":
+			return False
+
 		if(
 			(extension in self.cExtensions and newFileExtension in self.cppExtensions) or
 			(extension in self.cppExtensions and newFileExtension in self.cExtensions)
@@ -1441,13 +1660,13 @@ class projectSettings( object ):
 		""" Converts the list into a list of lists - i.e., "chunks"
 		Each chunk represents one compilation unit in the chunked build system.
 		"""
-		if _shared_globals.disable_chunks or not self.use_chunks:
+		if _shared_globals.disable_chunks or not self.useChunks:
 			return [l]
 
 		if self.unity:
 			return [l]
 		chunks = []
-		if self.chunk_filesize > 0:
+		if self.chunkFilesize > 0:
 			sorted_list = sorted( l, key = os.path.getsize, reverse=True )
 			while sorted_list:
 				remaining = []
@@ -1461,7 +1680,7 @@ class projectSettings( object ):
 						remaining.append(srcFile)
 						continue
 					filesize = os.path.getsize( srcFile )
-					if chunksize + filesize > self.chunk_filesize:
+					if chunksize + filesize > self.chunkFilesize:
 						chunks.append( chunk )
 						remaining += sorted_list[i::-1]
 						log.LOG_INFO( "Made chunk: {0}".format( chunk ) )
@@ -1480,7 +1699,7 @@ class projectSettings( object ):
 					chunks.append( chunk )
 					log.LOG_INFO( "Made chunk: {0}".format( chunk ) )
 					log.LOG_INFO( "Chunk size: {0}".format( chunksize ) )
-		elif self.chunk_size > 0:
+		elif self.chunkSize > 0:
 			tempList = l
 			while tempList:
 				chunk = []
@@ -1493,7 +1712,7 @@ class projectSettings( object ):
 
 					chunk.append(srcFile)
 
-					if len(chunk) == self.chunk_size:
+					if len(chunk) == self.chunkSize:
 						remaining += tempList[i+1:]
 						chunks.append( chunk )
 						log.LOG_INFO( "Made chunk: {0}".format( chunk ) )
@@ -1512,8 +1731,18 @@ class projectSettings( object ):
 		"""Retrieves the chunk that a given file belongs to."""
 		for chunk in self.chunks:
 			if srcFile in chunk:
-				return _utils.get_chunk_name( self.output_name, chunk )
+				return _utils.GetChunkName( self.outputName, chunk )
 		return None
+
+
+	def ContainsChunk( self, inputChunkFile ):
+		# This logic really sucks and needs to be improved.
+		inputChunkFile = os.path.splitext( os.path.basename( inputChunkFile ) )[0]
+		for chunk in self.chunks:
+			chunkName = _utils.GetChunkName( self.outputName, chunk )
+			if inputChunkFile == chunkName:
+				return True
+		return False
 
 
 	def save_md5( self, inFile ):
@@ -1527,7 +1756,7 @@ class projectSettings( object ):
 		else:
 			baseName = os.path.basename( inFile )
 
-		md5file = "{}.md5".format( os.path.join( self.csbuild_dir, "md5s", hashlib.md5( inFile ).hexdigest(), baseName ) )
+		md5file = "{}.md5".format( os.path.join( self.csbuildDir, "md5s", hashlib.md5( inFile ).hexdigest(), baseName ) )
 
 		md5dir = os.path.dirname( md5file )
 		if not os.access(md5dir , os.F_OK):
@@ -1541,7 +1770,7 @@ class projectSettings( object ):
 			else:
 				f = open( inFile )
 			with f:
-				newmd5 = _utils.get_md5( f )
+				newmd5 = _utils.GetMd5( f )
 		finally:
 			with open( md5file, "wb" ) as f:
 				f.write( newmd5 )
@@ -1554,27 +1783,27 @@ class projectSettings( object ):
 		for header in headers:
 			self.save_md5( header )
 
-		for path in self.allpaths:
+		for path in self.allPaths:
 			self.save_md5( path )
 
 
 	def precompile_headers( self ):
-		if not self.needs_c_precompile and not self.needs_cpp_precompile:
+		if not self.needsPrecompileC and not self.needsPrecompileCpp:
 			return True
 
 		starttime = time.time( )
 		log.LOG_BUILD( "Precompiling headers..." )
 
-		self.built_something = True
+		self._builtSomething = True
 
-		if not os.access(self.obj_dir , os.F_OK):
-			os.makedirs( self.obj_dir )
+		if not os.access(self.objDir , os.F_OK):
+			os.makedirs( self.objDir )
 
 		thread = None
 		cthread = None
 		cppobj = ""
 		cobj = ""
-		if self.needs_cpp_precompile:
+		if self.needsPrecompileCpp:
 			if not _shared_globals.semaphore.acquire( False ):
 				if _shared_globals.max_threads != 1:
 					log.LOG_INFO( "Waiting for a build thread to become available..." )
@@ -1584,19 +1813,19 @@ class projectSettings( object ):
 
 			log.LOG_BUILD(
 				"Precompiling {0} ({1}/{2})...".format(
-					self.cppheaderfile,
+					self.cppHeaderFile,
 					_shared_globals.current_compile,
 					_shared_globals.total_compiles ) )
 
 			_shared_globals.current_compile += 1
 
-			cppobj = self.activeToolchain.Compiler().get_pch_file( self.cppheaderfile )
+			cppobj = self.activeToolchain.Compiler().GetPchFile( self.cppHeaderFile )
 
 			#precompiled headers block on current thread - run runs on current thread rather than starting a new one
-			thread = _utils.threaded_build( self.cppheaderfile, cppobj, self, True )
+			thread = _utils.ThreadedBuild( self.cppHeaderFile, cppobj, self, True )
 			thread.start( )
 
-		if self.needs_c_precompile:
+		if self.needsPrecompileC:
 			if not _shared_globals.semaphore.acquire( False ):
 				if _shared_globals.max_threads != 1:
 					log.LOG_INFO( "Waiting for a build thread to become available..." )
@@ -1606,16 +1835,16 @@ class projectSettings( object ):
 
 			log.LOG_BUILD(
 				"Precompiling {0} ({1}/{2})...".format(
-					self.cheaderfile,
+					self.cHeaderFile,
 					_shared_globals.current_compile,
 					_shared_globals.total_compiles ) )
 
 			_shared_globals.current_compile += 1
 
-			cobj = self.activeToolchain.Compiler().get_pch_file( self.cheaderfile )
+			cobj = self.activeToolchain.Compiler().GetPchFile( self.cHeaderFile )
 
 			#precompiled headers block on current thread - run runs on current thread rather than starting a new one
-			cthread = _utils.threaded_build( self.cheaderfile, cobj, self, True )
+			cthread = _utils.ThreadedBuild( self.cHeaderFile, cobj, self, True )
 			cthread.start( )
 
 		if thread:
@@ -1630,10 +1859,10 @@ class projectSettings( object ):
 		totalsec = math.floor( totaltime % 60 )
 		log.LOG_BUILD( "Precompile took {0}:{1:02}".format( int( totalmin ), int( totalsec ) ) )
 
-		self.precompile_done = True
-		self.precompileFailed = self.compile_failed
+		self.precompileDone = True
+		self.precompileFailed = self.compilationFailed
 
-		return not self.compile_failed
+		return not self.compilationFailed
 
 
 
@@ -1641,31 +1870,31 @@ class ProjectGroup( object ):
 	"""
 	Defines a group of projects, and also may contain subgroups.
 
-	@ivar tempprojects: Temporary list of projects directly under this group
-	@type tempprojects: dict[str, projectSettings]
+	:ivar tempprojects: Temporary list of projects directly under this group
+	:type tempprojects: dict[str, projectSettings]
 
-	@ivar projects: Fully fleshed-out list of projects under this group
+	:ivar projects: Fully fleshed-out list of projects under this group
 	Dict is { name : { target : project } }
-	@type projects: dict[str, dict[str, projectSettings]]
+	:type projects: dict[str, dict[str, projectSettings]]
 
-	@ivar subgroups: List of child groups
-	@type subgroups: dict[str, ProjectGroup]
+	:ivar subgroups: List of child groups
+	:type subgroups: dict[str, ProjectGroup]
 
-	@ivar name: Group name
-	@type name: str
+	:ivar name: Group name
+	:type name: str
 
-	@ivar parentGroup: The group's parent group
-	@type parentGroup: ProjectGroup
+	:ivar parentGroup: The group's parent group
+	:type parentGroup: ProjectGroup
 	"""
 	def __init__( self, name, parentGroup ):
 		"""
 		Create a new ProjectGroup
 
-		@param name: Group name
-		@type name: str
+		:param name: Group name
+		:type name: str
 
-		@param parentGroup: parent group
-		@type parentGroup: ProjectGroup
+		:param parentGroup: parent group
+		:type parentGroup: ProjectGroup
 		"""
 		self.tempprojects = {}
 		self.projects = {}

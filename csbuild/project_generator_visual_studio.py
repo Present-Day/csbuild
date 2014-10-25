@@ -113,10 +113,12 @@ class Project:
 		self.id = "{{{}}}".format(str(GenerateNewUuid(globalProjectUuidList, name)).upper())
 		self.isFilter = False
 		self.isBuildAllProject = False
+		self.isRegenProject = False
 		self.platformConfigList = []
 		self.fullSourceFileList = set()
 		self.fullHeaderFileList = set()
 		self.fullIncludePathList = set()
+		self.fileFilterMap = {}
 		self.makefilePath = ""
 
 
@@ -143,7 +145,7 @@ class CachedFileData:
 		canWriteOutputFile = True
 		if os.access(self._outputFilePath, os.F_OK):
 			# Any user files that already exist will be ignored to preserve user debug settings.
-			if self._isUserFile and not csbuild.get_option("do-not-ignore-user-files"):
+			if self._isUserFile and not csbuild.GetOption("do-not-ignore-user-files"):
 				log.LOG_BUILD("Ignoring: {}".format(self._outputFilePath))
 				return
 
@@ -185,9 +187,9 @@ class project_generator_visual_studio(project_generator.project_generator):
 	def __init__(self, path, solutionName, extraArgs):
 		project_generator.project_generator.__init__(self, path, solutionName, extraArgs)
 
-		versionNumber = csbuild.get_option("visual-studio-version")
+		versionNumber = csbuild.GetOption("visual-studio-version")
 
-		self._createNativeProject = False # csbuild.get_option("create-native-project")
+		self._createNativeProject = False # csbuild.GetOption("create-native-project")
 		self._visualStudioVersion = versionNumber
 		self._projectMap = {}
 		self._configList = []
@@ -225,7 +227,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 
 
 	@staticmethod
-	def additional_args(parser):
+	def AdditionalArgs(parser):
 		parser.add_argument("--visual-studio-version",
 			help = "Select the version of Visual Studio the generated solution will be compatible with.",
 			choices = VisualStudioVersion.All,
@@ -242,7 +244,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 		#)
 
 
-	def write_solution(self):
+	def WriteProjectFiles(self):
 
 		def recurseGroups(projectMap_out, parentFilter_out, projectOutputPath, projectGroup):
 			# Setup the projects first.
@@ -269,7 +271,11 @@ class project_generator_visual_studio(project_generator.project_generator):
 							projectData.platformConfigList.append((configName, platformName, toolchainName, settings))
 							projectData.fullSourceFileList.update(set(settings.allsources))
 							projectData.fullHeaderFileList.update(set(settings.allheaders))
-							projectData.fullIncludePathList.update(set(settings.include_dirs))
+							projectData.fullIncludePathList.update(set(settings.includeDirs))
+							for source in projectData.fullSourceFileList:
+								projectData.fileFilterMap[source] = os.path.join("Source Files", os.path.dirname(os.path.relpath(source, settings.workingDirectory)).replace(".." + os.path.sep, "")).rstrip(os.path.sep)
+							for header in projectData.fullHeaderFileList:
+								projectData.fileFilterMap[header] = os.path.join("Header Files", os.path.dirname(os.path.relpath(header, settings.workingDirectory)).replace(".." + os.path.sep, "")).rstrip(os.path.sep)
 
 				projectData.fullSourceFileList = sorted(projectData.fullSourceFileList)
 				projectData.fullHeaderFileList = sorted(projectData.fullHeaderFileList)
@@ -340,15 +346,23 @@ class project_generator_visual_studio(project_generator.project_generator):
 			buildAllProjectData = Project(buildAllProjectName, self._projectUuidList) # Create a new object to contain project data.
 			buildAllProjectData.outputPath = self.rootpath
 			buildAllProjectData.isBuildAllProject = True
-			buildAllProjectData.makefilePath = csbuild.scriptfiles[0] # Reference the main makefile.
+			buildAllProjectData.makefilePath = csbuild.scriptFiles[0] # Reference the main makefile.
+
+			regenProjectName = "(REGENERATE_SOLUTION)"
+			regenProjectData = Project(regenProjectName, self._projectUuidList) # Create a new object to contain project data.
+			regenProjectData.outputPath = self.rootpath
+			regenProjectData.isRegenProject = True
+			regenProjectData.makefilePath = csbuild.scriptFiles[0] # Reference the main makefile.
 
 			# The Build All project doesn't have any project settings, but it still needs all of the platforms and configurations.
 			for platformName in self._platformList:
 				for configName in self._configList:
 					buildAllProjectData.platformConfigList.append((configName, platformName, "", None))
+					regenProjectData.platformConfigList.append((configName, platformName, "", None))
 
-			# Add the Build All project to the project map.
+			# Add the Build All and Regen projects to the project map.
 			self._projectMap[buildAllProjectData.name] = buildAllProjectData
+			self._projectMap[regenProjectData.name] = regenProjectData
 
 		recurseGroups(self._projectMap, None, "", projectSettings.rootGroup)
 		resolveDependencies(self._projectMap)
@@ -655,22 +669,36 @@ class project_generator_visual_studio(project_generator.project_generator):
 						outDirNode = AddNode(propertyGroupNode, "OutDir")
 						intDirNode = AddNode(propertyGroupNode, "IntDir")
 
-						archName = self._archMap[platformName]
-						projectArg = " --project={}".format(projectData.name) if not projectData.isBuildAllProject else ""
-						mainMakefile = os.path.relpath(os.path.join(os.getcwd(), csbuild.mainfile), projectData.outputPath)
-						properConfigName = self._reverseConfigMap[configName]
+						pythonExePath = os.path.normcase(sys.executable)
+						mainMakefile = os.path.relpath(os.path.join(os.getcwd(), csbuild.mainFile), projectData.outputPath)
 
-						buildCommandNode.text = "{} {} --target={} --architecture={}{} {}".format(sys.executable, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
-						cleanCommandNode.text = "{} {} --clean --target={} --architecture={}{} {}".format(sys.executable, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
-						rebuildCommandNode.text = "{} {} --rebuild --target={} --architecture={}{} {}".format(sys.executable, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
-						includePathNode.text = ";".join(self._fullIncludePathList)
+						if not projectData.isRegenProject:
+							archName = self._archMap[platformName]
+							projectArg = " --project={}".format(projectData.name) if not projectData.isBuildAllProject else ""
+							properConfigName = self._reverseConfigMap[configName]
 
-						if not projectData.isBuildAllProject:
+							buildCommandNode.text = "{} {} --target={} --architecture={}{} {}".format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
+							cleanCommandNode.text = "{} {} --clean --target={} --architecture={}{} {}".format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
+							rebuildCommandNode.text = "{} {} --rebuild --target={} --architecture={}{} {}".format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
+							includePathNode.text = ";".join(self._fullIncludePathList)
+						else:
+							buildCommandNode.text = "{} {} {}".format(pythonExePath, mainMakefile, " ".join(sys.argv[1:]))
+							rebuildCommandNode.text = buildCommandNode.text
+							cleanCommandNode.text = buildCommandNode.text
+
+						if settings and settings.defines and len(settings.defines) > 0:
+							preprocessorNode = AddNode(propertyGroupNode, "NMakePreprocessorDefinitions")
+							preprocessorNode.text = ""
+							for define in settings.defines:
+								preprocessorNode.text += "{};".format(define)
+							preprocessorNode.text += "$(NMakePreprocessorDefinitions)"
+
+						if not projectData.isBuildAllProject and not projectData.isRegenProject:
 							outputNode = AddNode(propertyGroupNode, "NMakeOutput")
 
-							outDirNode.text = os.path.relpath(settings.output_dir, projectData.outputPath)
-							intDirNode.text = os.path.relpath(settings.obj_dir, projectData.outputPath)
-							outputNode.text = os.path.relpath(os.path.join(settings.output_dir, settings.output_name), projectData.outputPath)
+							outDirNode.text = os.path.relpath(settings.outputDir, projectData.outputPath)
+							intDirNode.text = os.path.relpath(settings.objDir, projectData.outputPath)
+							outputNode.text = os.path.relpath(os.path.join(settings.outputDir, settings.outputName), projectData.outputPath)
 						else:
 							# Gotta put this stuff somewhere for the Build All project.
 							outDirNode.text = projectData.name + "_log"
@@ -692,25 +720,29 @@ class project_generator_visual_studio(project_generator.project_generator):
 				rootNode.set("ToolsVersion", "4.0")
 				rootNode.set("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003")
 
-				if not projectData.isBuildAllProject:
+				if not projectData.isBuildAllProject and not projectData.isRegenProject:
 					itemGroupNode = AddNode(rootNode, "ItemGroup")
 
-					# TODO: Add better source file filters.
-					sourceFileFilterNode = AddNode(itemGroupNode, "Filter")
-					headerFileFilterNode = AddNode(itemGroupNode, "Filter")
+					# Gather a list of filter paths.
+					filterList = set()
+					for file, filter in projectData.fileFilterMap.items():
+						filterList.add(filter)
+						# Visual Studio requires that each directory level be registered as individual filters.
+						while True:
+							filter = os.path.dirname(filter)
+							if filter:
+								filterList.add(filter)
+							else:
+								break
 
+					# Add each path as a new filter node.
 					filterGuidList = set()
-					sourceFileFilterName = "Source Files"
-					headerFileFilterName = "Header Files"
+					for filter in sorted(filterList):
+						filterNode = AddNode(itemGroupNode, "Filter")
+						uniqueIdNode = AddNode(filterNode, "UniqueIdentifier")
 
-					sourceFileFilterNode.set("Include", sourceFileFilterName)
-					headerFileFilterNode.set("Include", headerFileFilterName)
-
-					uniqueIdNode = AddNode(sourceFileFilterNode, "UniqueIdentifier")
-					uniqueIdNode.text = "{{{}}}".format(GenerateNewUuid(filterGuidList, sourceFileFilterName))
-
-					uniqueIdNode = AddNode(headerFileFilterNode, "UniqueIdentifier")
-					uniqueIdNode.text = "{{{}}}".format(GenerateNewUuid(filterGuidList, headerFileFilterName))
+						filterNode.set("Include", filter)
+						uniqueIdNode.text = "{{{}}}".format(GenerateNewUuid(filterGuidList, filter))
 
 					# Add the project's source files.
 					if len(projectData.fullSourceFileList) > 0:
@@ -719,8 +751,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 							sourceFileNode = AddNode(itemGroupNode, "ClCompile")
 							filterNode = AddNode(sourceFileNode, "Filter")
 							sourceFileNode.set("Include", os.path.relpath(sourceFilePath, projectData.outputPath))
-							filterNode.text = "Source Files"
-
+							filterNode.text = projectData.fileFilterMap[sourceFilePath]
 
 					# Add the project's header files.
 					if len(projectData.fullHeaderFileList) > 0:
@@ -729,7 +760,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 							headerFileNode = AddNode(itemGroupNode, "ClInclude")
 							filterNode = AddNode(headerFileNode, "Filter")
 							headerFileNode.set("Include", os.path.relpath(headerFilePath, projectData.outputPath))
-							filterNode.text = "Header Files"
+							filterNode.text = projectData.fileFilterMap[headerFilePath]
 
 				self._SaveXmlFile(rootNode, os.path.join(projectData.outputPath, "{}.{}.filters".format(projectData.name, self._projectFileType)), False)
 
@@ -744,7 +775,7 @@ class project_generator_visual_studio(project_generator.project_generator):
 				rootNode.set("ToolsVersion", "4.0")
 				rootNode.set("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003")
 
-				if not projectData.isBuildAllProject:
+				if not projectData.isBuildAllProject and not projectData.isRegenProject:
 					for configName, platformName, toolchainName, _ in projectData.platformConfigList:
 						if IsMicrosoftPlatform(platformName):
 							propertyGroupNode = AddNode(rootNode, "PropertyGroup")

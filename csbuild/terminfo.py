@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 """
-B{Provides info about the terminal the makefile's being run in}
+**Provides info about the terminal the makefile's being run in**
 """
 
 import platform
@@ -76,11 +76,6 @@ class TermInfo( object ):
 	"""
 	Provides access to cross-platform methods of getting terminal info and interacting with
 	colored output.
-
-	@undocumented: _handle
-	@undocumented: _reset
-	@undocumented: _color_supported
-	@undocumented: cursesValid
 	"""
 	@staticmethod
 	def ResetColor( ):
@@ -98,8 +93,8 @@ class TermInfo( object ):
 		"""
 		Set the color of the terminal
 
-		@param color: The desired color
-		@type color: TermColor value
+		:param color: The desired color
+		:type color: TermColor value
 		"""
 		if platform.system( ) == "Windows":
 			ctypes.windll.kernel32.SetConsoleTextAttribute( ctypes.windll.kernel32.GetStdHandle( -11 ), color )
@@ -112,8 +107,8 @@ class TermInfo( object ):
 		"""
 		Retrieve the current column count for this terminal
 
-		@return: Number of columns
-		@rtype: int
+		:return: Number of columns
+		:rtype: int
 		"""
 		if platform.system( ) == "Windows":
 			csbi = ctypes.create_string_buffer( 22 )
@@ -136,8 +131,8 @@ class TermInfo( object ):
 		"""
 		Check whether the active terminal supports colors.
 
-		@return: Whether or not color is supported
-		@rtype: bool
+		:return: Whether or not color is supported
+		:rtype: bool
 		"""
 		if platform.system( ) == "Windows":
 			return TermInfo._color_supported
@@ -153,8 +148,8 @@ class TermInfo( object ):
 		"""
 		Get the default color for this terminal
 
-		@return: The default color
-		@rtype: TermColor value
+		:return: The default color
+		:rtype: TermColor value
 		"""
 		if platform.system( ) == "Windows":
 			# Based on IPython's winconsole.py, written by Alexander Belchenko
