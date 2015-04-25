@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>csbuild.projectSettings module &mdash; csbuild 1.0.0b1 documentation</title>
+    <title>csbuild.projectSettings module &mdash; csbuild 0.91.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0b1',
+        VERSION:     '0.91.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+    <link rel="top" title="csbuild 0.91.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -134,12 +134,16 @@
 <li><strong>libraries</strong> &#8211; The libraries the project will link against</li>
 <li><strong>staticLibraries</strong> &#8211; The libraries the project will forcibly statically link against</li>
 <li><strong>sharedLibraries</strong> &#8211; The libraries the project will forcibly statically link against</li>
+<li><strong>frameworks</strong> &#8211; The Apple frameworks the project will link against (only applicable to Apple platforms).</li>
 <li><strong>includeDirs</strong> &#8211; Directories to search for included headers in</li>
 <li><strong>libraryDirs</strong> &#8211; Directories to search for libraries in</li>
+<li><strong>frameworkDirs</strong> &#8211; Directories to search for Apple frameworks.</li>
 <li><strong>optLevel</strong> &#8211; Optimization level for this project</li>
 <li><strong>debugLevel</strong> &#8211; Debug level for this project</li>
 <li><strong>defines</strong> &#8211; #define declarations for this project</li>
 <li><strong>undefines</strong> &#8211; #undef declarations for this project</li>
+<li><strong>useHiddenVisibility</strong> &#8211; Use hidden symbol visibility for this project.</li>
+<li><strong>stdLib</strong> &#8211; C++ standard library to build against for this project.</li>
 <li><strong>cxx</strong> &#8211; C++ compiler executable for this project</li>
 <li><strong>cc</strong> &#8211; C compiler executable for this project</li>
 <li><strong>hasCppFiles</strong> &#8211; Whether or not the project includes C++ files</li>
@@ -208,8 +212,8 @@ compile process. Note that this variable is modified in multiple threads and sho
 <li><strong>libraryLocations</strong> &#8211; evaluated locations of the project&#8217;s libraries</li>
 <li><strong>scriptPath</strong> &#8211; The location of the script file this project is defined in</li>
 <li><a class="reference external" href="http://docs.python.org/library/mutex.html#module-mutex" title="(in Python v2.7)"><strong>mutex</strong></a> &#8211; A mutex used to control modification of project data across multiple threads</li>
-<li><strong>preBuildStep</strong> &#8211; A function that will be executed before compile of this project begins</li>
-<li><strong>postBuildStep</strong> &#8211; A function that will be executed after compile of this project ends</li>
+<li><strong>preBuildSteps</strong> &#8211; Functions that will be executed before compile of this project begins</li>
+<li><strong>postBuildSteps</strong> &#8211; Functions that will be executed after compile of this project ends</li>
 <li><strong>parentGroup</strong> &#8211; The group this project is contained within</li>
 <li><strong>state</strong> &#8211; Current state of the project</li>
 <li><strong>startTime</strong> &#8211; The time the project build started</li>
@@ -217,6 +221,20 @@ compile process. Note that this variable is modified in multiple threads and sho
 <li><strong>extraFiles</strong> &#8211; Extra files being compiled, these will be rolled into project.sources, so use that instead</li>
 <li><strong>extraDirs</strong> &#8211; Extra directories used to search for files</li>
 <li><strong>extraObjs</strong> &#8211; Extra objects to pass to the linker</li>
+<li><strong>objDirTemp</strong> &#8211; Output directory for intermediate object files</li>
+<li><strong>outputDirTemp</strong> &#8211; Output directory for the final output file</li>
+<li><strong>headerInstallSubdirTemp</strong> &#8211; Subdirectory that headers live in for this project</li>
+<li><strong>includeDirsTemp</strong> &#8211; Directories to search for included headers in</li>
+<li><strong>libraryDirsTemp</strong> &#8211; Directories to search for libraries in</li>
+<li><strong>precompileTemp</strong> &#8211; List of files to precompile</li>
+<li><strong>precompileAsCTemp</strong> &#8211; List of files to precompile as C files</li>
+<li><strong>precompileExcludeFilesTemp</strong> &#8211; List of files NOT to precompile</li>
+<li><strong>extraFilesTemp</strong> &#8211; Extra files being compiled, these will be rolled into project.sources, so use that instead</li>
+<li><strong>extraDirsTemp</strong> &#8211; Extra directories used to search for files</li>
+<li><strong>extraObjsTemp</strong> &#8211; Extra objects to pass to the linker</li>
+<li><strong>excludeDirsTemp</strong> &#8211; Directories excluded from source file discovery</li>
+<li><strong>excludeFilesTemp</strong> &#8211; Files excluded from source file discovery</li>
+<li><strong>frameworkDirsTemp</strong> &#8211; Directories to search for Apple frameworks.</li>
 </ul>
 </td>
 </tr>
@@ -269,6 +287,16 @@ more details on what additional instance variables are available.</p>
 <dd><p>Force a re-run of the file discovery process. Useful if a postPrepareBuild step adds additional files to the project.
 This will have no effect when called from any place other than a postPrepareBuild step.</p>
 </dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.ResolveFilesAndDirectories">
+<tt class="descname">ResolveFilesAndDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.ResolveFilesAndDirectories" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.projectSettings.projectSettings.RunFileDiscovery">
+<tt class="descname">RunFileDiscovery</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.projectSettings.projectSettings.RunFileDiscovery" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="method">
 <dt id="csbuild.projectSettings.projectSettings.SetAttr">
@@ -464,12 +492,12 @@ Each chunk represents one compilation unit in the chunked build system.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

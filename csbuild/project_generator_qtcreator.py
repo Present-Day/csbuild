@@ -158,12 +158,12 @@ class project_generator_qtcreator( project_generator.project_generator ):
 			projstr = " --project {}".format( project.name )
 			make_dir = os.getcwd( )
 
-			f.write( "all:\n\t@cd {} && {} ./{}{} ${{ARGS}}\n\n".format( make_dir, sys.executable, csbuild.mainfile,
+			f.write( "all:\n\t@cd {} && {} ./{}{} ${{ARGS}}\n\n".format( make_dir, sys.executable, csbuild.mainFile,
 				projstr ) )
 			f.write( "clean:\n\t@cd {} && {} ./{}{} ${{ARGS}} --clean\n\n".format( make_dir, sys.executable,
-				csbuild.mainfile, projstr ) )
+				csbuild.mainFile, projstr ) )
 			f.write( "install:\n\t@cd {} && {} ./{}{} ${{ARGS}} --install\n\n".format( make_dir, sys.executable,
-				csbuild.mainfile, projstr ) )
+				csbuild.mainFile, projstr ) )
 
 
 	def _writeSubdirsProject( self, projectGroup, parentNames, projlist ):
@@ -215,12 +215,12 @@ class project_generator_qtcreator( project_generator.project_generator ):
 		with open( os.path.join( grouppath, "Makefile" ), "w" ) as f:
 			make_dir = os.getcwd( )
 
-			f.write( "all:\n\t@cd {} && {} ./{}{} ${{ARGS}}\n\n".format( make_dir, sys.executable, csbuild.mainfile,
+			f.write( "all:\n\t@cd {} && {} ./{}{} ${{ARGS}}\n\n".format( make_dir, sys.executable, csbuild.mainFile,
 				projstr ) )
 			f.write( "clean:\n\t@cd {} && {} ./{}{} ${{ARGS}} --clean\n\n".format( make_dir, sys.executable,
-				csbuild.mainfile, projstr ) )
+				csbuild.mainFile, projstr ) )
 			f.write( "install:\n\t@cd {} && {} ./{}{} ${{ARGS}} --install\n\n".format( make_dir, sys.executable,
-				csbuild.mainfile, projstr ) )
+				csbuild.mainFile, projstr ) )
 
 		del parentNames[-1]
 

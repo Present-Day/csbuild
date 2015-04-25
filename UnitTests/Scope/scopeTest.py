@@ -5,7 +5,7 @@ sys.path.insert(0, "../../")
 
 import csbuild
 
-csbuild.Toolchain("gcc").CppCompiler("clang++")
+csbuild.Toolchain("gcc").SetCxxCommand("clang++")
 
 @csbuild.project(
 	name="myApp_toolchain",
@@ -15,7 +15,7 @@ csbuild.Toolchain("gcc").CppCompiler("clang++")
 	],
 )
 def myApp():
-	csbuild.Toolchain("gcc", "msvc").Output("myApp_toolchain", csbuild.ProjectType.Application)
+	csbuild.Toolchain("gcc", "msvc").SetOutput("myApp_toolchain", csbuild.ProjectType.Application)
 
 @csbuild.project(
 	name="myLib_toolchain",
@@ -25,11 +25,11 @@ def myApp():
 	],
 )
 def myLib():
-	csbuild.Toolchain("gcc", "msvc").Output("myLib_toolchain", csbuild.ProjectType.StaticLibrary)
+	csbuild.Toolchain("gcc", "msvc").SetOutput("myLib_toolchain", csbuild.ProjectType.StaticLibrary)
 
 	@csbuild.scope(csbuild.ScopeDef.Final)
 	def finalScope():
-		csbuild.Toolchain("gcc", "msvc").Define("WITH_HELLO")
+		csbuild.Toolchain("gcc", "msvc").AddDefines("WITH_HELLO")
 
 @csbuild.project(
 	name="myLib2_toolchain",
@@ -37,15 +37,15 @@ def myLib():
 	depends=[],
 )
 def myLib():
-	csbuild.Toolchain("gcc", "msvc").Output("myLib2_toolchain", csbuild.ProjectType.StaticLibrary)
+	csbuild.Toolchain("gcc", "msvc").SetOutput("myLib2_toolchain", csbuild.ProjectType.StaticLibrary)
 
 	@csbuild.scope(csbuild.ScopeDef.Intermediate)
 	def intermediateScope():
-		csbuild.Toolchain("gcc", "msvc").Define("WITH_PRINT")
+		csbuild.Toolchain("gcc", "msvc").AddDefines("WITH_PRINT")
 
 	@csbuild.scope(csbuild.ScopeDef.Final)
 	def finalScope():
-		csbuild.Toolchain("gcc", "msvc").Define("HAS_MYLIB2")
+		csbuild.Toolchain("gcc", "msvc").AddDefines("HAS_MYLIB2")
 
 
 @csbuild.project(
@@ -56,7 +56,7 @@ def myLib():
 	],
 )
 def myApp():
-	csbuild.Output("myApp", csbuild.ProjectType.Application)
+	csbuild.SetOutput("myApp", csbuild.ProjectType.Application)
 
 @csbuild.project(
 	name="myLib",
@@ -66,11 +66,11 @@ def myApp():
 	],
 )
 def myLib():
-	csbuild.Output("myLib", csbuild.ProjectType.StaticLibrary)
+	csbuild.SetOutput("myLib", csbuild.ProjectType.StaticLibrary)
 
 	@csbuild.scope(csbuild.ScopeDef.Final)
 	def finalScope():
-		csbuild.Define("WITH_HELLO")
+		csbuild.AddDefines("WITH_HELLO")
 
 @csbuild.project(
 	name="myLib2",
@@ -78,12 +78,12 @@ def myLib():
 	depends=[],
 )
 def myLib():
-	csbuild.Output("myLib2", csbuild.ProjectType.StaticLibrary)
+	csbuild.SetOutput("myLib2", csbuild.ProjectType.StaticLibrary)
 
 	@csbuild.scope(csbuild.ScopeDef.Intermediate)
 	def intermediateScope():
-		csbuild.Define("WITH_PRINT")
+		csbuild.AddDefines("WITH_PRINT")
 
 	@csbuild.scope(csbuild.ScopeDef.Final)
 	def finalScope():
-		csbuild.Define("HAS_MYLIB2")
+		csbuild.AddDefines("HAS_MYLIB2")

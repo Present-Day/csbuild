@@ -1,0 +1,7 @@
+digraph G {
+	layout="neato";
+	overlap="false";
+	splines="spline"
+	AndroidTest_Basic [shape="oval" color="#ff0000"];
+	AndroidTest_Basic [shape="oval" color="#cc5200"];
+}

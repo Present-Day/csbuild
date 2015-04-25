@@ -1,6 +1,6 @@
 ##CSB
 
-CSB (pronounced "Cusp") is a python makefile program that's written to be both efficient and easy to use. Unlike GNU make, the syntax for CSB is very simple and easy to approach, while still being powerful. No deep understanding of g++'s hundreds of flags is required.
+CSBuild is a python makefile program that's written to be both efficient and easy to use. Unlike GNU make, the syntax for CSB is very simple and easy to approach, while still being powerful. No deep understanding of g++'s hundreds of flags is required.
 
 Additionally, CSB is designed to prevent doing more work than necessary whenever possible. Rather than specifying every file you want to compile, you specify files and directories you DON'T want to compile, so adding a new file to your project is as easy as creating it. And when compiling, CSB checks the header files in each of your source files, recompiling every necessary source file when an included header changes, but leaving alone the files that the header can't affect. Further, it keeps md5 records of source and header files within the project, so that it doesn't recompile files if the modified date has changed but the contents haven't.
 

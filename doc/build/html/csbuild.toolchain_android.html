@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>csbuild.toolchain_android module &mdash; csbuild 1.0.0b1 documentation</title>
+    <title>csbuild.toolchain_android module &mdash; csbuild 0.91.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0b1',
+        VERSION:     '0.91.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+    <link rel="top" title="csbuild 0.91.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -47,6 +47,17 @@
   <div class="section" id="module-csbuild.toolchain_android">
 <span id="csbuild-toolchain-android-module"></span><h1>csbuild.toolchain_android module<a class="headerlink" href="#module-csbuild.toolchain_android" title="Permalink to this headline">¶</a></h1>
 <p>Contains a plugin class for creating android NDK projects</p>
+<dl class="class">
+<dt id="csbuild.toolchain_android.APKBuilder">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_android.</tt><tt class="descname">APKBuilder</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.APKBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_android.AndroidBase" title="csbuild.toolchain_android.AndroidBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_android.AndroidBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.toolBase" title="csbuild.toolchain.toolBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.toolBase</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain_android.APKBuilder.postBuildStep">
+<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.APKBuilder.postBuildStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="csbuild.toolchain_android.AndroidBase">
 <em class="property">class </em><tt class="descclassname">csbuild.toolchain_android.</tt><tt class="descname">AndroidBase</tt><a class="headerlink" href="#csbuild.toolchain_android.AndroidBase" title="Permalink to this definition">¶</a></dt>
@@ -130,8 +141,8 @@
 
 <dl class="class">
 <dt id="csbuild.toolchain_android.AndroidCompiler">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain_android.</tt><tt class="descname">AndroidCompiler</tt><a class="headerlink" href="#csbuild.toolchain_android.AndroidCompiler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_android.AndroidBase" title="csbuild.toolchain_android.AndroidBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_android.AndroidBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain_gcc.html#csbuild.toolchain_gcc.compiler_gcc" title="csbuild.toolchain_gcc.compiler_gcc"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.compiler_gcc</span></tt></a></p>
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_android.</tt><tt class="descname">AndroidCompiler</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidCompiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_android.AndroidBase" title="csbuild.toolchain_android.AndroidBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_android.AndroidBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain_gcc.html#csbuild.toolchain_gcc.GccCompiler" title="csbuild.toolchain_gcc.GccCompiler"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.GccCompiler</span></tt></a></p>
 <dl class="method">
 <dt id="csbuild.toolchain_android.AndroidCompiler.GetDefaultArchitecture">
 <tt class="descname">GetDefaultArchitecture</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidCompiler.GetDefaultArchitecture" title="Permalink to this definition">¶</a></dt>
@@ -139,7 +150,7 @@
 
 <dl class="method">
 <dt id="csbuild.toolchain_android.AndroidCompiler.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidCompiler.copy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidCompiler.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -156,8 +167,8 @@
 
 <dl class="class">
 <dt id="csbuild.toolchain_android.AndroidLinker">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain_android.</tt><tt class="descname">AndroidLinker</tt><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_android.AndroidBase" title="csbuild.toolchain_android.AndroidBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_android.AndroidBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain_gcc.html#csbuild.toolchain_gcc.linker_gcc" title="csbuild.toolchain_gcc.linker_gcc"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.linker_gcc</span></tt></a></p>
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_android.</tt><tt class="descname">AndroidLinker</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_android.AndroidBase" title="csbuild.toolchain_android.AndroidBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_android.AndroidBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain_gcc.html#csbuild.toolchain_gcc.GccLinker" title="csbuild.toolchain_gcc.GccLinker"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.GccLinker</span></tt></a></p>
 <dl class="staticmethod">
 <dt id="csbuild.toolchain_android.AndroidLinker.AdditionalArgs">
 <em class="property">static </em><tt class="descname">AdditionalArgs</tt><big>(</big><em>parser</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.AdditionalArgs" title="Permalink to this definition">¶</a></dt>
@@ -169,23 +180,18 @@
 <dd></dd></dl>
 
 <dl class="method">
+<dt id="csbuild.toolchain_android.AndroidLinker.GetDefaultOutputExtension">
+<tt class="descname">GetDefaultOutputExtension</tt><big>(</big><em>projectType</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.GetDefaultOutputExtension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="csbuild.toolchain_android.AndroidLinker.GetLinkCommand">
 <tt class="descname">GetLinkCommand</tt><big>(</big><em>project</em>, <em>outputFile</em>, <em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.GetLinkCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="csbuild.toolchain_android.AndroidLinker.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.copy" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_android.AndroidLinker.postBuildStep">
-<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.postBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_android.AndroidLinker.prePrepareBuildStep">
-<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_android.AndroidLinker.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -229,12 +235,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

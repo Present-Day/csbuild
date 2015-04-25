@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>csbuild.toolchain_gcc module &mdash; csbuild 1.0.0b1 documentation</title>
+    <title>csbuild.toolchain_gcc module &mdash; csbuild 0.91.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0b1',
+        VERSION:     '0.91.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+    <link rel="top" title="csbuild 0.91.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -48,12 +48,12 @@
 <span id="csbuild-toolchain-gcc-module"></span><h1>csbuild.toolchain_gcc module<a class="headerlink" href="#module-csbuild.toolchain_gcc" title="Permalink to this headline">¶</a></h1>
 <p>Contains a plugin class for interfacing with GCC</p>
 <dl class="class">
-<dt id="csbuild.toolchain_gcc.compiler_gcc">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain_gcc.</tt><tt class="descname">compiler_gcc</tt><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_gcc.</tt><tt class="descname">GccCompiler</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_gcc.gccBase" title="csbuild.toolchain_gcc.gccBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.gccBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.compilerBase" title="csbuild.toolchain.compilerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.compilerBase</span></tt></a></p>
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.AddWarnFlags">
-<tt class="descname">AddWarnFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.AddWarnFlags" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.AddWarnFlags">
+<tt class="descname">AddWarnFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.AddWarnFlags" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sets warn flags to be passed to the compiler.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -66,80 +66,80 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.ClearWarnFlags">
-<tt class="descname">ClearWarnFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.ClearWarnFlags" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.ClearWarnFlags">
+<tt class="descname">ClearWarnFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.ClearWarnFlags" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clears the list of warning flags</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetBaseCcCommand">
-<tt class="descname">GetBaseCcCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetBaseCcCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetBaseCcCommand">
+<tt class="descname">GetBaseCcCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetBaseCcCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetBaseCcPrecompileCommand">
-<tt class="descname">GetBaseCcPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetBaseCcPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetBaseCcPrecompileCommand">
+<tt class="descname">GetBaseCcPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetBaseCcPrecompileCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetBaseCxxCommand">
-<tt class="descname">GetBaseCxxCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetBaseCxxCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetBaseCxxCommand">
+<tt class="descname">GetBaseCxxCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetBaseCxxCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetBaseCxxPrecompileCommand">
-<tt class="descname">GetBaseCxxPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetBaseCxxPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetBaseCxxPrecompileCommand">
+<tt class="descname">GetBaseCxxPrecompileCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetBaseCxxPrecompileCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetExtendedCommand">
-<tt class="descname">GetExtendedCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetExtendedCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetExtendedCommand">
+<tt class="descname">GetExtendedCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetExtendedCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetExtendedPrecompileCommand">
-<tt class="descname">GetExtendedPrecompileCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetExtendedPrecompileCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetExtendedPrecompileCommand">
+<tt class="descname">GetExtendedPrecompileCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>forceIncludeFile</em>, <em>outObj</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetExtendedPrecompileCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetExtraPostPreprocessorFlags">
-<tt class="descname">GetExtraPostPreprocessorFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetExtraPostPreprocessorFlags" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetExtraPostPreprocessorFlags">
+<tt class="descname">GetExtraPostPreprocessorFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetExtraPostPreprocessorFlags" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetObjExt">
-<tt class="descname">GetObjExt</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetObjExt" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetObjExt">
+<tt class="descname">GetObjExt</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetObjExt" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetPchFile">
-<tt class="descname">GetPchFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetPchFile" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetPchFile">
+<tt class="descname">GetPchFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetPchFile" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetPostPreprocessorSanitationLines">
-<tt class="descname">GetPostPreprocessorSanitationLines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetPostPreprocessorSanitationLines" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetPostPreprocessorSanitationLines">
+<tt class="descname">GetPostPreprocessorSanitationLines</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetPostPreprocessorSanitationLines" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.GetPreprocessCommand">
-<tt class="descname">GetPreprocessCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.GetPreprocessCommand" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.GetPreprocessCommand">
+<tt class="descname">GetPreprocessCommand</tt><big>(</big><em>baseCmd</em>, <em>project</em>, <em>inFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.GetPreprocessCommand" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.InterruptExitCode">
-<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.InterruptExitCode">
+<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.PragmaMessage">
-<tt class="descname">PragmaMessage</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.PragmaMessage" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.PragmaMessage">
+<tt class="descname">PragmaMessage</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.PragmaMessage" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.SetCStandard">
-<tt class="descname">SetCStandard</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.SetCStandard" title="Permalink to this definition">¶</a></dt>
-<dd><p>The C/C++ standard to be used when compiling. Possible values are C99, C11, etc.</p>
+<dt id="csbuild.toolchain_gcc.GccCompiler.SetCStandard">
+<tt class="descname">SetCStandard</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.SetCStandard" title="Permalink to this definition">¶</a></dt>
+<dd><p>The C/C++ standard to be used when compiling. Possible values are &#8220;c99&#8221;, &#8220;c11&#8221;, etc.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -151,9 +151,9 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.SetCppStandard">
-<tt class="descname">SetCppStandard</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.SetCppStandard" title="Permalink to this definition">¶</a></dt>
-<dd><p>The C/C++ standard to be used when compiling. Possible values are C++03, C++-11, etc.</p>
+<dt id="csbuild.toolchain_gcc.GccCompiler.SetCppStandard">
+<tt class="descname">SetCppStandard</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.SetCppStandard" title="Permalink to this definition">¶</a></dt>
+<dd><p>The C/C++ standard to be used when compiling. Possible values are &#8220;c++03&#8221;, &#8220;c++11&#8221;, etc.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -165,8 +165,55 @@
 </dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain_gcc.compiler_gcc.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.compiler_gcc.copy" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain_gcc.GccCompiler.copy">
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccCompiler.copy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain_gcc.GccLinker">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_gcc.</tt><tt class="descname">GccLinker</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_gcc.gccBase" title="csbuild.toolchain_gcc.gccBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.gccBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.linkerBase" title="csbuild.toolchain.linkerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.linkerBase</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.DisableStrictOrdering">
+<tt class="descname">DisableStrictOrdering</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.DisableStrictOrdering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use &#8211;start-group/&#8211;end-group to eliminate the need to strictly order libraries when linking.
+This is the default behavior.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.EnableStrictOrdering">
+<tt class="descname">EnableStrictOrdering</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.EnableStrictOrdering" title="Permalink to this definition">¶</a></dt>
+<dd><p>By default, csbuild uses &#8211;start-group and &#8211;end-group to eliminate GCC&#8217;s requirements of
+strictly managed link order. This comes with a performance cost when linking, however, so
+if you would prefer to manage your link order manually, this function will disable csbuild&#8217;s
+default &#8211;start-group/&#8211;end-group behavior.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.FindLibrary">
+<tt class="descname">FindLibrary</tt><big>(</big><em>project</em>, <em>library</em>, <em>libraryDirs</em>, <em>force_static</em>, <em>force_shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.FindLibrary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.GetDefaultOutputExtension">
+<tt class="descname">GetDefaultOutputExtension</tt><big>(</big><em>projectType</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.GetDefaultOutputExtension" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.GetLinkCommand">
+<tt class="descname">GetLinkCommand</tt><big>(</big><em>project</em>, <em>outputFile</em>, <em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.GetLinkCommand" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.InterruptExitCode">
+<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain_gcc.GccLinker.copy">
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.GccLinker.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -183,53 +230,6 @@
 <dl class="method">
 <dt id="csbuild.toolchain_gcc.gccBase.SetObjcAbiVersion">
 <tt class="descname">SetObjcAbiVersion</tt><big>(</big><em>version</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.gccBase.SetObjcAbiVersion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="csbuild.toolchain_gcc.linker_gcc">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain_gcc.</tt><tt class="descname">linker_gcc</tt><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_gcc.gccBase" title="csbuild.toolchain_gcc.gccBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.gccBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain.html#csbuild.toolchain.linkerBase" title="csbuild.toolchain.linkerBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.linkerBase</span></tt></a></p>
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.DisableStrictOrdering">
-<tt class="descname">DisableStrictOrdering</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.DisableStrictOrdering" title="Permalink to this definition">¶</a></dt>
-<dd><p>Use &#8211;start-group/&#8211;end-group to eliminate the need to strictly order libraries when linking.
-This is the default behavior.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.EnableStrictOrdering">
-<tt class="descname">EnableStrictOrdering</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.EnableStrictOrdering" title="Permalink to this definition">¶</a></dt>
-<dd><p>By default, csbuild uses &#8211;start-group and &#8211;end-group to eliminate GCC&#8217;s requirements of
-strictly managed link order. This comes with a performance cost when linking, however, so
-if you would prefer to manage your link order manually, this function will disable csbuild&#8217;s
-default &#8211;start-group/&#8211;end-group behavior.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.FindLibrary">
-<tt class="descname">FindLibrary</tt><big>(</big><em>project</em>, <em>library</em>, <em>libraryDirs</em>, <em>force_static</em>, <em>force_shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.FindLibrary" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.GetDefaultOutputExtension">
-<tt class="descname">GetDefaultOutputExtension</tt><big>(</big><em>projectType</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.GetDefaultOutputExtension" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.GetLinkCommand">
-<tt class="descname">GetLinkCommand</tt><big>(</big><em>project</em>, <em>outputFile</em>, <em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.GetLinkCommand" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.InterruptExitCode">
-<tt class="descname">InterruptExitCode</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.InterruptExitCode" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain_gcc.linker_gcc.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_gcc.linker_gcc.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -273,12 +273,12 @@ default &#8211;start-group/&#8211;end-group behavior.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

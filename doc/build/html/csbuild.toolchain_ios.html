@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>csbuild.toolchain_ios module &mdash; csbuild 1.0.0b1 documentation</title>
+    <title>csbuild.toolchain_ios module &mdash; csbuild 0.91.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0b1',
+        VERSION:     '0.91.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+    <link rel="top" title="csbuild 0.91.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -50,7 +50,8 @@
 <dl class="class">
 <dt id="csbuild.toolchain_ios.iOSArchitecture">
 <em class="property">class </em><tt class="descclassname">csbuild.toolchain_ios.</tt><tt class="descname">iOSArchitecture</tt><a class="headerlink" href="#csbuild.toolchain_ios.iOSArchitecture" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="attribute">
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="attribute">
 <dt id="csbuild.toolchain_ios.iOSArchitecture.DEVICE_ARM64">
 <tt class="descname">DEVICE_ARM64</tt><em class="property"> = 'device-arm64'</em><a class="headerlink" href="#csbuild.toolchain_ios.iOSArchitecture.DEVICE_ARM64" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -63,6 +64,11 @@
 <dl class="attribute">
 <dt id="csbuild.toolchain_ios.iOSArchitecture.SIMULATOR_I386">
 <tt class="descname">SIMULATOR_I386</tt><em class="property"> = 'simulator-i386'</em><a class="headerlink" href="#csbuild.toolchain_ios.iOSArchitecture.SIMULATOR_I386" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="csbuild.toolchain_ios.iOSArchitecture.SIMULATOR_X64">
+<tt class="descname">SIMULATOR_X64</tt><em class="property"> = 'simulator-x64'</em><a class="headerlink" href="#csbuild.toolchain_ios.iOSArchitecture.SIMULATOR_X64" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -93,20 +99,38 @@
 
 <dl class="method">
 <dt id="csbuild.toolchain_ios.iOSBase.SetTargetDeviceVersion">
-<tt class="descname">SetTargetDeviceVersion</tt><big>(</big><em>versionStr</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSBase.SetTargetDeviceVersion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<tt class="descname">SetTargetDeviceVersion</tt><big>(</big><em>version</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSBase.SetTargetDeviceVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the target device version to compile against.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>version</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Target device version.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="method">
 <dt id="csbuild.toolchain_ios.iOSBase.SetTargetSimulatorVersion">
-<tt class="descname">SetTargetSimulatorVersion</tt><big>(</big><em>versionStr</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSBase.SetTargetSimulatorVersion" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<tt class="descname">SetTargetSimulatorVersion</tt><big>(</big><em>version</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSBase.SetTargetSimulatorVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the target simulator version to compile against.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>version</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Target simulator version.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="csbuild.toolchain_ios.iOSCompiler">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain_ios.</tt><tt class="descname">iOSCompiler</tt><a class="headerlink" href="#csbuild.toolchain_ios.iOSCompiler" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_ios.iOSBase" title="csbuild.toolchain_ios.iOSBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_ios.iOSBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain_gcc.html#csbuild.toolchain_gcc.compiler_gcc" title="csbuild.toolchain_gcc.compiler_gcc"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.compiler_gcc</span></tt></a></p>
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_ios.</tt><tt class="descname">iOSCompiler</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSCompiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_ios.iOSBase" title="csbuild.toolchain_ios.iOSBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_ios.iOSBase</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc_darwin.GccCompilerDarwin</span></tt></p>
 <dl class="method">
 <dt id="csbuild.toolchain_ios.iOSCompiler.GetBaseCcCommand">
 <tt class="descname">GetBaseCcCommand</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSCompiler.GetBaseCcCommand" title="Permalink to this definition">¶</a></dt>
@@ -119,15 +143,15 @@
 
 <dl class="method">
 <dt id="csbuild.toolchain_ios.iOSCompiler.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSCompiler.copy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSCompiler.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="csbuild.toolchain_ios.iOSLinker">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain_ios.</tt><tt class="descname">iOSLinker</tt><a class="headerlink" href="#csbuild.toolchain_ios.iOSLinker" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_ios.iOSBase" title="csbuild.toolchain_ios.iOSBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_ios.iOSBase</span></tt></a>, <a class="reference internal" href="csbuild.toolchain_gcc.html#csbuild.toolchain_gcc.linker_gcc" title="csbuild.toolchain_gcc.linker_gcc"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc.linker_gcc</span></tt></a></p>
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain_ios.</tt><tt class="descname">iOSLinker</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSLinker" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain_ios.iOSBase" title="csbuild.toolchain_ios.iOSBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_ios.iOSBase</span></tt></a>, <tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain_gcc_darwin.GccLinkerDarwin</span></tt></p>
 <dl class="method">
 <dt id="csbuild.toolchain_ios.iOSLinker.GetLinkCommand">
 <tt class="descname">GetLinkCommand</tt><big>(</big><em>project</em>, <em>outputFile</em>, <em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSLinker.GetLinkCommand" title="Permalink to this definition">¶</a></dt>
@@ -135,7 +159,7 @@
 
 <dl class="method">
 <dt id="csbuild.toolchain_ios.iOSLinker.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSLinker.copy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain_ios.iOSLinker.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -179,12 +203,12 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>csbuild.toolchain module &mdash; csbuild 1.0.0b1 documentation</title>
+    <title>csbuild.toolchain module &mdash; csbuild 0.91.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0b1',
+        VERSION:     '0.91.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+    <link rel="top" title="csbuild 0.91.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -68,6 +68,51 @@
 <dt id="csbuild.toolchain.SettingsOverrider">
 <em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">SettingsOverrider</tt><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddAppleAssetCatalogs">
+<tt class="descname">AddAppleAssetCatalogs</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddAppleAssetCatalogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+Add a list of asset catalogs to be compiled. Only applies to builds for Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>And arbitrary number of strings.</em>) &#8211; List of asset catalogs.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddAppleInterfaceFiles">
+<tt class="descname">AddAppleInterfaceFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddAppleInterfaceFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+Add a list of interface files to be compiled. Only applies to builds for Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>And arbitrary number of strings.</em>) &#8211; List of interface files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.AddAppleStoryboardFiles">
+<tt class="descname">AddAppleStoryboardFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddAppleStoryboardFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+Add a list of storyboard files to be compiled. Only applies to builds for Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>And arbitrary number of strings.</em>) &#8211; List of storyboard files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="csbuild.toolchain.SettingsOverrider.AddCcCompilerFlags">
 <tt class="descname">AddCcCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.AddCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
@@ -340,6 +385,24 @@ called on a per-toolchain basis.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearAppleAssetCatalogs">
+<tt class="descname">ClearAppleAssetCatalogs</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearAppleAssetCatalogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of asset catalogs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearAppleInterfaceFiles">
+<tt class="descname">ClearAppleInterfaceFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearAppleInterfaceFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of interface files.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.ClearAppleStoryboardFiles">
+<tt class="descname">ClearAppleStoryboardFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearAppleStoryboardFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of storyboard files.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="csbuild.toolchain.SettingsOverrider.ClearCcCompilerFlags">
 <tt class="descname">ClearCcCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.ClearCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clears the list of literal C compiler flags.</p>
@@ -534,15 +597,12 @@ or a pattern that matches more than two files, no two files in the list will eve
 <dd><p>Enables installation of the project&#8217;s headers
 Default target is /usr/local/include, unless the &#8211;prefix option is specified.
 If &#8211;prefix is specified, the target will be <em>{prefix</em>}/include</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Override directory - i.e., if you specify this as &#8220;headers&#8221;, the headers will be installed</td>
-</tr>
-</tbody>
-</table>
-<p>to <em>{prefix</em>}/headers.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.EnableHiddenVisibility">
+<tt class="descname">EnableHiddenVisibility</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.EnableHiddenVisibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable the use of hidden symbol visibility. Ignored by all but the gcc toolchain (and derived toolchains).</p>
 </dd></dl>
 
 <dl class="method">
@@ -551,15 +611,6 @@ If &#8211;prefix is specified, the target will be <em>{prefix</em>}/include</p>
 <dd><p>Enables installation of the compiled output file.
 Default target is /usr/local/lib, unless the &#8211;prefix option is specified.
 If &#8211;prefix is specified, the target will be <em>{prefix</em>}/lib</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Override directory - i.e., if you specify this as &#8220;libraries&#8221;, the libraries will be installed</td>
-</tr>
-</tbody>
-</table>
-<p>to <em>{prefix</em>}/libraries.</p>
 </dd></dl>
 
 <dl class="method">
@@ -629,9 +680,23 @@ modify any external headers, you will need to manually &#8211;clean or &#8211;re
 </dd></dl>
 
 <dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetApplePropertyList">
+<tt class="descname">SetApplePropertyList</tt><big>(</big><em>plistFile</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetApplePropertyList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the property list for a project.  This only applies to builds on Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>plistFile</strong> (str or class:<cite>csbuild.plugin_plist_generator.PListGenerator</cite>) &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="csbuild.toolchain.SettingsOverrider.SetCcCommand">
 <tt class="descname">SetCcCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetCcCommand" title="Permalink to this definition">¶</a></dt>
-<dd><p>Specify the compiler executable to be used for compiling C files. Ignored by the msvc toolchain.</p>
+<dd><p>Specify the compiler executable to be used for compiling C files. Ignored by all but the gcc toolchain (and derived toolchains).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -684,9 +749,23 @@ are not specified here will not be built.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="csbuild.toolchain.SettingsOverrider.SetCppStandardLibrary">
+<tt class="descname">SetCppStandardLibrary</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetCppStandardLibrary" title="Permalink to this definition">¶</a></dt>
+<dd><p>The standard C++ library to be used when compiling. Possible values are &#8220;libstdc++&#8221; and &#8220;libc++&#8221;. Ignored by all but the gcc toolchain (and derived toolchains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Library to use.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="csbuild.toolchain.SettingsOverrider.SetCxxCommand">
 <tt class="descname">SetCxxCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.SetCxxCommand" title="Permalink to this definition">¶</a></dt>
-<dd><p>Specify the compiler executable to be used for compiling C++ files. Ignored by the msvc toolchain.</p>
+<dd><p>Specify the compiler executable to be used for compiling C++ files. Ignored by all but the gcc toolchain (and derived toolchains).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -840,9 +919,11 @@ The default is 10.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>projectType</strong> (<a class="reference internal" href="csbuild.html#csbuild.ProjectType" title="csbuild.ProjectType"><em>csbuild.ProjectType</em></a>) &#8211; The type of project to compile. The options are:
 - ProjectType.Application - on Windows, this will be built with a .exe extension. On Linux, there is no extension.
 - ProjectType.SharedLibrary - on Windows, this will generate a .lib and a .dll.
-On Linux, this will generate a .so and prefix &#8220;lib&#8221; to the output name.
+On Linux, this will generate a .so (.dylib for MacOSX) and prefix &#8220;lib&#8221; to the output name.
 - ProjectType.StaticLibrary - on Windows, this will generate a .lib. On Linux, this will generate a .a and prefix
-&#8220;lib&#8221; to the output name.</td>
+&#8220;lib&#8221; to the output name.
+- ProjectType.LoadableModule - On MacOSX, this will generate a .bundle file. On every other platform, it will be
+treated exactly the same as ProjectType.SharedLibrary.</td>
 </tr>
 </tbody>
 </table>
@@ -942,15 +1023,21 @@ is not set up to support all of the toolchain&#8217;s architectures.</p>
 
 <dl class="method">
 <dt id="csbuild.toolchain.SettingsOverrider.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.copy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.SettingsOverrider.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="class">
+<dt id="csbuild.toolchain.SharedSettings">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">SharedSettings</tt><a class="headerlink" href="#csbuild.toolchain.SharedSettings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="http://docs.python.org/library/functions.html#object" title="(in Python v2.7)"><tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
 <dt id="csbuild.toolchain.compilerBase">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">compilerBase</tt><a class="headerlink" href="#csbuild.toolchain.compilerBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.SettingsOverrider" title="csbuild.toolchain.SettingsOverrider"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.SettingsOverrider</span></tt></a></p>
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">compilerBase</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.toolBase" title="csbuild.toolchain.toolBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.toolBase</span></tt></a></p>
 <dl class="staticmethod">
 <dt id="csbuild.toolchain.compilerBase.AdditionalArgs">
 <em class="property">static </em><tt class="descname">AdditionalArgs</tt><big>(</big><em>parser</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.AdditionalArgs" title="Permalink to this definition">¶</a></dt>
@@ -1192,6 +1279,11 @@ that setting should cause all object files to be regenerated.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="csbuild.toolchain.compilerBase.GetObjectScraper">
+<tt class="descname">GetObjectScraper</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetObjectScraper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="csbuild.toolchain.compilerBase.GetPchFile">
 <tt class="descname">GetPchFile</tt><big>(</big><em>fileName</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.GetPchFile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the properly formatted precompiled header output file for a given header input.</p>
@@ -1252,13 +1344,18 @@ that setting should cause all object files to be regenerated.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="csbuild.toolchain.compilerBase.MakeDummyObjects">
+<tt class="descname">MakeDummyObjects</tt><big>(</big><em>objList</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.MakeDummyObjects" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
 <dt id="csbuild.toolchain.compilerBase.PragmaMessage">
 <tt class="descname">PragmaMessage</tt><big>(</big><em>message</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.PragmaMessage" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
 <dt id="csbuild.toolchain.compilerBase.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.copy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1266,47 +1363,12 @@ that setting should cause all object files to be regenerated.</p>
 <tt class="descname">parseOutput</tt><big>(</big><em>outputStr</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.parseOutput" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.postBuildStep">
-<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.postBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.postMakeStep">
-<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.postMakeStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.postPrepareBuildStep">
-<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.preBuildStep">
-<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.preBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.preLinkStep">
-<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.preLinkStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.preMakeStep">
-<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.preMakeStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.compilerBase.prePrepareBuildStep">
-<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.compilerBase.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="class">
 <dt id="csbuild.toolchain.linkerBase">
-<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">linkerBase</tt><a class="headerlink" href="#csbuild.toolchain.linkerBase" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.SettingsOverrider" title="csbuild.toolchain.SettingsOverrider"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.SettingsOverrider</span></tt></a></p>
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">linkerBase</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.toolBase" title="csbuild.toolchain.toolBase"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.toolBase</span></tt></a></p>
 <dl class="staticmethod">
 <dt id="csbuild.toolchain.linkerBase.AdditionalArgs">
 <em class="property">static </em><tt class="descname">AdditionalArgs</tt><big>(</big><em>parser</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.AdditionalArgs" title="Permalink to this definition">¶</a></dt>
@@ -1425,7 +1487,7 @@ that setting should cause all object files to be regenerated.</p>
 
 <dl class="method">
 <dt id="csbuild.toolchain.linkerBase.copy">
-<tt class="descname">copy</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.copy" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">copy</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.copy" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1433,39 +1495,55 @@ that setting should cause all object files to be regenerated.</p>
 <tt class="descname">parseOutput</tt><big>(</big><em>outputStr</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.parseOutput" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="method">
-<dt id="csbuild.toolchain.linkerBase.postBuildStep">
-<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.postBuildStep" title="Permalink to this definition">¶</a></dt>
+</dd></dl>
+
+<dl class="class">
+<dt id="csbuild.toolchain.toolBase">
+<em class="property">class </em><tt class="descclassname">csbuild.toolchain.</tt><tt class="descname">toolBase</tt><big>(</big><em>shared</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#csbuild.toolchain.SettingsOverrider" title="csbuild.toolchain.SettingsOverrider"><tt class="xref py py-class docutils literal"><span class="pre">csbuild.toolchain.SettingsOverrider</span></tt></a></p>
+<dl class="staticmethod">
+<dt id="csbuild.toolchain.toolBase.globalPostMakeStep">
+<em class="property">static </em><tt class="descname">globalPostMakeStep</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.globalPostMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="csbuild.toolchain.toolBase.globalPreMakeStep">
+<em class="property">static </em><tt class="descname">globalPreMakeStep</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.globalPreMakeStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain.linkerBase.postMakeStep">
-<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.postMakeStep" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain.toolBase.postBuildStep">
+<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.postBuildStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain.linkerBase.postPrepareBuildStep">
-<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain.toolBase.postMakeStep">
+<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.postMakeStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain.linkerBase.preBuildStep">
-<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.preBuildStep" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain.toolBase.postPrepareBuildStep">
+<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain.linkerBase.preLinkStep">
-<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.preLinkStep" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain.toolBase.preBuildStep">
+<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.preBuildStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain.linkerBase.preMakeStep">
-<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.preMakeStep" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain.toolBase.preLinkStep">
+<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.preLinkStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
-<dt id="csbuild.toolchain.linkerBase.prePrepareBuildStep">
-<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.linkerBase.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
+<dt id="csbuild.toolchain.toolBase.preMakeStep">
+<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.preMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolBase.prePrepareBuildStep">
+<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolBase.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -1490,6 +1568,16 @@ To create a new toolchain, inherit from this class, and then use
 <dl class="method">
 <dt id="csbuild.toolchain.toolchain.Compiler">
 <tt class="descname">Compiler</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.Compiler" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.GetGlobalPostMakeSteps">
+<tt class="descname">GetGlobalPostMakeSteps</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.GetGlobalPostMakeSteps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="csbuild.toolchain.toolchain.GetGlobalPreMakeSteps">
+<tt class="descname">GetGlobalPreMakeSteps</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.GetGlobalPreMakeSteps" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1540,41 +1628,6 @@ To create a new toolchain, inherit from this class, and then use
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.postBuildStep">
-<tt class="descname">postBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.postBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.postMakeStep">
-<tt class="descname">postMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.postMakeStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.postPrepareBuildStep">
-<tt class="descname">postPrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.postPrepareBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.preBuildStep">
-<tt class="descname">preBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.preBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.preLinkStep">
-<tt class="descname">preLinkStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.preLinkStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.preMakeStep">
-<tt class="descname">preMakeStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.preMakeStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="csbuild.toolchain.toolchain.prePrepareBuildStep">
-<tt class="descname">prePrepareBuildStep</tt><big>(</big><em>project</em><big>)</big><a class="headerlink" href="#csbuild.toolchain.toolchain.prePrepareBuildStep" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 </div>
@@ -1616,12 +1669,12 @@ To create a new toolchain, inherit from this class, and then use
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

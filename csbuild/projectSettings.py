@@ -49,11 +49,14 @@ import glob
 import itertools
 import threading
 import types
+import copy
 
 from . import log
 from . import _shared_globals
 from . import _utils
 from . import toolchain
+from . import plugin_plist_generator
+
 
 class projectSettings( object ):
 	"""
@@ -86,11 +89,17 @@ class projectSettings( object ):
 	:ivar sharedLibraries: The libraries the project will forcibly statically link against
 	:type sharedLibraries: list[str]
 
+	:ivar frameworks: The Apple frameworks the project will link against (only applicable to Apple platforms).
+	:type frameworks: set[str]
+
 	:ivar includeDirs: Directories to search for included headers in
 	:type includeDirs: list[str]
 
 	:ivar libraryDirs: Directories to search for libraries in
 	:type libraryDirs: list[str]
+
+	:ivar frameworkDirs: Directories to search for Apple frameworks.
+	:type frameworkDirs: set[str]
 
 	:ivar optLevel: Optimization level for this project
 	:type optLevel: csbuild.OptimizationLevel
@@ -103,6 +112,12 @@ class projectSettings( object ):
 
 	:ivar undefines: #undef declarations for this project
 	:type undefines: list[str]
+
+	:ivar useHiddenVisibility: Use hidden symbol visibility for this project.
+	:type useHiddenVisibility: bool
+
+	:ivar stdLib: C++ standard library to build against for this project.
+	:type stdLib: str
 
 	:ivar cxx: C++ compiler executable for this project
 	:type cxx: str
@@ -304,11 +319,11 @@ class projectSettings( object ):
 	:ivar mutex: A mutex used to control modification of project data across multiple threads
 	:type mutex: threading.Lock
 
-	:ivar preBuildStep: A function that will be executed before compile of this project begins
-	:type preBuildStep: function
+	:ivar preBuildSteps: Functions that will be executed before compile of this project begins
+	:type preBuildSteps: set(function)
 
-	:ivar postBuildStep: A function that will be executed after compile of this project ends
-	:type postBuildStep: function
+	:ivar postBuildSteps: Functions that will be executed after compile of this project ends
+	:type postBuildSteps: set(function)
 
 	:ivar parentGroup: The group this project is contained within
 	:type parentGroup: ProjectGroup
@@ -330,6 +345,48 @@ class projectSettings( object ):
 
 	:type extraObjs: set[str]
 	:ivar extraObjs: Extra objects to pass to the linker
+
+	:ivar objDirTemp: Output directory for intermediate object files
+	:type objDirTemp: :class:`_utils.PathWorkingDir`
+
+	:ivar outputDirTemp: Output directory for the final output file
+	:type outputDirTemp: :class:`_utils.PathWorkingDir`
+
+	:ivar headerInstallSubdirTemp: Subdirectory that headers live in for this project
+	:type headerInstallSubdirTemp: :class:`_utils.PathWorkingDir`
+
+	:ivar includeDirsTemp: Directories to search for included headers in
+	:type includeDirsTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar libraryDirsTemp: Directories to search for libraries in
+	:type libraryDirsTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar precompileTemp: List of files to precompile
+	:type precompileTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar precompileAsCTemp: List of files to precompile as C files
+	:type precompileAsCTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar precompileExcludeFilesTemp: List of files NOT to precompile
+	:type precompileExcludeFilesTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar extraFilesTemp: Extra files being compiled, these will be rolled into project.sources, so use that instead
+	:type extraFilesTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar extraDirsTemp: Extra directories used to search for files
+	:type extraDirsTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar extraObjsTemp: Extra objects to pass to the linker
+	:type extraObjsTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar excludeDirsTemp: Directories excluded from source file discovery
+	:type excludeDirsTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar excludeFilesTemp: Files excluded from source file discovery
+	:type excludeFilesTemp: list[:class:`_utils.PathWorkingDir`]
+
+	:ivar frameworkDirsTemp: Directories to search for Apple frameworks.
+	:type frameworkDirsTemp: list[:class:`_utils.PathWorkingDir`]
 
 	.. note:: Toolchains can define additional variables that will show up on this class's
 		instance variable list when that toolchain is active. See toolchain documentation for
@@ -383,10 +440,16 @@ class projectSettings( object ):
 		self.libraryDirs = []
 		self.frameworkDirs = set()
 
+		self.storyboardFiles = set()
+		self.interfaceFiles = set()
+		self.assetCatalogs = set()
+
 		self.optLevel = csbuild.OptimizationLevel.Disabled
 		self.debugLevel = csbuild.DebugLevel.Disabled
 		self.defines = []
 		self.undefines = []
+		self.useHiddenVisibility = False
+		self.stdLib = "libstdc++"
 		self.cxx = ""
 		self.cc = ""
 		self.hasCppFiles = False
@@ -495,19 +558,35 @@ class projectSettings( object ):
 
 		self.mutex = threading.Lock( )
 
-		self.postBuildStep = None
-		self.preBuildStep = None
-		self.prePrepareBuildStep = None
-		self.postPrepareBuildStep = None
-		self.preLinkStep = None
-		self.preMakeStep = None
-		self.postMakeStep = None
+		self.postBuildSteps = set()
+		self.preBuildSteps = set()
+		self.prePrepareBuildSteps = set()
+		self.postPrepareBuildSteps = set()
+		self.preLinkSteps = set()
+		self.preMakeSteps = set()
+		self.postMakeSteps = set()
 
 		self.parentGroup = currentGroup
 
 		self.extraFiles = []
 		self.extraDirs = []
 		self.extraObjs = set()
+
+		self.tempsDirty = True # Default to true so the first call to resolve paths is forced to run.
+		self.objDirTemp = None
+		self.outputDirTemp = None
+		self.headerInstallSubdirTemp = None
+		self.includeDirsTemp = []
+		self.libraryDirsTemp = []
+		self.precompileTemp = []
+		self.precompileAsCTemp = []
+		self.precompileExcludeFilesTemp = []
+		self.extraFilesTemp = []
+		self.extraDirsTemp = []
+		self.extraObjsTemp = []
+		self.excludeDirsTemp = []
+		self.excludeFilesTemp = []
+		self.frameworkDirsTemp = []
 
 		self.cExtensions = {".c"}
 		self.cppExtensions = {".cpp", ".cxx", ".cc", ".cp", ".c++"}
@@ -540,6 +619,9 @@ class projectSettings( object ):
 		self.splitChunks = {}
 
 		self.userData = projectSettings.UserData()
+		self.plistFile = None
+
+		self.plugins = set()
 
 		self._intermediateScopeSettings = {}
 		self._finalScopeSettings = {}
@@ -584,72 +666,19 @@ class projectSettings( object ):
 		global currentProject
 		currentProject = self
 
-		self.activeToolchain.prePrepareBuildStep(self)
-		if self.prePrepareBuildStep:
-			log.LOG_BUILD( "Running pre-PrepareBuild step for {} ({} {}/{})".format( self.outputName, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
-			self.prePrepareBuildStep(self)
+		pluginClasses = self.plugins
+		self.plugins = []
+		for pluginClass in pluginClasses:
+			self.plugins.append(pluginClass())
 
-		self.outputDir = os.path.abspath( self.outputDir ).format(project=self)
+		for plugin in self.plugins:
+			_utils.CheckRunBuildStep(self, plugin.prePrepareBuildStep, "plugin pre-PrepareBuild")
+		_utils.CheckRunBuildStep(self, self.activeToolchain.prePrepareBuildStep, "toolchain pre-PrepareBuild")
+		for buildStep in self.prePrepareBuildSteps:
+			_utils.CheckRunBuildStep(self, buildStep, "project pre-PrepareBuild")
 
-		# Create the executable/library output directory if it doesn't exist.
-		if not os.access(self.outputDir, os.F_OK):
-			os.makedirs(self.outputDir)
-
-		alteredLibraryDirs = []
-		for directory in self.libraryDirs:
-			directory = directory.format(project=self)
-			if not os.access(directory, os.F_OK):
-				log.LOG_WARN("Library path {} does not exist!".format(directory))
-			alteredLibraryDirs.append(directory)
-		self.libraryDirs = alteredLibraryDirs
-
-		#Kind of hacky. The libraries returned here are a temporary object that's been created by combining
-		#base, toolchain, and architecture information. We need to bind it to something more permanent so we
-		#can actually modify it. Assigning it to itself makes that temporary list permanent.
-		self.libraries = self.libraries
-
-		for dep in self.reconciledLinkDepends:
-			proj = _shared_globals.projects[dep]
-			proj.activeToolchain.SetActiveTool("linker")
-			if proj.type == csbuild.ProjectType.StaticLibrary and self.linkMode == csbuild.StaticLinkMode.LinkIntermediateObjects:
-				continue
-			self.libraries.add(proj.outputName.split(".")[0])
-			dir = proj.outputDir.format(project=proj)
-			if dir not in self.libraryDirs:
-				self.libraryDirs.append(dir)
-
-		self.activeToolchain.SetActiveTool("compiler")
-		self.objDir = os.path.abspath( self.objDir ).format(project=self)
-		self.csbuildDir = os.path.join( self.objDir, ".csbuild" )
-
-		alteredIncludeDirs = []
-		for directory in self.includeDirs:
-			directory = directory.format(project=self)
-			if not os.access(directory, os.F_OK):
-				log.LOG_WARN("Include path {} does not exist!".format(directory))
-			alteredIncludeDirs.append(directory)
-		self.includeDirs = alteredIncludeDirs
-
-		def apply_macro(l):
-			alteredList = []
-			for s in l:
-				s = os.path.abspath(s.format(project=self))
-				alteredList.append(s)
-			return alteredList
-
-		self.excludeDirs = apply_macro(self.excludeDirs)
-
-		self.extraFiles = apply_macro(self.extraFiles)
-		self.extraDirs = apply_macro(self.extraDirs)
-		self.extraObjs = set(apply_macro(list(self.extraObjs)))
-		self.excludeFiles = apply_macro(self.excludeFiles)
-		self.precompile = apply_macro(self.precompile)
-		self.precompileAsC = apply_macro(self.precompileAsC)
-		self.precompileExcludeFiles = apply_macro(self.precompileExcludeFiles)
-
-		self.headerInstallSubdir = self.headerInstallSubdir.format(project=self)
-
-		self.excludeDirs.append( self.csbuildDir )
+		# Run the initial pass to resolve file and directory paths.
+		self.ResolveFilesAndDirectories()
 
 		self.activeToolchain.SetActiveTool("linker")
 		if self.ext is None:
@@ -657,20 +686,6 @@ class projectSettings( object ):
 
 		self.outputName += self.ext
 		self.activeToolchain.SetActiveTool("compiler")
-
-		if not os.access(self.csbuildDir , os.F_OK):
-			os.makedirs( self.csbuildDir )
-
-		# Walk the source directory and construct the paths to each possible intermediate object file.
-		# Make sure the paths exist, and if they don't, create them.
-		for root, _, _ in os.walk(self.workingDirectory):
-			# Exclude the intermediate and output paths in case they're in the working directory.
-			if ".csbuild" in root or self.outputDir in root or self.objDir in root:
-				continue
-			tempFilename = os.path.join(root, "not_a_real.file")
-			objFilePath = os.path.dirname(_utils.GetSourceObjPath(self, tempFilename))
-			if not os.access(objFilePath, os.F_OK):
-				os.makedirs(objFilePath)
 
 		for item in self.fileOverrideSettings.items():
 			item[1].activeToolchain = item[1].toolchains[self.activeToolchainName]
@@ -695,9 +710,6 @@ class projectSettings( object ):
 			with open( cmdfile, "w" ) as f:
 				f.write( self.cxxCmd + self.ccCmd )
 
-
-		self.RediscoverFiles()
-
 		if self.name not in self.parentGroup.projects:
 			self.parentGroup.projects[self.name] = {}
 
@@ -709,18 +721,125 @@ class projectSettings( object ):
 
 		self.parentGroup.projects[self.name][self.activeToolchainName][self.targetName][self.outputArchitecture] = self
 
-		self.activeToolchain.postPrepareBuildStep(self)
-		if self.postPrepareBuildStep:
-			log.LOG_BUILD( "Running post-PrepareBuild step for {} ({} {}/{})".format( self.outputName, self.targetName, self.outputArchitecture, self.activeToolchainName ) )
-			self.postPrepareBuildStep(self)
+		# Run the stand-alone file discovery.
+		self.RunFileDiscovery()
+
+		for plugin in self.plugins:
+			_utils.CheckRunBuildStep(self, plugin.postPrepareBuildStep, "plugin post-PrepareBuild")
+		_utils.CheckRunBuildStep(self, self.activeToolchain.postPrepareBuildStep, "toolchain post-PrepareBuild")
+		for buildStep in self.postPrepareBuildSteps:
+			_utils.CheckRunBuildStep(self, buildStep, "project post-PrepareBuild")
+
+		# Make sure the paths are up-to-date in case the previous build step added/changed any of them.
+		self.ResolveFilesAndDirectories()
+
+		# Make output directories for all of the source files
+		for source in self.allsources:
+			# Exclude the intermediate and output paths in case they're in the working directory.
+			objFilePath = os.path.dirname(_utils.GetSourceObjPath(self, source))
+			if not os.access(objFilePath, os.F_OK):
+				os.makedirs(objFilePath)
 
 		os.chdir( wd )
 
-	def RediscoverFiles(self):
-		"""
-		Force a re-run of the file discovery process. Useful if a postPrepareBuild step adds additional files to the project.
-		This will have no effect when called from any place other than a postPrepareBuild step.
-		"""
+
+	def ResolveFilesAndDirectories( self ):
+		# Nothing to resolve if no files or directories have been added since the last resolve.
+		if not self.tempsDirty:
+			return
+
+		# Save the current working directory because we're going to be changing it when fixing up paths.
+		oldWorkingDir = os.getcwd()
+
+		def resolvePath( _tempPath, _proj ):
+			os.chdir( _tempPath.workingDir )
+			return os.path.abspath( _utils.ResolveProjectMacros( _tempPath.path, _proj ) )
+
+		if self.outputDirTemp:
+			self.outputDir = resolvePath( self.outputDirTemp, self )
+		else:
+			self.outputDir = oldWorkingDir
+
+		if self.objDirTemp:
+			self.objDir = resolvePath( self.objDirTemp, self )
+		else:
+			self.objDir = oldWorkingDir
+
+		# Create the executable/library output directory if it doesn't exist.
+		if not os.access(self.outputDir, os.F_OK):
+			os.makedirs(self.outputDir)
+
+		alteredLibraryDirs = []
+		for directory in self.libraryDirsTemp:
+			directory = resolvePath( directory, self )
+			if not os.access(directory, os.F_OK):
+				log.LOG_WARN("Library path {} does not exist!".format(directory))
+			alteredLibraryDirs.append(directory)
+		self.libraryDirs = alteredLibraryDirs
+
+		for dep in self.reconciledLinkDepends:
+			proj = _shared_globals.projects[dep]
+			proj.activeToolchain.SetActiveTool("linker")
+			if proj.type == csbuild.ProjectType.StaticLibrary and self.linkMode == csbuild.StaticLinkMode.LinkIntermediateObjects:
+				continue
+			self.libraries.add(proj.outputName.split(".")[0])
+			if proj.outputDir:
+				# This project has already been prepared, use its output directory as is.
+				depOutDir = proj.outputDir
+			else:
+				# This project has not been prepared yet, so we need to construct its output directory manually.
+				depOutDir = resolvePath( proj.outputDirTemp, proj )
+			if depOutDir not in self.libraryDirs:
+				self.libraryDirs.append(depOutDir)
+
+		self.activeToolchain.SetActiveTool( "compiler" )
+		self.csbuildDir = os.path.join( self.objDir, ".csbuild" )
+
+		if not os.access(self.csbuildDir , os.F_OK):
+			os.makedirs( self.csbuildDir )
+
+		alteredIncludeDirs = []
+		for directory in self.includeDirsTemp:
+			directory = resolvePath( directory, self )
+			if not os.access(directory, os.F_OK):
+				log.LOG_WARN( "Include path {} does not exist!".format( directory ) )
+			alteredIncludeDirs.append( directory )
+		self.includeDirs = alteredIncludeDirs
+
+		def apply_macro(l):
+			alteredList = []
+			for s in l:
+				s = resolvePath( s, self )
+				alteredList.append(s)
+			return alteredList
+
+		self.excludeDirs = apply_macro( self.excludeDirsTemp )
+		self.extraFiles = apply_macro( self.extraFilesTemp )
+		self.extraDirs = apply_macro( self.extraDirsTemp )
+		self.extraObjs = set( apply_macro( list( self.extraObjsTemp ) ) )
+		self.excludeFiles = apply_macro(self.excludeFilesTemp )
+		self.precompile = apply_macro( self.precompileTemp )
+		self.precompileAsC = apply_macro( self.precompileAsCTemp )
+		self.precompileExcludeFiles = apply_macro( self.precompileExcludeFilesTemp )
+		self.frameworkDirs = apply_macro( self.frameworkDirsTemp )
+
+		if self.headerInstallSubdirTemp:
+			self.headerInstallSubdir = resolvePath( self.headerInstallSubdirTemp, self )
+		else:
+			self.headerInstallSubdir = oldWorkingDir
+
+		self.excludeDirs.append( self.csbuildDir )
+
+		# Restore the old working directory.
+		os.chdir( oldWorkingDir )
+
+
+	def RunFileDiscovery( self ):
+		#Have to chdir in case this gets called from a build step.
+		#We'll chdir back when we're done.
+		wd = os.getcwd()
+		os.chdir( self.workingDirectory )
+
 		self.sources = []
 		if not self.forceChunks:
 			self.allsources = []
@@ -735,6 +854,7 @@ class projectSettings( object ):
 			self.allheaders = self.cppHeaders + self.cHeaders
 
 			if not self.allsources:
+				os.chdir(wd)
 				return
 
 			#We'll do this even if _use_chunks is false, because it simplifies the linker logic.
@@ -751,6 +871,17 @@ class projectSettings( object ):
 			self.sources = list( self.allsources )
 
 		_shared_globals.allfiles |= set(self.sources)
+		os.chdir(wd)
+
+
+	def RediscoverFiles(self):
+		"""
+		Force a re-run of the file discovery process. Useful if a postPrepareBuild step adds additional files to the project.
+		This will have no effect when called from any place other than a postPrepareBuild step.
+		"""
+		self.ResolveFilesAndDirectories()
+		self.RunFileDiscovery()
+
 
 	def SetValue(self, key, value):
 		scope = self._currentScope
@@ -878,12 +1009,16 @@ class projectSettings( object ):
 			return
 
 		if isinstance( newObj, dict ):
+			baseObj["obj"] = dict(baseObj["obj"])
 			baseObj["obj"].update( newObj )
 		elif isinstance( newObj, list ):
+			baseObj["obj"] = list(baseObj["obj"])
 			baseObj["obj"] += newObj
 		elif isinstance( newObj, set ):
+			baseObj["obj"] = set(baseObj["obj"])
 			baseObj["obj"] |= newObj
 		elif isinstance( newObj, csbuild.projectSettings.projectSettings.UserData ):
+			baseObj["obj"] = baseObj["obj"].copy()
 			baseObj["obj"].dataDict.update( newObj.dataDict )
 		else:
 			baseObj["obj"] = newObj
@@ -918,6 +1053,7 @@ class projectSettings( object ):
 				projectSettings._processToolchain(base, self.activeToolchain, name)
 
 				self._finalizedSettings[tool][name] = base["obj"]
+
 		self.activeToolchain.SetActiveTool("linker")
 		if sys.version_info >= (3,0):
 			self.GetAttr = types.MethodType(projectSettings.GetAttrNext, self)
@@ -997,10 +1133,15 @@ class projectSettings( object ):
 			"includeDirs": list( self.includeDirs ),
 			"libraryDirs": list( self.libraryDirs ),
 			"frameworkDirs": set( self.frameworkDirs ),
+			"storyboardFiles": set( self.storyboardFiles ),
+			"interfaceFiles": set( self.interfaceFiles ),
+			"assetCatalogs": set( self.assetCatalogs ),
 			"optLevel": self.optLevel,
 			"debugLevel": self.debugLevel,
 			"defines": list( self.defines ),
 			"undefines": list( self.undefines ),
+			"useHiddenVisibility": self.useHiddenVisibility,
+			"stdLib": self.stdLib,
 			"cxx": self.cxx,
 			"cc": self.cc,
 			"hasCppFiles": self.hasCppFiles,
@@ -1081,13 +1222,13 @@ class projectSettings( object ):
 			"scriptPath": self.scriptPath,
 			"scriptFile": self.scriptFile,
 			"mutex": threading.Lock( ),
-			"preBuildStep" : self.preBuildStep,
-			"postBuildStep" : self.postBuildStep,
-			"prePrepareBuildStep" : self.prePrepareBuildStep,
-			"postPrepareBuildStep" : self.postPrepareBuildStep,
-			"preLinkStep" : self.preLinkStep,
-			"preMakeStep" : self.preMakeStep,
-			"postMakeStep" : self.postMakeStep,
+			"preBuildSteps" : set(self.preBuildSteps),
+			"postBuildSteps" : set(self.postBuildSteps),
+			"prePrepareBuildSteps" : set(self.prePrepareBuildSteps),
+			"postPrepareBuildSteps" : set(self.postPrepareBuildSteps),
+			"preLinkSteps" : set(self.preLinkSteps),
+			"preMakeSteps" : set(self.preMakeSteps),
+			"postMakeSteps" : set(self.postMakeSteps),
 			"parentGroup" : self.parentGroup,
 			"extraFiles": list(self.extraFiles),
 			"extraDirs": list(self.extraDirs),
@@ -1120,6 +1261,21 @@ class projectSettings( object ):
 			"linkOutput" : self.linkOutput,
 			"linkErrors" : self.linkErrors,
 			"parsedLinkErrors" : self.parsedLinkErrors,
+		    "tempsDirty" : self.tempsDirty,
+			"objDirTemp" : self.objDirTemp,
+			"outputDirTemp" : self.outputDirTemp,
+			"headerInstallSubdirTemp" : self.headerInstallSubdirTemp,
+			"includeDirsTemp" : self.includeDirsTemp,
+			"libraryDirsTemp" : self.libraryDirsTemp,
+			"precompileTemp" : self.precompileTemp,
+			"precompileAsCTemp" : self.precompileAsCTemp,
+			"precompileExcludeFilesTemp" : self.precompileExcludeFilesTemp,
+			"extraFilesTemp" : self.extraFilesTemp,
+			"extraDirsTemp" : self.extraDirsTemp,
+			"extraObjsTemp" : self.extraObjsTemp,
+			"excludeDirsTemp" : self.excludeDirsTemp,
+			"excludeFilesTemp" : self.excludeFilesTemp,
+			"frameworkDirsTemp" : self.frameworkDirsTemp,
 			"cExtensions" : set(self.cExtensions),
 			"cppExtensions" : set(self.cppExtensions),
 			"asmExtensions" : set(self.asmExtensions),
@@ -1135,6 +1291,8 @@ class projectSettings( object ):
 			"linkCommand" : self.linkCommand,
 			"compileCommands" : dict(self.compileCommands),
 			"userData" : self.userData.copy(),
+			"plistFile" : copy.deepcopy( self.plistFile ) if isinstance( self.plistFile, plugin_plist_generator.PListGenerator ) else self.plistFile,
+			"plugins" : set(self.plugins),
 		}
 
 		for name in self.targets:

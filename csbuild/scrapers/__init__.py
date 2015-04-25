@@ -1,0 +1,3 @@
+BYTE = 1
+SHORT = 2
+LONG = 4

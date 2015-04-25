@@ -35,30 +35,28 @@ from . import log
 
 class gccBase( object ):
 	def __init__( self ):
-		self.isClang = False
-		self._objcAbiVersion = None
+		self.shared.isClang = False
+		self.shared._objcAbiVersion = 2
 
-		if platform.system() == "Darwin":
-			#TODO: Find the best SDK available instead of hardcoding one.
-			self._sysroot = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk"
-		else:
-			self._sysroot = "/"
 
-	def _copyTo(self, other):
-		other.isClang = self.isClang
-		other._objcAbiVersion = self._objcAbiVersion
-		other._sysroot = self._sysroot
+	def _copyTo( self, other ):
+		other.shared.isClang = self.shared.isClang
+		other.shared._objcAbiVersion = self.shared._objcAbiVersion
 
-	def GetValidArchitectures(self):
+
+	def GetValidArchitectures( self ):
 		return ['x86', 'x64']
 
-	def SetObjcAbiVersion(self, version):
-		self._objcAbiVersion = version
 
-	def _getObjcAbiVersion(self):
-		return "-fobjc-abi-version={} ".format(self._objcAbiVersion) if self._objcAbiVersion else ""
+	def SetObjcAbiVersion( self, version ):
+		self.shared._objcAbiVersion = version
 
-	def _getArchFlag(self, project):
+
+	def _getStandardLibraryArg( self, project ):
+		return "-stdlib={} ".format( project.stdLib )
+
+
+	def _getArchFlag( self, project ):
 		archArg = ""
 		if project.outputArchitecture == 'x86':
 			archArg = "-m32 "
@@ -68,7 +66,7 @@ class gccBase( object ):
 			log.LOG_ERROR("Architecture {} is not natively supported by GCC toolchain. Cross-compiling must be implemented by the makefile.")
 		return archArg
 
-	def _parseClangOutput(self, outputStr):
+	def _parseClangOutput( self, outputStr ):
 		command = re.compile("^clang(\\+\\+)?: +(fatal +)?(warning|error|note): (.*)$")
 		inLine = re.compile("^In (.*) included from (.*):(\\d+):$")
 		message = re.compile("^(<command line>|([A-Za-z]:)?[^:]+\\.[^:]+)(:(\\d+):(\\d+)|\\((\\d+)\\) *): +(fatal +)?(error|warning|note): (.*)$")
@@ -218,16 +216,16 @@ class gccBase( object ):
 
 
 	def _parseOutput(self, outputStr):
-		if self.isClang:
+		if self.shared.isClang:
 			return self._parseClangOutput(outputStr)
 		else:
 			return self._parseGccOutput(outputStr)
 
 
-class compiler_gcc( gccBase, toolchain.compilerBase ):
-	def __init__( self ):
-		gccBase.__init__(self)
-		toolchain.compilerBase.__init__( self )
+class GccCompiler( gccBase, toolchain.compilerBase ):
+	def __init__( self, shared ):
+		toolchain.compilerBase.__init__( self, shared )
+		gccBase.__init__( self )
 
 		self.warnFlags = set()
 		self.cppStandard = ""
@@ -237,13 +235,21 @@ class compiler_gcc( gccBase, toolchain.compilerBase ):
 		#self._settingsOverrides["cc"] = "gcc"
 
 
-	def copy(self):
-		ret = toolchain.compilerBase.copy(self)
-		gccBase._copyTo(self, ret)
-		ret.warnFlags = set(self.warnFlags)
+	def copy( self, shared ):
+		ret = toolchain.compilerBase.copy( self, shared )
+		gccBase._copyTo( self, ret )
+		ret.warnFlags = set( self.warnFlags )
 		ret.cppStandard = self.cppStandard
 		ret.cStandard = self.cStandard
 		return ret
+
+
+	def _getObjcAbiVersionArg( self ):
+		return "-fobjc-abi-version={} ".format( self.shared._objcAbiVersion ) if self.shared._objcAbiVersion else ""
+
+
+	def _getVisibilityArgs( self, project ):
+		return "-fvisibility=hidden -fvisibility-inlines-hidden " if project.useHiddenVisibility else ""
 
 
 	def _getWarnings( self, warnFlags, noWarnings ):
@@ -275,7 +281,7 @@ class compiler_gcc( gccBase, toolchain.compilerBase ):
 		return ret
 
 
-	def _getOptFlag(self, optLevel):
+	def _getOptFlag( self, optLevel ):
 		if optLevel == csbuild.OptimizationLevel.Max:
 			return "3"
 		elif optLevel == csbuild.OptimizationLevel.Speed:
@@ -291,27 +297,33 @@ class compiler_gcc( gccBase, toolchain.compilerBase ):
 		if "clang" not in compiler:
 			exitcodes = "-pass-exit-codes"
 		else:
-			self.isClang = True
+			self.shared.isClang = True
 
 		if isCpp:
 			standard = self.cppStandard
 		else:
 			standard = self.cStandard
 
-		archArg = self._getArchFlag(project)
+		if project.type == csbuild.ProjectType.SharedLibrary or project.type == csbuild.ProjectType.LoadableModule:
+			picFlag = "-fPIC "
+		else:
+			picFlag = ""
 
-		return "\"{}\" {}{} -Winvalid-pch -c -isysroot \"{}\" {}{}{} -O{} {}{}{} {}".format(
+		archArg = self._getArchFlag( project )
+
+		return "\"{}\" {}{}{} -Winvalid-pch -c {}{} -O{} {}{}{}{}{} {} ".format(
 			compiler,
 			archArg,
 			exitcodes,
-			self._sysroot,
-			self._getObjcAbiVersion(),
+			self._getObjcAbiVersionArg(),
 			self._getDefines( project.defines, project.undefines ),
 			"-g" if project.debugLevel != csbuild.DebugLevel.Disabled else "",
 			self._getOptFlag(project.optLevel),
-			"-fPIC " if project.type == csbuild.ProjectType.SharedLibrary else "",
+			picFlag,
 			"-pg " if project.profile else "",
-			"--std={0}".format( standard ) if standard != "" else "",
+			"-std={} ".format( standard ) if standard != "" else "",
+			self._getStandardLibraryArg( project ),
+			self._getVisibilityArgs( project ),
 			" ".join( project.cxxCompilerFlags ) if isCpp else " ".join( project.ccCompilerFlags )
 		)
 
@@ -390,7 +402,7 @@ class compiler_gcc( gccBase, toolchain.compilerBase ):
 
 	def SetCppStandard( self, s ):
 		"""
-		The C/C++ standard to be used when compiling. Possible values are C++03, C++-11, etc.
+		The C/C++ standard to be used when compiling. Possible values are "c++03", "c++11", etc.
 
 		:param s: The standard to use
 		:type s: str
@@ -400,7 +412,7 @@ class compiler_gcc( gccBase, toolchain.compilerBase ):
 
 	def SetCStandard( self, s ):
 		"""
-		The C/C++ standard to be used when compiling. Possible values are C99, C11, etc.
+		The C/C++ standard to be used when compiling. Possible values are "c99", "c11", etc.
 
 		:param s: The standard to use
 		:type s: str
@@ -408,10 +420,10 @@ class compiler_gcc( gccBase, toolchain.compilerBase ):
 		self.cStandard = s
 
 
-class linker_gcc( gccBase, toolchain.linkerBase ):
-	def __init__( self ):
+class GccLinker( gccBase, toolchain.linkerBase ):
+	def __init__( self, shared ):
+		toolchain.linkerBase.__init__( self, shared )
 		gccBase.__init__(self)
-		toolchain.linkerBase.__init__( self )
 
 		self.strictOrdering = False
 		self._ld = "ld"
@@ -421,33 +433,16 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 		self._setup = False
 		self._project_settings = None
 
-		self._frameworks = set()
-		self._frameworkDirs = set()
-
 		#self._settingsOverrides["cxx"] = "g++"
 		#self._settingsOverrides["cc"] = "gcc"
 
 
-	def copy(self):
-		ret = toolchain.linkerBase.copy(self)
+	def copy(self, shared):
+		ret = toolchain.linkerBase.copy(self, shared)
 		gccBase._copyTo(self, ret)
 		ret.strictOrdering = self.strictOrdering
 		ret._actual_library_names = dict(self._actual_library_names)
 		ret._project_settings = self._project_settings
-		return ret
-
-
-	def _getFrameworkDirectories(self, project):
-		ret = ""
-		for directory in project.frameworkDirs:
-			ret += "-F{} ".format(directory)
-		return ret
-
-
-	def _getFrameworks(self, project):
-		ret = ""
-		for framework in project.frameworks:
-			ret += "-framework {} ".format(framework)
 		return ret
 
 
@@ -464,6 +459,13 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 		if project.outputArchitecture == "x64":
 			self._include_lib64 = True
 
+
+	def _getObjcAbiVersionArg(self):
+		# The standard GNU linker doesn't receive an argument for the Objective-C ABI version.
+		# This is more of a convenience for OSX and iOS.
+		return ""
+
+
 	def _getLibraryArg(self, lib):
 		for depend in self._project_settings.reconciledLinkDepends:
 			dependProj = _shared_globals.projects[depend]
@@ -472,14 +474,9 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 			dependLibName = dependProj.outputName
 			splitName = os.path.splitext(dependLibName)[0]
 			if splitName == lib or splitName == "lib{}".format( lib ):
-				if platform.system() == "Darwin":
-					return "{} ".format( os.path.join( dependProj.outputDir, dependLibName ) )
-				else:
-					return '-l:{} '.format( dependLibName )
-		if platform.system() == "Darwin":
-			return "{} ".format( self._actual_library_names[lib] )
-		else:
-			return "-l:{} ".format( self._actual_library_names[lib] )
+				return '-l:{} '.format( dependLibName )
+		return "-l:{} ".format( self._actual_library_names[lib] )
+
 
 	def _getLibraries( self, libraries ):
 		"""Returns a string containing all of the passed libraries, formatted to be passed to gcc/g++."""
@@ -510,32 +507,30 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 		ret = ""
 		for lib in libDirs:
 			ret += "-L{} ".format( lib )
-		# OSX doesn't require the /usr lib directories.
-		if platform.system() != "Darwin":
-			ret += "-L/usr/lib -L/usr/local/lib "
+		ret += "-L/usr/lib -L/usr/local/lib "
+		if self._include_lib64:
+			ret += "-L/usr/lib64 -L/usr/local/lib64 "
+		if forLinker:
+			for lib in libDirs:
+				ret += "-Wl,-R{} ".format( os.path.abspath( lib ) )
+			ret += "-Wl,-R/usr/lib -Wl,-R/usr/local/lib "
 			if self._include_lib64:
-				ret += "-L/usr/lib64 -L/usr/local/lib64 "
-			if forLinker:
-				for lib in libDirs:
-					ret += "-Wl,-R{} ".format( os.path.abspath( lib ) )
-				ret += "-Wl,-R/usr/lib -Wl,-R/usr/local/lib "
-				if self._include_lib64:
-					ret += "-Wl,-R/usr/lib64 -Wl,-R/usr/local/lib64 "
+				ret += "-Wl,-R/usr/lib64 -Wl,-R/usr/local/lib64 "
 		return ret
 
 
-	def _getStartGroupFlags(self):
-		if platform.system() == "Darwin":
-			# OSX doesn't support the start/end group flags.
-			return ""
+	def _getStartGroupFlags( self ):
 		return "-Wl,--no-as-needed -Wl,--start-group"
 
 
-	def _getEndGroupFlags(self):
-		if platform.system() == "Darwin":
-			# OSX doesn't support he start/end group flags.
-			return ""
+	def _getEndGroupFlags( self ):
 		return "-Wl,--end-group"
+
+
+	def _getSharedLibraryFlag( self, project ):
+		if project.type == csbuild.ProjectType.SharedLibrary or project.type == csbuild.ProjectType.LoadableModule:
+			return "-shared "
+		return ""
 
 
 	def GetLinkCommand( self, project, outputFile, objList ):
@@ -563,15 +558,13 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 			else:
 				cmd = project.cc
 
-			archArg = self._getArchFlag(project)
+			archArg = self._getArchFlag( project )
 
-			return "\"{}\" -isysroot \"{}\" {}{}{}{}{}-o{} {} {} {} {}{}{} {} {}-g{} -O{} {} {}".format(
+			return "\"{}\" {}{}{}{}-o{} {} {} {} {}{}{} {} {}-g{} -O{} {} {} ".format(
 				cmd,
-				self._sysroot,
-				self._getObjcAbiVersion(),
 				archArg,
-				self._getFrameworkDirectories(project),
-				self._getFrameworks(project),
+				self._getObjcAbiVersionArg(),
+				self._getStandardLibraryArg( project ),
 				"-pg " if project.profile else "",
 				outputFile,
 				"@{}".format(linkFile),
@@ -584,12 +577,12 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 				self._getLibraryDirs( project.libraryDirs, True ),
 				project.debugLevel,
 				project.optLevel,
-				"-shared" if project.type == csbuild.ProjectType.SharedLibrary else "",
+				self._getSharedLibraryFlag( project ),
 				" ".join( project.linkerFlags )
 			)
 
 
-	def _findLibraryUnix( self, project, library, libraryDirs, force_static, force_shared ):
+	def FindLibrary( self, project, library, libraryDirs, force_static, force_shared ):
 		success = True
 		out = ""
 		self._setupForProject( project )
@@ -642,7 +635,7 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 						RMatch = re.search( "attempt to open (.*) succeeded".encode( 'utf-8' ), out, re.I )
 					else:
 						RMatch = re.search( "attempt to open (.*) succeeded", out, re.I )
-						#Some libraries (such as -liberty) will return successful but don't have a file (internal to ld maybe?)
+					#Some libraries (such as -liberty) will return successful but don't have a file (internal to ld maybe?)
 					#In those cases we can probably assume they haven't been modified.
 					#Set the mtime to 0 and return success as long as ld didn't return an error code.
 					if RMatch is not None:
@@ -654,49 +647,6 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 						return lib
 					elif not success:
 						return None
-
-	def _findLibraryDarwin( self, project, library, libraryDirs ):
-		self._setupForProject(project)
-
-		for lib_dir in libraryDirs:
-			log.LOG_INFO("Looking for library {} in directory {}...".format(library, lib_dir))
-			lib_file_path = os.path.join( lib_dir, library )
-			libFileStatic = "{}.a".format( lib_file_path )
-			libFileDynamic = "{}.dylib".format( lib_file_path )
-			# Check for a static lib.
-			if os.access(libFileStatic , os.F_OK):
-				self._actual_library_names.update( { library : libFileStatic } )
-				return libFileStatic
-			# Check for a dynamic lib.
-			if os.access(libFileDynamic , os.F_OK):
-				self._actual_library_names.update( { library : libFileDynamic } )
-				return libFileDynamic
-
-		for lib_dir in libraryDirs:
-			# Compatibility with Linux's way of adding lib- to the front of its libraries
-			libfileCompat = "lib{}".format( library )
-			log.LOG_INFO("Looking for library {} in directory {}...".format(libfileCompat, lib_dir))
-			lib_file_path = os.path.join( lib_dir, libfileCompat )
-			libFileStatic = "{}.a".format( lib_file_path )
-			libFileDynamic = "{}.dylib".format( lib_file_path )
-			# Check for a static lib.
-			if os.access(libFileStatic , os.F_OK):
-				self._actual_library_names.update( { library : libFileStatic } )
-				return libFileStatic
-			# Check for a dynamic lib.
-			if os.access(libFileDynamic , os.F_OK):
-				self._actual_library_names.update( { library : libFileDynamic } )
-				return libFileDynamic
-
-		# The library wasn't found.
-		return None
-
-
-	def FindLibrary( self, project, library, libraryDirs, force_static, force_shared ):
-		if platform.system() == "Darwin":
-			return self._findLibraryDarwin( project, library, libraryDirs )
-		else:
-			return self._findLibraryUnix( project, library, libraryDirs, force_static, force_shared )
 
 
 	def GetDefaultOutputExtension( self, projectType ):
@@ -710,10 +660,8 @@ class linker_gcc( gccBase, toolchain.linkerBase ):
 				return ".lib"
 			else:
 				return ".a"
-		elif projectType == csbuild.ProjectType.SharedLibrary:
-			if platform.system() == "Darwin":
-				return ".dylib"
-			elif platform.system() == "Windows":
+		elif projectType == csbuild.ProjectType.SharedLibrary or projectType == csbuild.ProjectType.LoadableModule:
+			if platform.system() == "Windows":
 				return ".dll"
 			else:
 				return ".so"

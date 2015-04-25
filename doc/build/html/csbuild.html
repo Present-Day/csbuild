@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>csbuild package &mdash; csbuild 1.0.0b1 documentation</title>
+    <title>csbuild package &mdash; csbuild 0.91.0.0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0b1',
+        VERSION:     '0.91.0.0',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -23,7 +23,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="csbuild 1.0.0b1 documentation" href="index.html" /> 
+    <link rel="top" title="csbuild 0.91.0.0 documentation" href="index.html" /> 
   </head>
   <body>
     <div class="related">
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>  
 
@@ -75,6 +75,51 @@
 anything that&#8217;s imported and used by those threads should always be implemented on the main thread before that
 thread&#8217;s execution starts. Otherwise, CSBuild does not guarantee that the import will have completed
 once that thread tries to use it. Long story short: Don&#8217;t import modules within threads.</p>
+<dl class="function">
+<dt id="csbuild.AddAppleAssetCatalogs">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddAppleAssetCatalogs</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddAppleAssetCatalogs" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+Add a list of asset catalogs to be compiled. Only applies to builds for Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>And arbitrary number of strings.</em>) &#8211; List of asset catalogs.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddAppleInterfaceFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddAppleInterfaceFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddAppleInterfaceFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+Add a list of interface files to be compiled. Only applies to builds for Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>And arbitrary number of strings.</em>) &#8211; List of interface files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.AddAppleStoryboardFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">AddAppleStoryboardFiles</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddAppleStoryboardFiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+Add a list of storyboard files to be compiled. Only applies to builds for Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>args</strong> (<em>And arbitrary number of strings.</em>) &#8211; List of storyboard files.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="function">
 <dt id="csbuild.AddCcCompilerFlags">
 <tt class="descclassname">csbuild.</tt><tt class="descname">AddCcCompilerFlags</tt><big>(</big><em>*args</em><big>)</big><a class="headerlink" href="#csbuild.AddCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
@@ -377,6 +422,21 @@ copied and pasted directly into this one in the location of the AddScript() call
 </dd></dl>
 
 <dl class="function">
+<dt id="csbuild.ClearAppleAssetCatalogs">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearAppleAssetCatalogs</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearAppleAssetCatalogs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearAppleInterfaceFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearAppleInterfaceFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearAppleInterfaceFiles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearAppleStoryboardFiles">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearAppleStoryboardFiles</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearAppleStoryboardFiles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="csbuild.ClearCcCompilerFlags">
 <tt class="descclassname">csbuild.</tt><tt class="descname">ClearCcCompilerFlags</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearCcCompilerFlags" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clears the list of literal C compiler flags.</p>
@@ -422,6 +482,18 @@ copied and pasted directly into this one in the location of the AddScript() call
 <dt id="csbuild.ClearExtraObjects">
 <tt class="descclassname">csbuild.</tt><tt class="descname">ClearExtraObjects</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearExtraObjects" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear the list of external objects to link.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearFrameworkDirectories">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearFrameworkDirectories</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearFrameworkDirectories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the framework directories.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.ClearFrameworks">
+<tt class="descclassname">csbuild.</tt><tt class="descname">ClearFrameworks</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.ClearFrameworks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the list of frameworks.</p>
 </dd></dl>
 
 <dl class="function">
@@ -599,6 +671,12 @@ or a pattern that matches more than two files, no two files in the list will eve
 <dd><p>Enables installation of the project&#8217;s headers.
 Default target is /usr/local/include, unless the &#8211;prefix option is specified.
 If &#8211;prefix is specified, the target will be <em>{prefix</em>}/include</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.EnableHiddenVisibility">
+<tt class="descclassname">csbuild.</tt><tt class="descname">EnableHiddenVisibility</tt><big>(</big><big>)</big><a class="headerlink" href="#csbuild.EnableHiddenVisibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable the use of hidden symbol visibility. Ignored by all but the gcc toolchain (and derived toolchains).</p>
 </dd></dl>
 
 <dl class="function">
@@ -810,6 +888,11 @@ modify any external headers, you will need to manually &#8211;clean or &#8211;re
 <dd></dd></dl>
 
 <dl class="attribute">
+<dt id="csbuild.ProjectType.LoadableModule">
+<tt class="descname">LoadableModule</tt><em class="property"> = 3</em><a class="headerlink" href="#csbuild.ProjectType.LoadableModule" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="csbuild.ProjectType.SharedLibrary">
 <tt class="descname">SharedLibrary</tt><em class="property"> = 1</em><a class="headerlink" href="#csbuild.ProjectType.SharedLibrary" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -820,6 +903,11 @@ modify any external headers, you will need to manually &#8211;clean or &#8211;re
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="function">
+<dt id="csbuild.RegisterPlugin">
+<tt class="descclassname">csbuild.</tt><tt class="descname">RegisterPlugin</tt><big>(</big><em>pluginClass</em><big>)</big><a class="headerlink" href="#csbuild.RegisterPlugin" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="function">
 <dt id="csbuild.RegisterProjectGenerator">
@@ -841,7 +929,7 @@ modify any external headers, you will need to manually &#8211;clean or &#8211;re
 
 <dl class="function">
 <dt id="csbuild.RegisterToolchain">
-<tt class="descclassname">csbuild.</tt><tt class="descname">RegisterToolchain</tt><big>(</big><em>name</em>, <em>compiler</em>, <em>linker</em><big>)</big><a class="headerlink" href="#csbuild.RegisterToolchain" title="Permalink to this definition">¶</a></dt>
+<tt class="descclassname">csbuild.</tt><tt class="descname">RegisterToolchain</tt><big>(</big><em>name</em>, <em>compiler</em>, <em>linker</em>, <em>**customTools</em><big>)</big><a class="headerlink" href="#csbuild.RegisterToolchain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Register a new toolchain for use in the project.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -907,6 +995,20 @@ On Linux platforms, this is set to gcc by default.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="csbuild.SetApplePropertyList">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetApplePropertyList</tt><big>(</big><em>plistFile</em><big>)</big><a class="headerlink" href="#csbuild.SetApplePropertyList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the property list for a project.  This only applies to builds on Apple platforms.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>plistFile</strong> (str or class:<cite>csbuild.plugin_plist_generator.PListGenerator</cite>) &#8211; </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="csbuild.SetCcCommand">
 <tt class="descclassname">csbuild.</tt><tt class="descname">SetCcCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetCcCommand" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specify the compiler executable to be used for compiling C files. Ignored by the msvc toolchain.</p>
@@ -963,9 +1065,23 @@ are not specified here will not be built.</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="csbuild.SetCppStandardLibrary">
+<tt class="descclassname">csbuild.</tt><tt class="descname">SetCppStandardLibrary</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetCppStandardLibrary" title="Permalink to this definition">¶</a></dt>
+<dd><p>The standard C++ library to be used when compiling. Possible values are &#8220;libstdc++&#8221; and &#8220;libc++&#8221;. Ignored by all but the gcc toolchain (and derived toolchains).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>s</strong> (<a class="reference external" href="http://docs.python.org/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) &#8211; Library to use.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="csbuild.SetCxxCommand">
 <tt class="descclassname">csbuild.</tt><tt class="descname">SetCxxCommand</tt><big>(</big><em>s</em><big>)</big><a class="headerlink" href="#csbuild.SetCxxCommand" title="Permalink to this definition">¶</a></dt>
-<dd><p>Specify the compiler executable to be used for compiling C++ files. Ignored by the msvc toolchain.</p>
+<dd><p>Specify the compiler executable to be used for compiling C++ files. Ignored by all but the gcc toolchain (and derived toolchains).</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1310,6 +1426,46 @@ csbuild.Toolchain(&#8220;gcc&#8221;, &#8220;msvc&#8221;).EnableWarningsAsErrors(
 </dd></dl>
 
 <dl class="function">
+<dt id="csbuild.globalPostMakeStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">globalPostMakeStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.globalPostMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a global post-make step that will only be executed once. Post-make steps run after all projects have
+finished building and linking. This step will only run if the entire build process was successful.</p>
+<p>Global build steps execute after all project build steps of the same type have completed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take no arguments.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="csbuild.globalPreMakeStep">
+<tt class="descclassname">csbuild.</tt><tt class="descname">globalPreMakeStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.globalPreMakeStep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that creates a global pre-make step that will only be executed once. Pre-make steps run after all projects&#8217; preparation
+steps have completed and their final chunk sets have been collected, but before any compiling starts.</p>
+<p>Global build steps execute after all project build steps of the same type have completed.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>func</strong> (<em>(Implicit) function</em>) &#8211; (Implicit) The function wrapped by this decorator</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The function this wraps should take no arguments.</p>
+</div>
+</dd></dl>
+
+<dl class="function">
 <dt id="csbuild.postBuildStep">
 <tt class="descclassname">csbuild.</tt><tt class="descname">postBuildStep</tt><big>(</big><em>func</em><big>)</big><a class="headerlink" href="#csbuild.postBuildStep" title="Permalink to this definition">¶</a></dt>
 <dd><p>Decorator that creates a post-build step for the containing project. Post-build steps run after the project has
@@ -1570,12 +1726,12 @@ override is True.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">csbuild 1.0.0b1 documentation</a> &raquo;</li> 
+        <li><a href="index.html">csbuild 0.91.0.0 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2014, Jaedyn K. Draper, Brandon M. Bare.
-      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
     </div>
   </body>
 </html>

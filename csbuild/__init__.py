@@ -45,6 +45,16 @@ import platform
 import imp
 import re
 import traceback
+import copy
+
+if sys.version_info >= (3,0):
+	import io
+	StringIO = io.StringIO
+else:
+	import cStringIO
+	StringIO = cStringIO.StringIO
+
+from . import plugin_plist_generator
 
 if sys.version_info < (3,0):
 	import cPickle as pickle
@@ -58,6 +68,7 @@ class ProjectType( object ):
 	Application = 0
 	SharedLibrary = 1
 	StaticLibrary = 2
+	LoadableModule = 3 # Only matters for Apple platforms; every other platform will interpret this as SharedLibrary.
 
 class DebugLevel( object ):
 	Disabled = 0
@@ -87,6 +98,7 @@ from . import _utils
 from . import toolchain
 from . import toolchain_msvc
 from . import toolchain_gcc
+from . import toolchain_gcc_darwin
 from . import toolchain_android
 from . import toolchain_ios
 from . import log
@@ -94,9 +106,9 @@ from . import _shared_globals
 from . import projectSettings
 from . import project_generator_qtcreator
 from . import project_generator_slickedit
-from . import project_generator_visual_studio
+from . import project_generator_visual_studio_v2
 from . import project_generator
-
+from . import plugin
 
 __author__ = "Jaedyn K. Draper, Brandon M. Bare"
 __copyright__ = 'Copyright (C) 2012-2014 Jaedyn K. Draper'
@@ -151,7 +163,10 @@ def SetHeaderInstallSubdirectory( s ):
 	:param s: The desired subdirectory; i.e., if you specify this as "myLib", the headers will be
 	installed under *{prefix*}/include/myLib.
 	"""
-	projectSettings.currentProject.SetValue("headerInstallSubdir", s)
+	s = _utils.FixupRelativePath( s )
+	s = _utils.PathWorkingDirPair( s )
+	projectSettings.currentProject.SetValue( "headerInstallSubdirTemp", s)
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddExcludeDirectories( *args ):
@@ -165,10 +180,11 @@ def AddExcludeDirectories( *args ):
 	args = list( args )
 	newargs = []
 	for arg in args:
-		if arg[0] != '/' and not arg.startswith( "./" ):
-			arg = "./" + arg
-		newargs.append( os.path.abspath( arg ) )
-	projectSettings.currentProject.ExtendList("excludeDirs", newargs)
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newargs.append( arg )
+	projectSettings.currentProject.ExtendList( "excludeDirsTemp", newargs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddExcludeFiles( *args ):
@@ -182,10 +198,11 @@ def AddExcludeFiles( *args ):
 	args = list( args )
 	newargs = []
 	for arg in args:
-		if arg[0] != '/' and not arg.startswith( "./" ):
-			arg = "./" + arg
-		newargs.append( os.path.abspath( arg ) )
-	projectSettings.currentProject.ExtendList("excludeFiles", newargs)
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newargs.append( arg )
+	projectSettings.currentProject.ExtendList( "excludeFilesTemp", newargs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddLibraries( *args ):
@@ -246,9 +263,13 @@ def AddIncludeDirectories( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of directories to be searched.
 	"""
+	newArgs = []
 	for arg in args:
-		arg = os.path.abspath( arg )
-		projectSettings.currentProject.AppendList("includeDirs",  arg )
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newArgs.append( arg )
+	projectSettings.currentProject.ExtendList( "includeDirsTemp", newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddLibraryDirectories( *args ):
@@ -262,9 +283,13 @@ def AddLibraryDirectories( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of directories to be searched.
 	"""
+	newArgs = []
 	for arg in args:
-		arg = os.path.abspath( arg )
-		projectSettings.currentProject.AppendList("libraryDirs",  arg )
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newArgs.append( arg )
+	projectSettings.currentProject.ExtendList( "libraryDirsTemp",  newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddFrameworkDirectories( *args ):
@@ -275,9 +300,46 @@ def AddFrameworkDirectories( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of directories to be searched.
 	"""
+	newArgs = []
 	for arg in args:
-		arg = os.path.abspath( arg )
-		projectSettings.currentProject.AddToSet("frameworkDirs",  arg )
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newArgs.append( arg )
+	projectSettings.currentProject.ExtendList( "frameworkDirsTemp",  newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
+
+
+def AddAppleStoryboardFiles( *args ):
+	"""
+	DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+	Add a list of storyboard files to be compiled. Only applies to builds for Apple platforms.
+
+	:param args: List of storyboard files.
+	:type args: And arbitrary number of strings.
+	"""
+	projectSettings.currentProject.UnionSet( "storyboardFiles", set( args ) )
+
+
+def AddAppleInterfaceFiles( *args ):
+	"""
+	DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+	Add a list of interface files to be compiled. Only applies to builds for Apple platforms.
+
+	:param args: List of interface files.
+	:type args: And arbitrary number of strings.
+	"""
+	projectSettings.currentProject.UnionSet( "interfaceFiles", set( args ) )
+
+
+def AddAppleAssetCatalogs( *args ):
+	"""
+	DEPRECATED - This will be removed when tool plugins are able to register file extensions.
+	Add a list of asset catalogs to be compiled. Only applies to builds for Apple platforms.
+
+	:param args: List of asset catalogs.
+	:type args: And arbitrary number of strings.
+	"""
+	projectSettings.currentProject.UnionSet( "assetCatalogs", set( args ) )
 
 
 def ClearLibraries( ):
@@ -295,14 +357,39 @@ def ClearSharedibraries( ):
 	projectSettings.currentProject.SetValue("sharedLibraries", set())
 
 
+def ClearFrameworks():
+	"""Clears the list of frameworks."""
+	projectSettings.currentProject.SetValue( "frameworks", set() )
+
+
 def ClearIncludeDirectories( ):
 	"""Clears the include directories"""
-	projectSettings.currentProject.SetValue("includeDirs", [])
+	projectSettings.currentProject.SetValue( "includeDirsTemp", [] )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def ClearLibraryDirectories( ):
 	"""Clears the library directories"""
-	projectSettings.currentProject.SetValue("libraryDirs", [])
+	projectSettings.currentProject.SetValue( "libraryDirsTemp", [] )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
+
+
+def ClearFrameworkDirectories():
+	"""Clears the framework directories."""
+	projectSettings.currentProject.SetValue( "frameworkDirsTemp", [] )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
+
+
+def ClearAppleStoryboardFiles():
+	projectSettings.currentProject.SetValue( "storyboardFiles", set() )
+
+
+def ClearAppleInterfaceFiles():
+	projectSettings.currentProject.SetValue( "interfaceFiles", set() )
+
+
+def ClearAppleAssetCatalogs():
+	projectSettings.currentProject.SetValue( "assetCatalogs", set() )
 
 
 def SetOptimizationLevel( i ):
@@ -357,9 +444,26 @@ def ClearUndefines( ):
 	projectSettings.currentProject.SetValue("undefines", [])
 
 
+def EnableHiddenVisibility():
+	"""
+	Enable the use of hidden symbol visibility. Ignored by all but the gcc toolchain (and derived toolchains).
+	"""
+	projectSettings.currentProject.SetValue( "useHiddenVisibility", True )
+
+
+def SetCppStandardLibrary( s ):
+	"""
+	The standard C++ library to be used when compiling. Possible values are "libstdc++" and "libc++". Ignored by all but the gcc toolchain (and derived toolchains).
+
+	:param s: Library to use.
+	:type s: str
+	"""
+	projectSettings.currentProject.SetValue( "stdLib", s )
+
+
 def SetCxxCommand( s ):
 	"""
-	Specify the compiler executable to be used for compiling C++ files. Ignored by the msvc toolchain.
+	Specify the compiler executable to be used for compiling C++ files. Ignored by all but the gcc toolchain (and derived toolchains).
 
 	:type s: str
 	:param s: Path to the executable to use for compilation
@@ -414,8 +518,11 @@ def SetOutputDirectory( s ):
 	:type s: str
 	:param s: The output directory, relative to the current script location, NOT to the project working directory.
 	"""
-	projectSettings.currentProject.SetValue("outputDir", os.path.abspath( s ))
-	projectSettings.currentProject.SetValue("_outputDir_set", True)
+	s = _utils.FixupRelativePath( s )
+	s = _utils.PathWorkingDirPair( s )
+	projectSettings.currentProject.SetValue( "outputDirTemp", s )
+	projectSettings.currentProject.SetValue( "_outputDir_set", True )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def SetIntermediateDirectory( s ):
@@ -425,8 +532,11 @@ def SetIntermediateDirectory( s ):
 	:type s: str
 	:param s: The object directory, relative to the current script location, NOT to the project working directory.
 	"""
-	projectSettings.currentProject.SetValue("objDir", os.path.abspath( s ))
-	projectSettings.currentProject.SetValue("_objDir_set", True)
+	s = _utils.FixupRelativePath( s )
+	s = _utils.PathWorkingDirPair( s )
+	projectSettings.currentProject.SetValue( "objDirTemp", s )
+	projectSettings.currentProject.SetValue( "_objDir_set", True )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def EnableProfiling( ):
@@ -666,10 +776,15 @@ def Precompile( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The files to precompile.
 	"""
-	projectSettings.currentProject.SetValue("precompile", [])
+	projectSettings.currentProject.SetValue( "precompileTemp", [] )
+	newArgs = []
 	for arg in list( args ):
-		projectSettings.currentProject.AppendList("precompile",  os.path.abspath( arg ) )
-	projectSettings.currentProject.SetValue("chunkedPrecompile", False)
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newArgs.append( arg )
+	projectSettings.currentProject.ExtendList( "precompileTemp",  newArgs )
+	projectSettings.currentProject.SetValue( "chunkedPrecompile", False )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def PrecompileAsC( *args ):
@@ -679,16 +794,21 @@ def PrecompileAsC( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The files to specify as C files.
 	"""
-	projectSettings.currentProject.SetValue("precompileAsC", [])
+	projectSettings.currentProject.SetValue( "precompileAsCTemp", [] )
+	newArgs = []
 	for arg in list( args ):
-		projectSettings.currentProject.AppendList("precompileAsC",  os.path.abspath( arg ) )
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newArgs.append( arg )
+	projectSettings.currentProject.AppendList( "precompileAsCTemp", newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
-def EnableChunkedPrecompile( ):
+def EnableChunkedPrecompile():
 	"""
 	When this is enabled, all header files will be precompiled into a single "superheader" and included in all files.
 	"""
-	projectSettings.currentProject.SetValue("chunkedPrecompile", True)
+	projectSettings.currentProject.SetValue( "chunkedPrecompile", True )
 
 
 def DisablePrecompile( *args ):
@@ -701,16 +821,18 @@ def DisablePrecompile( *args ):
 	"""
 	args = list( args )
 	if args:
-		newargs = []
+		newArgs = []
 		for arg in args:
-			if arg[0] != '/' and not arg.startswith( "./" ):
-				arg = "./" + arg
-			newargs.append( os.path.abspath( arg ) )
-			projectSettings.currentProject.ExtendList("precompileExcludeFiles", newargs)
+			arg = _utils.FixupRelativePath( arg )
+			arg = _utils.PathWorkingDirPair( arg )
+			newArgs.append( arg )
+		projectSettings.currentProject.ExtendList( "precompileExcludeFilesTemp", newArgs )
 	else:
-		projectSettings.currentProject.SetValue("chunkedPrecompile", False)
-		projectSettings.currentProject.SetValue("precompile", [])
-		projectSettings.currentProject.SetValue("precompileAsC", [])
+		projectSettings.currentProject.SetValue( "chunkedPrecompile", False )
+		projectSettings.currentProject.SetValue( "precompileTemp", [] )
+		projectSettings.currentProject.SetValue( "precompileAsCTemp", [] )
+
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def EnableUnityBuild( ):
@@ -751,16 +873,22 @@ def AddExtraFiles( *args ):
 	:type args: an arbitrary number of strings
 	:param args: A list of files to add.
 	"""
+	newArgs = []
 	for arg in list( args ):
 		for file in glob.glob( arg ):
-			projectSettings.currentProject.AppendList("extraFiles",  os.path.abspath( file ) )
+			file = _utils.FixupRelativePath( file )
+			file = _utils.PathWorkingDirPair( file )
+			newArgs.append( file )
+	projectSettings.currentProject.ExtendList( "extraFilesTemp", newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def ClearExtraFiles():
 	"""
 	Clear the list of external files to compile.
 	"""
-	projectSettings.currentProject.SetValue("extraFiles", [])
+	projectSettings.currentProject.SetValue( "extraFilesTemp", [] )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddExtraDirectories( *args ):
@@ -770,15 +898,21 @@ def AddExtraDirectories( *args ):
 	:type args: an arbitrary number of strings
 	:param args: A list of directories to search.
 	"""
+	newArgs = []
 	for arg in list( args ):
-		projectSettings.currentProject.AppendList("extraDirs",  os.path.abspath( arg ) )
+		arg = _utils.FixupRelativePath( arg )
+		arg = _utils.PathWorkingDirPair( arg )
+		newArgs.append( arg )
+	projectSettings.currentProject.ExtendList( "extraDirsTemp", newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def ClearExtraDirectories():
 	"""
 	Clear the list of external directories to search.
 	"""
-	projectSettings.currentProject.SetValue("extraDirs", [])
+	projectSettings.currentProject.SetValue( "extraDirsTemp", [] )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def AddExtraObjects( *args ):
@@ -788,16 +922,22 @@ def AddExtraObjects( *args ):
 	:type args: an arbitrary number of strings
 	:param args: A list of objects to add.
 	"""
+	newArgs = []
 	for arg in list( args ):
 		for file in glob.glob( arg ):
-			projectSettings.currentProject.UnionSet("extraObjs",  os.path.abspath( file ) )
+			file = _utils.FixupRelativePath( file )
+			file = _utils.PathWorkingDirPair( file )
+			newArgs.append( file )
+	projectSettings.currentProject.ExtendList( "extraObjsTemp", newArgs )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def ClearExtraObjects():
 	"""
 	Clear the list of external objects to link.
 	"""
-	projectSettings.currentProject.SetValue("extraObjs", set())
+	projectSettings.currentProject.SetValue( "extraObjsTemp", [] )
+	projectSettings.currentProject.SetValue( "tempsDirty", True )
 
 
 def EnableWarningsAsErrors( ):
@@ -900,6 +1040,16 @@ def SetUserData(key, value):
 	projectSettings.currentProject.userData.dataDict[key] = value
 
 
+def SetApplePropertyList( plistFile ):
+	"""
+	Set the property list for a project.  This only applies to builds on Apple platforms.
+
+	:param plistFile:
+	:type plistFile: str or class:`csbuild.plugin_plist_generator.PListGenerator`
+	"""
+	projectSettings.currentProject.SetValue( "plistFile", copy.deepcopy( plistFile ) if isinstance( plistFile, plugin_plist_generator.PListGenerator ) else plistFile )
+
+
 def SetSupportedArchitectures(*architectures):
 	"""
 	Specifies the architectures that this project supports. This can be used to limit
@@ -918,7 +1068,7 @@ def SetSupportedToolchains(*toolchains):
 	projectSettings.currentProject.SetValue("supportedToolchains", set(toolchains))
 
 
-def RegisterToolchain( name, compiler, linker ):
+def RegisterToolchain( name, compiler, linker, **customTools ):
 	"""
 	Register a new toolchain for use in the project.
 
@@ -932,8 +1082,11 @@ def RegisterToolchain( name, compiler, linker ):
 	class registeredToolchain(toolchain.toolchain):
 		def __init__(self):
 			toolchain.toolchain.__init__(self)
-			self.tools["compiler"] = compiler()
-			self.tools["linker"] = linker()
+			self.tools["compiler"] = compiler(self.shared)
+			self.tools["linker"] = linker(self.shared)
+			toolsDict = dict(customTools)
+			for name, tool in toolsDict.items():
+				self.tools[name] = tool(self.shared)
 
 	# Format the name so that it can be used as part of its architecture command line option.
 	# This generally means replacing all whitespace with dashes.
@@ -969,6 +1122,10 @@ def RegisterProjectGenerator( name, generator ):
 	"""
 	_shared_globals.allgenerators[name] = generator
 	_shared_globals.project_generators[name] = generator
+
+
+def RegisterPlugin( pluginClass ):
+	projectSettings.currentProject.AddToSet( "plugins", pluginClass )
 
 
 def Toolchain( *args ):
@@ -1235,7 +1392,7 @@ def prePrepareBuildStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("prePrepareBuildStep", func)
+	projectSettings.currentProject.AddToSet("prePrepareBuildSteps", func)
 	return func
 
 
@@ -1252,7 +1409,7 @@ def postPrepareBuildStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("postPrepareBuildStep", func)
+	projectSettings.currentProject.AddToSet("postPrepareBuildSteps", func)
 	return func
 
 
@@ -1268,7 +1425,7 @@ def preMakeStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("preMakeStep", func)
+	projectSettings.currentProject.AddToSet("preMakeSteps", func)
 	return func
 
 
@@ -1284,7 +1441,7 @@ def postMakeStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("postMakeStep", func)
+	projectSettings.currentProject.AddToSet("postMakeSteps", func)
 	return func
 
 
@@ -1300,7 +1457,7 @@ def preBuildStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("preBuildStep", func)
+	projectSettings.currentProject.AddToSet("preBuildSteps", func)
 	return func
 
 
@@ -1316,7 +1473,7 @@ def postBuildStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("postBuildStep", func)
+	projectSettings.currentProject.AddToSet("postBuildSteps", func)
 	return func
 
 
@@ -1332,7 +1489,39 @@ def preLinkStep( func ):
 		:class:`csbuild.projectSettings.projectSettings`.
 	"""
 
-	projectSettings.currentProject.SetValue("preLinkStep", func)
+	projectSettings.currentProject.AddToSet("preLinkSteps", func)
+	return func
+
+def globalPostMakeStep( func ):
+	"""
+	Decorator that creates a global post-make step that will only be executed once. Post-make steps run after all projects have
+	finished building and linking. This step will only run if the entire build process was successful.
+
+	Global build steps execute after all project build steps of the same type have completed.
+
+	:param func: (Implicit) The function wrapped by this decorator
+	:type func: (Implicit) function
+
+	.. note:: The function this wraps should take no arguments.
+	"""
+	_shared_globals.globalPostMakeSteps.add(func)
+	return func
+
+
+def globalPreMakeStep( func ):
+	"""
+	Decorator that creates a global pre-make step that will only be executed once. Pre-make steps run after all projects' preparation
+	steps have completed and their final chunk sets have been collected, but before any compiling starts.
+
+	Global build steps execute after all project build steps of the same type have completed.
+
+	:param func: (Implicit) The function wrapped by this decorator
+	:type func: (Implicit) function
+
+	.. note:: The function this wraps should take no arguments.
+	"""
+
+	_shared_globals.globalPreMakeSteps.add(func)
 	return func
 
 
@@ -1385,10 +1574,21 @@ def _build( ):
 	#projects_needing_links = set()
 
 	for project in pending_builds:
-		project.activeToolchain.preMakeStep(project)
-		if project.preMakeStep:
-			log.LOG_BUILD( "Running pre-make step for {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
-			project.preMakeStep(project)
+		for plugin in project.plugins:
+			_utils.CheckRunBuildStep(project, plugin.preMakeStep, "plugin pre-make")
+			_shared_globals.globalPreMakeSteps.add(plugin.globalPreMakeStep)
+
+		_utils.CheckRunBuildStep(project, project.activeToolchain.preMakeStep, "toolchain pre-make")
+		_shared_globals.globalPreMakeSteps |= project.activeToolchain.GetGlobalPreMakeSteps()
+		for buildStep in project.preMakeSteps:
+			_utils.CheckRunBuildStep(project, buildStep, "project pre-make")
+
+	for buildStep in _shared_globals.globalPreMakeSteps:
+		if _utils.FuncIsEmpty(buildStep):
+			continue
+
+		log.LOG_BUILD( "Running global pre-make step {}".format(_utils.GetFuncName(buildStep)))
+		buildStep()
 
 	for project in _shared_globals.sortedProjects:
 		log.LOG_BUILD( "Verifying libraries for {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
@@ -1473,10 +1673,12 @@ def _build( ):
 
 			project.starttime = time.time( )
 
-			project.activeToolchain.preBuildStep(project)
-			if project.preBuildStep:
-				log.LOG_BUILD( "Running pre-build step for {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
-				project.preBuildStep( project )
+			for plugin in project.plugins:
+				_utils.CheckRunBuildStep(project, plugin.preBuildStep, "plugin pre-build")
+				plugin.preBuildStep(project)
+			_utils.CheckRunBuildStep(project, project.activeToolchain.preBuildStep, "toolchain pre-build")
+			for buildStep in project.preBuildSteps:
+				_utils.CheckRunBuildStep(project, buildStep, "project pre-build")
 
 			log.LOG_BUILD( "Building {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
 			project.state = _shared_globals.ProjectState.BUILDING
@@ -1632,10 +1834,21 @@ def _build( ):
 
 	if not projects_in_flight and not pending_links:
 		for project in _shared_globals.sortedProjects:
-			project.activeToolchain.postMakeStep(project)
-			if project.postMakeStep:
-				log.LOG_BUILD( "Running post-make step for {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
-				project.postMakeStep(project)
+			for plugin in project.plugins:
+				_utils.CheckRunBuildStep(project, plugin.postMakeStep, "plugin post-make")
+				_shared_globals.globalPostMakeSteps.add(plugin.globalPostMakeStep)
+
+			_utils.CheckRunBuildStep(project, project.activeToolchain.postMakeStep, "toolchain post-make")
+			_shared_globals.globalPostMakeSteps |= project.activeToolchain.GetGlobalPostMakeSteps()
+			for buildStep in project.postMakeSteps:
+				_utils.CheckRunBuildStep(project, buildStep, "project post-make")
+
+		for buildStep in _shared_globals.globalPostMakeSteps:
+			if _utils.FuncIsEmpty(buildStep):
+				continue
+
+			log.LOG_BUILD( "Running global post-make step {}".format(_utils.GetFuncName(buildStep)))
+			buildStep()
 
 	compiletime = time.time( ) - _shared_globals.starttime
 	totalmin = math.floor( compiletime / 60 )
@@ -1676,10 +1889,13 @@ def _link( project, *objs ):
 def _performLink(project, objs):
 	project.linkStart = time.time()
 
-	project.activeToolchain.preLinkStep(project)
-	if project.preLinkStep:
-		log.LOG_BUILD( "Running pre-link step for {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName  ) )
-		project.preLinkStep(project)
+	for plugin in project.plugins:
+		_utils.CheckRunBuildStep(project, plugin.preLinkStep, "plugin pre-link")
+	_utils.CheckRunBuildStep(project, project.activeToolchain.preLinkStep, "toolchain pre-link")
+	for buildStep in project.preLinkSteps:
+		_utils.CheckRunBuildStep(project, buildStep, "project pre-link")
+
+	project.ResolveFilesAndDirectories()
 
 	project.activeToolchain.SetActiveTool("linker")
 
@@ -1718,6 +1934,7 @@ def _performLink(project, objs):
 		return _LinkStatus.UpToDate
 
 	for obj in project.extraObjs:
+		log.LOG_INFO("Adding extra link object {} to link queue".format(obj))
 		if not os.access(obj, os.F_OK):
 			log.LOG_ERROR("Could not find extra object {}".format(obj))
 
@@ -1877,18 +2094,12 @@ class _LinkThread(threading.Thread):
 				_shared_globals.build_success = False
 				project.state = _shared_globals.ProjectState.LINK_FAILED
 			elif ret == _LinkStatus.Success:
+				for plugin in project.plugins:
+					_utils.CheckRunBuildStep(project, plugin.postBuildStep, "plugin post-build")
+				_utils.CheckRunBuildStep(project, project.activeToolchain.postBuildStep, "toolchain post-build")
 
-				try:
-					project.activeToolchain.postBuildStep(project)
-				except Exception:
-					traceback.print_exc()
-
-				if project.postBuildStep:
-					log.LOG_BUILD( "Running post-build step for {} ({} {}/{})".format( project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
-					try:
-						project.postBuildStep( project )
-					except Exception:
-						traceback.print_exc()
+				for buildStep in project.postBuildSteps:
+					_utils.CheckRunBuildStep(project, buildStep, "project post-build")
 				project.state = _shared_globals.ProjectState.FINISHED
 			elif ret == _LinkStatus.UpToDate:
 				project.state = _shared_globals.ProjectState.UP_TO_DATE
@@ -2137,10 +2348,8 @@ def SetupDebugTarget( ):
 		projectSettings.currentProject.outputDir = "{project.activeToolchainName}-{project.outputArchitecture}-{project.targetName}"
 	if not projectSettings.currentProject._objDir_set:
 		projectSettings.currentProject.objDir = os.path.join(projectSettings.currentProject.outputDir, "obj")
-	if not projectSettings.currentProject.toolchains["msvc"].Compiler().debug_runtime_set:
-		projectSettings.currentProject.toolchains["msvc"].Compiler().debug_runtime = True
-	if not projectSettings.currentProject.toolchains["msvc"].Linker().debug_runtime_set:
-		projectSettings.currentProject.toolchains["msvc"].Linker().debug_runtime = True
+	if not projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime_set:
+		projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime = True
 
 
 def SetupReleaseTarget( ):
@@ -2157,21 +2366,26 @@ def SetupReleaseTarget( ):
 		projectSettings.currentProject.outputDir = "{project.activeToolchainName}-{project.outputArchitecture}-{project.targetName}"
 	if not projectSettings.currentProject._objDir_set:
 		projectSettings.currentProject.objDir = os.path.join(projectSettings.currentProject.outputDir, "obj")
-	if not projectSettings.currentProject.toolchains["msvc"].Compiler().debug_runtime_set:
-		projectSettings.currentProject.toolchains["msvc"].Compiler().debug_runtime = False
-	if not projectSettings.currentProject.toolchains["msvc"].Linker().debug_runtime_set:
-		projectSettings.currentProject.toolchains["msvc"].Linker().debug_runtime = False
+	if not projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime_set:
+		projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime = False
 
 
 def _setupdefaults( ):
-	RegisterToolchain( "gcc", toolchain_gcc.compiler_gcc, toolchain_gcc.linker_gcc )
-	RegisterToolchain( "msvc", toolchain_msvc.compiler_msvc, toolchain_msvc.linker_msvc )
-	RegisterToolchain( "android", toolchain_android.AndroidCompiler, toolchain_android.AndroidLinker )
+	if platform.system() == "Darwin":
+		gccCompiler, gccLinker = toolchain_gcc_darwin.GccCompilerDarwin, toolchain_gcc_darwin.GccLinkerDarwin
+	else:
+		gccCompiler, gccLinker = toolchain_gcc.GccCompiler, toolchain_gcc.GccLinker
+
+	RegisterToolchain( "gcc", gccCompiler, gccLinker )
+	RegisterToolchain( "msvc", toolchain_msvc.MsvcCompiler, toolchain_msvc.MsvcLinker )
+	RegisterToolchain( "android", toolchain_android.AndroidCompiler, toolchain_android.AndroidLinker, apkBuilder = toolchain_android.APKBuilder )
 	RegisterToolchain( "ios", toolchain_ios.iOSCompiler, toolchain_ios.iOSLinker )
 
 	RegisterProjectGenerator( "qtcreator", project_generator_qtcreator.project_generator_qtcreator )
-	RegisterProjectGenerator( "slickedit", project_generator_slickedit.project_generator_slickedit )
-	RegisterProjectGenerator( "visualstudio", project_generator_visual_studio.project_generator_visual_studio )
+	RegisterProjectGenerator( "visualstudio", project_generator_visual_studio_v2.project_generator_visual_studio )
+
+	#TODO: SlickEdit project generation is disabled until we get it fixed up.
+	#RegisterProjectGenerator( "slickedit", project_generator_slickedit.project_generator_slickedit )
 
 	if platform.system( ) == "Windows":
 		SetActiveToolchain( "msvc" )
@@ -2310,11 +2524,8 @@ class _dummy( object ):
 
 
 def _execfile( file, glob, loc ):
-	if sys.version_info >= (3, 0):
-		with open( file, "r" ) as f:
-			exec (f.read( ), glob, loc)
-	else:
-		execfile( file, glob, loc )
+	with open( file, "r" ) as f:
+		exec(compile(f.read( ), file, "exec"), glob, loc)
 
 
 mainFile = ""
@@ -2694,33 +2905,6 @@ def _run( ):
 
 					newproject.fileOverrideSettings[file] = projCopy
 
-				if newproject.targetName not in newproject.targets:
-					log.LOG_INFO( "Project {} has no rules specified for target {}. Skipping.".format( newproject.name,
-						newproject.targetName ) )
-					return
-
-				projectSettings.currentProject = newproject
-
-				SetOutputArchitecture(architecture)
-
-				for targetFunc in newproject.targets[newproject.targetName]:
-					targetFunc( )
-
-				if newproject.outputArchitecture in newproject.archFuncs:
-					for archFunc in newproject.archFuncs[newproject.outputArchitecture]:
-						archFunc()
-
-				for file in newproject.fileOverrides:
-					projCopy = newproject.copy()
-					projectSettings.currentProject = projCopy
-
-					for func in newproject.fileOverrides[file]:
-						func()
-
-					newproject.fileOverrideSettings[file] = projCopy
-
-				projectSettings.currentProject = newproject
-
 				alteredLinkDepends = []
 				alteredLinkDependsIntermediate = []
 				alteredLinkDependsFinal = []
@@ -2957,7 +3141,8 @@ def _run( ):
 			else:
 				add_intermediates(proj.linkDependsIntermediate)
 
-		project.finalizeSettings2()
+		if not args.dg:
+			project.finalizeSettings2()
 
 	already_errored_link = { }
 	already_errored_source = { }
@@ -3023,7 +3208,8 @@ def _run( ):
 	_shared_globals.sortedProjects = _utils.SortProjects( _shared_globals.projects )
 
 	if args.dg:
-		builder = 'digraph G {\n\tlayout="neato";\n\toverlap="false";\n\tsplines="spline"\n'
+		builder = StringIO()
+		builder.write('digraph G {\n\tlayout="neato";\n\toverlap="false";\n\tsplines="spline"\n')
 		colors = [
 			"#ff0000", "#cc5200", "#b2742d", "#858c23", "#20802d",
 			"#00ffcc", "#39c3e6", "#205380", "#003380", "#38008c",
@@ -3040,29 +3226,49 @@ def _run( ):
 			idx += 1
 			if idx == len(colors):
 				idx = 0
-			builder += '\t{0} [shape="{1}" color="{2}" style="filled" fillcolor="{2}30"];\n'.format(project.name, "box3d" if project.type == ProjectType.Application else "oval", color)
+			builder.write('\t{0} [shape="{1}" color="{2}" style="filled" fillcolor="{2}30"];\n'.format(project.name, "box3d" if project.type == ProjectType.Application else "oval", color))
 			for dep in project.linkDepends:
 				otherProj = _shared_globals.projects[dep]
-				builder += '\t{} -> {} [color="{}"];\n'.format(project.name, otherProj.name, color)
+				builder.write('\t{} -> {} [color="{}"];\n'.format(project.name, otherProj.name, color))
 			for dep in project.linkDependsIntermediate:
 				otherProj = _shared_globals.projects[dep]
-				builder += '\t{} -> {} [color="{}B0" style="dashed" arrowhead="onormal"];\n'.format(project.name, otherProj.name, color)
+				builder.write('\t{} -> {} [color="{}B0" style="dashed" arrowhead="onormal"];\n'.format(project.name, otherProj.name, color))
 			for dep in project.linkDependsFinal:
 				otherProj = _shared_globals.projects[dep]
-				builder += '\t{} -> {} [color="{}B0" style="dashed" arrowhead="onormal"];\n'.format(project.name, otherProj.name, color)
+				builder.write('\t{} -> {} [color="{}B0" style="dashed" arrowhead="onormal"];\n'.format(project.name, otherProj.name, color))
 
 			if args.with_libs:
 				project.activeToolchain = project.toolchains[project.activeToolchainName]
 				project.activeToolchain.SetActiveTool("linker")
-				for lib in project.libraries:
-					lib = lib.replace("-", "_")
-					if lib not in libs_drawn:
-						builder += '\t{} [shape="diamond" color="#303030" style="filled" fillcolor="#D0D0D080"];\n'.format(lib)
-						libs_drawn.add(lib)
-					builder += '\t{} -> {} [color="{}" style="dotted" arrowhead="onormal"];\n'.format(project.name, lib, color)
-		builder += "}\n"
+				def drawLibs(libraries, style):
+					for lib in libraries:
+						lib = lib.replace("-", "_")
+						if lib not in libs_drawn:
+							builder.write('\t{} [shape="diamond" color="#303030" style="filled" fillcolor="#D0D0D080"];\n'.format(lib))
+							libs_drawn.add(lib)
+						builder.write('\t{} -> {} [color="{}" style="{}" arrowhead="onormal"];\n'.format(project.name, lib, color, style))
+
+				drawLibs(project.libraries, "solid")
+				if "libraries" in project._intermediateScopeSettings:
+					drawLibs(project._intermediateScopeSettings["libraries"], "dashed")
+				if "libraries" in project._finalScopeSettings:
+					drawLibs(project._finalScopeSettings["libraries"], "dashed")
+
+				tc = object.__getattribute__(project, "finalToolchains")[object.__getattribute__(project, "activeToolchainName")]
+				tc.SetActiveTool("linker")
+
+				if "libraries" in tc.activeTool._settingsOverrides:
+					drawLibs(tc.activeTool._settingsOverrides["libraries"], "dashed")
+
+				tc = object.__getattribute__(project, "intermediateToolchains")[object.__getattribute__(project, "activeToolchainName")]
+				tc.SetActiveTool("linker")
+
+				if "libraries" in tc.activeTool._settingsOverrides:
+					drawLibs(tc.activeTool._settingsOverrides["libraries"], "dashed")
+
+		builder.write("}\n")
 		with open("depends.gv", "w") as f:
-			f.write(builder)
+			f.write(builder.getvalue())
 		log.LOG_BUILD("Wrote depends.gv")
 		try:
 			from graphviz import Digraph
@@ -3070,7 +3276,7 @@ def _run( ):
 			log.LOG_WARN("graphviz library not found. You can open depends.gv with graphviz or a similar dot viewer to view the graph, or install graphviz with pip install graphviz.")
 		else:
 			graph = Digraph(comment="CSBuild Dependency Graph", format="png", engine="dot", filename="depends")
-			Digraph.source=property(lambda self: builder)
+			Digraph.source=property(lambda self: builder.getvalue())
 			graph.render("depends.gv", view=True)
 			log.LOG_BUILD("Wrote depends.png")
 		return

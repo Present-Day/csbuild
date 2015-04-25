@@ -677,12 +677,19 @@ class project_generator_visual_studio(project_generator.project_generator):
 							projectArg = " --project={}".format(projectData.name) if not projectData.isBuildAllProject else ""
 							properConfigName = self._reverseConfigMap[configName]
 
-							buildCommandNode.text = "{} {} --target={} --architecture={}{} {}".format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
-							cleanCommandNode.text = "{} {} --clean --target={} --architecture={}{} {}".format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
-							rebuildCommandNode.text = "{} {} --rebuild --target={} --architecture={}{} {}".format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
+							buildCommandNode.text = '"{}" "{}" --target={} --architecture={}{} {}'.format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
+							cleanCommandNode.text = '"{}" "{}" --clean --target={} --architecture={}{} {}'.format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
+							rebuildCommandNode.text = '"{}" "{}" --rebuild --target={} --architecture={}{} {}'.format(pythonExePath, mainMakefile, properConfigName, archName, projectArg, self._extraBuildArgs)
 							includePathNode.text = ";".join(self._fullIncludePathList)
 						else:
-							buildCommandNode.text = "{} {} {}".format(pythonExePath, mainMakefile, " ".join(sys.argv[1:]))
+							argList = []
+							# The Windows command line likes to remove any quotes around arguments, so we need to re-add them.
+							# And because we can't know which args need quotes, we'll just add them to all of the arguments.
+							for arg in sys.argv[1:]:
+								argPair = arg.split("=", 2)
+								for element in argPair:
+									argList.append('"{}"'.format(element))
+							buildCommandNode.text = '"{}" "{}" {}'.format(pythonExePath, mainMakefile, " ".join(argList))
 							rebuildCommandNode.text = buildCommandNode.text
 							cleanCommandNode.text = buildCommandNode.text
 

@@ -850,7 +850,10 @@ def GetChunkedObjPath(project, chunk):
 
 def GetSourceObjPath(project, source, sourceIsChunkPath=False):
 	if not sourceIsChunkPath:
-		objSubPath = os.path.dirname(os.path.relpath(os.path.abspath(source), project.workingDirectory))
+		sourceDirName = os.path.dirname(os.path.abspath(source))
+		if sys.version_info >= (3, 0):
+			sourceDirName = sourceDirName.encode("utf-8")
+		objSubPath = hashlib.md5( sourceDirName ).hexdigest()
 	else:
 		objSubPath = ""
 	return os.path.join(project.objDir, objSubPath, "{}_{}{}".format(
@@ -865,3 +868,75 @@ def GetUnityChunkObjPath(project):
 		project.targetName,
 		project.activeToolchain.Compiler().GetObjExt()
 	))
+
+
+def GetFuncName(func):
+	if sys.version_info >= (3,0,0):
+		return "{}() ({}:{})".format(func.__qualname__, os.path.basename(func.__code__.co_filename), func.__code__.co_firstlineno)
+	else:
+		try:
+			return "{}.{}() ({}:{})".format(func.im_class.__name__, func.__name__, os.path.basename(func.__code__.co_filename), func.__code__.co_firstlineno)
+		except:
+			return "{}() ({}:{})".format(func.__name__, os.path.basename(func.__code__.co_filename), func.__code__.co_firstlineno)
+
+def FuncIsEmpty(func):
+	#Checks the bytecode to see whether it equates to "pass"
+	if sys.version_info >= (3,0,0):
+		return func.__code__.co_code == b'd\x00\x00S'
+	return func.__code__.co_code == 'd\x00\x00S'
+
+_buildEventMutex = threading.Lock()
+
+def CheckRunBuildStep(project, step, name):
+	if not FuncIsEmpty(step):
+		with _buildEventMutex:
+			wd = os.getcwd( )
+			os.chdir( project.scriptPath )
+
+			log.LOG_BUILD( "Running {} step {} for {} ({} {}/{})".format( name, GetFuncName(step), project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName ) )
+			try:
+				step(project)
+			except Exception:
+				traceback.print_exc()
+
+			os.chdir(wd)
+
+
+def ResolveProjectMacros(_path, _project):
+	"""
+	This will iteratively resolve each project macro in a string until there are none left.  However, If either the '{' or '}' characters are desired in the path,
+	they'll need to be escaped up to the correct number of times since each resolve pass will remove one set of those characters.
+	"""
+	while True:
+		fixedPath = _path.format( project=_project )
+		if fixedPath == _path:
+			break
+		_path = fixedPath
+	return _path
+
+
+def FixupRelativePath( arg ):
+	"""
+	Convert a non-absolute path to a posix relative path.
+	"""
+	isWindowsAbsPath = False
+	if platform.system() == "Windows":
+		splitPath = os.path.splitdrive( arg )
+		isWindowsAbsPath = ( splitPath[0] != '' )
+	if not isWindowsAbsPath and arg[0] != '/' and not arg.startswith( "./" ):
+		path = "./" + arg
+	return arg
+
+
+class PathWorkingDirPair( object ):
+	"""
+	Keep track of a path set from a makefile along with the working directory at the time that path was set.
+	This will allow us to resolve paths from the context of where they were originally set.
+	"""
+	def __init__( self, _path ):
+		self.path = _path
+		self.workingDir = os.getcwd()
+
+	def __lt__(self, other):
+
+		return ( self.path < other.path ) and ( self.workingDir < other.workingDir )
