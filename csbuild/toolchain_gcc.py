@@ -32,6 +32,7 @@ from . import _shared_globals
 from . import toolchain
 import csbuild
 from . import log
+from .scrapers import ELF
 
 class gccBase( object ):
 	def __init__( self ):
@@ -418,6 +419,14 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		:type s: str
 		"""
 		self.cStandard = s
+
+
+	def SupportsObjectScraping(self):
+		return True
+
+
+	def GetObjectScraper(self):
+		return ELF.ELFScraper()
 
 
 class GccLinker( gccBase, toolchain.linkerBase ):

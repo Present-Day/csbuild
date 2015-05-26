@@ -145,6 +145,13 @@ class GccCompilerDarwin( GccDarwinBase, toolchain_gcc.GccCompiler ):
 		)
 		return ret
 
+	def SupportsObjectScraping(self):
+		return False
+
+
+	def GetObjectScraper(self):
+		return None
+
 
 class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 	def __init__( self, shared ):

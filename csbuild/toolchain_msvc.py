@@ -427,9 +427,9 @@ class MsvcCompiler( MsvcBase, toolchain.compilerBase ):
 
 	def preLinkStep(self, project):
 		if project.cHeaderFile:
-			self.shared._project_settings.extraObjs.add("{}.obj".format(project.cHeaderFile.rsplit(".", 1)[0]))
+			project.extraObjs.add("{}.obj".format(project.cHeaderFile.rsplit(".", 1)[0]))
 		if project.cppHeaderFile:
-			self.shared._project_settings.extraObjs.add("{}.obj".format(project.cppHeaderFile.rsplit(".", 1)[0]))
+			project.extraObjs.add("{}.obj".format(project.cppHeaderFile.rsplit(".", 1)[0]))
 
 
 	def _getExtendedPrecompilerArgs( self, base_cmd, force_include_file, output_obj, input_file ):
@@ -526,8 +526,16 @@ class MsvcCompiler( MsvcBase, toolchain.compilerBase ):
 		return fileName.rsplit( ".", 1 )[0] + ".pch"
 
 
+	def SupportsObjectScraping(self):
+		return True
+
+
 	def GetObjectScraper(self):
 		return COFF.COFFScraper()
+
+
+	def SupportsDummyObjects(self):
+		return True
 
 
 	def MakeDummyObjects(self, objList):
@@ -659,10 +667,10 @@ class MsvcLinker( MsvcBase, toolchain.linkerBase ):
 				splitName = os.path.splitext(dependLibName)[0]
 				if ( splitName == lib or splitName == "lib{}".format( lib ) ):
 					found = True
-					args += '"{}" '.format( dependLibName )
+					args += '"{}"\n'.format( dependLibName )
 					break
 			if not found:
-				args += '"{}" '.format( self._actual_library_names[lib] )
+				args += '"{}"\n'.format( self._actual_library_names[lib] )
 
 		return args
 

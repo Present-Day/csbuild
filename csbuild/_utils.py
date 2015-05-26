@@ -706,7 +706,7 @@ def ChunkedBuild( ):
 		obj = GetSourceObjPath( owningProject, chunkname, sourceIsChunkPath=owningProject.ContainsChunk( chunkname ) )
 		for chunk in owningProject.chunks:
 			if GetChunkName( owningProject.outputName, chunk ) == chunkname:
-				if os.access(obj , os.F_OK):
+				if not owningProject.activeToolchain.Compiler().SupportsObjectScraping() and os.access(obj , os.F_OK):
 					os.remove(obj)
 					log.LOG_WARN_NOPUSH(
 						"Breaking chunk ({0}) into individual files to improve future iteration turnaround.".format(
@@ -802,11 +802,15 @@ def ChunkedBuild( ):
 					#This keeps large builds fast through the chunked build, without sacrificing the speed of smaller
 					#incremental builds (except on the first build after the chunk)
 					os.remove( obj )
-					add_chunk = chunk
+					if owningProject.activeToolchain.Compiler().SupportsObjectScraping():
+						add_chunk = sources_in_this_chunk
+					else:
+						add_chunk = chunk
 					if project.useChunks and not _shared_globals.disable_chunks:
-						log.LOG_WARN_NOPUSH(
-							"Breaking chunk ({0}) into individual files to improve future iteration turnaround.".format(
-								chunk ) )
+						if owningProject.activeToolchain.Compiler().SupportsObjectScraping():
+							log.LOG_WARN_NOPUSH(
+								"Breaking chunk ({0}) into individual files to improve future iteration turnaround.".format(
+									chunk ) )
 
 						for filename in chunk:
 							owningProject.splitChunks[filename] = chunkname

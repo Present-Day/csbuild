@@ -60,12 +60,22 @@ class iOSBase( object ):
 				DEFAULT_DEVICE_SDK_DIR = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
 				DEFAULT_SIMULATOR_SDK_DIR = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"
 
+				# In Python3, these will need to be bytes rather than strings for the decoding below.
+				if sys.version_info >= (3, 0):
+					DEFAULT_DEVICE_SDK_DIR = DEFAULT_DEVICE_SDK_DIR.encode("utf-8")
+					DEFAULT_SIMULATOR_SDK_DIR = DEFAULT_SIMULATOR_SDK_DIR.encode("utf-8")
+
 			try:
 				DEFAULT_DEVICE_SDK_VERSION = subprocess.check_output(["xcrun", "--sdk", "iphoneos", "--show-sdk-version"])
 				DEFAULT_SIMULATOR_SDK_VERSION = subprocess.check_output(["xcrun", "--sdk", "iphonesimulator", "--show-sdk-version"])
 			except:
 				DEFAULT_DEVICE_SDK_VERSION = ""
 				DEFAULT_SIMULATOR_SDK_VERSION = ""
+
+				# In Python3, these will need to be bytes rather than strings for the decoding below.
+				if sys.version_info >= (3, 0):
+					DEFAULT_DEVICE_SDK_VERSION = DEFAULT_DEVICE_SDK_VERSION.encode("utf-8")
+					DEFAULT_SIMULATOR_SDK_VERSION = DEFAULT_SIMULATOR_SDK_VERSION.encode("utf-8")
 
 			if sys.version_info >= (3, 0):
 				DEFAULT_DEVICE_SDK_DIR = DEFAULT_DEVICE_SDK_DIR.decode("utf-8")

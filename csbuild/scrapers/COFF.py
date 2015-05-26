@@ -1,7 +1,7 @@
 from . import scraper
 import struct
 
-from . import BYTE, SHORT, LONG
+from . import BYTE, SHORT, LONG, LONGLONG
 
 class SymbolClass:
 	STATIC = 2

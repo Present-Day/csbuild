@@ -67,10 +67,11 @@ class AndroidBase( object ):
 		#self.shared._maxSdkVersion = 19
 		#TODO: Determine this from highest number in the filesystem.
 		self.shared._targetSdkVersion = 19
-		self.shared._minSdkVersion = 1
+		self.shared._minSdkVersion = 9
 		self.shared._packageName = "csbuild.autopackage"
 		self.shared._activityName = None
 		self.shared._usedFeatures = []
+		self.shared._usedPermissions = [ "INTERNET", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE" ]
 		self.shared._sysRootDir = ""
 		self.shared._keystoreLocation = ""
 		self.shared._keystorePwFile = ""
@@ -90,6 +91,7 @@ class AndroidBase( object ):
 		other.shared._packageName = self.shared._packageName
 		other.shared._activityName = self.shared._activityName
 		other.shared._usedFeatures = list(self.shared._usedFeatures)
+		other.shared._usedPermissions = list(self.shared._usedPermissions)
 		other.shared._sysRootDir = self.shared._sysRootDir
 		other.shared._keystoreLocation = self.shared._keystoreLocation
 		other.shared._keystorePwFile = self.shared._keystorePwFile
@@ -141,6 +143,9 @@ class AndroidBase( object ):
 
 	def AddUsedFeatures(self, *args):
 		self.shared._usedFeatures += list(args)
+
+	def AddUsedPermissions(self, *args):
+		self.shared._usedPermissions += list(args)
 
 	def SetNativeAppGlue(self, addGlue):
 		self.shared._addNativeAppGlue = addGlue
@@ -356,7 +361,7 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.GccCompiler):
 		else:
 			picFlag = ""
 
-		return "\"{}\" {} -Winvalid-pch -c {}-g{} -O{} {}{}{} {} {} {}".format(
+		cmds = "\"{}\" {} -Winvalid-pch -c {}-g{} -O{} {}{}{} {} {} {}".format(
 			compiler,
 			exitcodes,
 			self._getDefines( project.defines, project.undefines ),
@@ -369,6 +374,8 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.GccCompiler):
 			self._getSystemDirectories(project, isCpp),
 			self._getTargetTriple(project)
 		)
+		
+		return cmds.replace("\\", "/")
 
 	def _getIncludeDirs( self, includeDirs ):
 		"""Returns a string containing all of the passed include directories, formatted to be passed to gcc/g++."""
@@ -469,10 +476,11 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 					"libs",
 					project.outputArchitecture)
 				)
+				#TODO: Differentiate between the static and shared runtime for libstdc++.
 				if project.useStaticRuntime:
-					ret += "-lgnustl_static "
+					ret += "-lstdc++ "
 				else:
-					ret += "-lgnustl_shared "
+					ret += "-lstdc++ "
 			elif self.shared._stlVersion == "stlport":
 				ret += "-L\"{}\" ".format(os.path.join(
 					self.shared._ndkHome,
@@ -510,7 +518,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 
 		linkFile = os.path.join(self._project_settings.csbuildDir, "{}.cmd".format(self._project_settings.name))
 
-		data = " ".join( objList )
+		data = " ".join( objList ).replace("\\", "/")
 		if sys.version_info >= (3, 0):
 			data = data.encode("utf-8")
 
@@ -522,9 +530,9 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 		os.write(fd, data)
 		os.fsync(fd)
 		os.close(fd)
-
+		
 		if project.type == csbuild.ProjectType.StaticLibrary:
-			return "\"{}\" rcs {} {}".format( self._ar, outputFile, " ".join( objList ) )
+			cmds = "\"{}\" rcs {} {}".format( self._ar, outputFile, " ".join( objList ) )
 		else:
 			if project.hasCppFiles:
 				cmd = project.activeToolchain.Compiler()._settingsOverrides["cxx"]
@@ -546,7 +554,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 			else:
 				sharedFlag = ""
 
-			return "\"{}\" {}-o{} {} {} {}{}{} {} {}-g{} -O{} {} {} {} {} -L\"{}\"".format(
+			cmds = "\"{}\" {}-o{} {} {} {}{}{} {} {}-g{} -O{} {} {} {} {} -L\"{}\"".format(
 				cmd,
 				"-pg " if project.profile else "",
 				outputFile,
@@ -565,6 +573,8 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 				self._getTargetTriple(project),
 				libDir
 			)
+			
+		return cmds.replace("\\", "/")
 
 	def FindLibrary( self, project, library, libraryDirs, force_static, force_shared ):
 		success = True
@@ -703,7 +713,7 @@ class APKBuilder(AndroidBase, toolchain.toolBase):
 				continue
 			shutil.copyfile(library, os.path.join(libDir, os.path.basename(library)))
 
-		for dep in project.linkDepends:
+		for dep in project.reconciledLinkDepends:
 			depProj = _shared_globals.projects[dep]
 			libFile = os.path.join(depProj.outputDir, depProj.outputName)
 			shutil.copyfile(libFile, os.path.join(libDir, os.path.basename(libFile)))
@@ -711,26 +721,29 @@ class APKBuilder(AndroidBase, toolchain.toolBase):
 		shutil.copyfile(os.path.join(project.outputDir, project.outputName), os.path.join(libDir, os.path.basename(project.outputName)))
 
 		with open(os.path.join(appDir, "AndroidManifest.xml"), "w") as f:
-			f.write("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n")
-			f.write("  package=\"com.csbuild.autopackage.{}\"\n".format(project.name))
-			f.write("  android:versionCode=\"1\"\n")
-			f.write("  android:versionName=\"1.0\">\n")
-			f.write("  <uses-sdk android:minSdkVersion=\"{}\" android:targetSdkVersion=\"{}\"/>\n".format(self.shared._minSdkVersion, self.shared._targetSdkVersion))
+			f.write('<?xml version="1.0" encoding="utf-8"?>\n')
+			f.write('<manifest xmlns:android="http://schemas.android.com/apk/res/android"\n')
+			f.write('  package="com.{}.{}"\n'.format(self.shared._packageName, project.name))
+			f.write('  android:versionCode="1"\n')
+			f.write('  android:versionName="1.0">\n')
+			f.write('  <uses-sdk android:minSdkVersion="{}" android:targetSdkVersion="{}"/>\n'.format(self.shared._minSdkVersion, self.shared._targetSdkVersion))
 			for feature in self.shared._usedFeatures:
 				#example: android:glEsVersion=\"0x00020000\"
-				f.write("  <uses-feature {}></uses-feature>".format(feature))
-			f.write("  <application android:label=\"{}\" android:hasCode=\"false\">\n".format(project.name))
-			f.write("    <activity android:name=\"android.app.NativeActivity\"\n")
-			f.write("      android:label=\"{}\">\n".format(project.name))
-			f.write("      android:configChanges=\"orientation|keyboardHidden\">\n")
-			f.write("      <meta-data android:name=\"android.app.lib_name\" android:value=\"{}\"/>\n".format(project.outputName[3:-3]))
-			f.write("      <intent-filter>\n")
-			f.write("        <action android:name=\"android.intent.action.MAIN\"/>\n")
-			f.write("        <category android:name=\"android.intent.category.LAUNCHER\"/>\n")
-			f.write("      </intent-filter>\n")
-			f.write("    </activity>\n")
-			f.write("  </application>\n")
-			f.write("</manifest>\n")
+				f.write('  <uses-feature android{}></uses-feature>'.format(feature))
+			for permission in self.shared._usedPermissions:
+				f.write('  <uses-permission android:name="android.permission.{}"/>\n'.format(permission))
+			f.write('  <application android:label="@string/app_name" android:hasCode="false" android:debuggable="true">\n')
+			f.write('    <activity android:name="android.app.NativeActivity"\n')
+			f.write('      android:label="@string/app_name"\n'.format(project.name))
+			f.write('      android:configChanges="orientation|keyboardHidden">\n')
+			f.write('      <meta-data android:name="android.app.lib_name" android:value="{}"/>\n'.format(project.outputName[3:-3]))
+			f.write('      <intent-filter>\n"')
+			f.write('        <action android:name="android.intent.action.MAIN"/>\n')
+			f.write('        <category android:name="android.intent.category.LAUNCHER"/>\n')
+			f.write('      </intent-filter>\n')
+			f.write('    </activity>\n')
+			f.write('  </application>\n')
+			f.write('</manifest>\n')
 
 		if project.optLevel != csbuild.OptimizationLevel.Max:
 			antBuildType = "debug"

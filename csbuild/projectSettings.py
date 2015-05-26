@@ -752,8 +752,7 @@ class projectSettings( object ):
 		oldWorkingDir = os.getcwd()
 
 		def resolvePath( _tempPath, _proj ):
-			os.chdir( _tempPath.workingDir )
-			return os.path.abspath( _utils.ResolveProjectMacros( _tempPath.path, _proj ) )
+			return os.path.normpath( os.path.join( _tempPath.workingDir, _utils.ResolveProjectMacros( _tempPath.path, _proj ) ) )
 
 		if self.outputDirTemp:
 			self.outputDir = resolvePath( self.outputDirTemp, self )
@@ -811,17 +810,18 @@ class projectSettings( object ):
 			for s in l:
 				s = resolvePath( s, self )
 				alteredList.append(s)
+			del l[:]
 			return alteredList
 
-		self.excludeDirs = apply_macro( self.excludeDirsTemp )
-		self.extraFiles = apply_macro( self.extraFilesTemp )
-		self.extraDirs = apply_macro( self.extraDirsTemp )
-		self.extraObjs = set( apply_macro( list( self.extraObjsTemp ) ) )
-		self.excludeFiles = apply_macro(self.excludeFilesTemp )
-		self.precompile = apply_macro( self.precompileTemp )
-		self.precompileAsC = apply_macro( self.precompileAsCTemp )
-		self.precompileExcludeFiles = apply_macro( self.precompileExcludeFilesTemp )
-		self.frameworkDirs = apply_macro( self.frameworkDirsTemp )
+		self.excludeDirs.extend(apply_macro( self.excludeDirsTemp ))
+		self.extraFiles.extend(apply_macro( self.extraFilesTemp ))
+		self.extraDirs.extend(apply_macro( self.extraDirsTemp ))
+		self.extraObjs.update(set( apply_macro( list( self.extraObjsTemp ) ) ))
+		self.excludeFiles.extend(apply_macro(self.excludeFilesTemp ))
+		self.precompile.extend(apply_macro( self.precompileTemp ))
+		self.precompileAsC.extend(apply_macro( self.precompileAsCTemp ))
+		self.precompileExcludeFiles.extend(apply_macro( self.precompileExcludeFilesTemp ))
+		self.frameworkDirs.update(set(apply_macro( self.frameworkDirsTemp )))
 
 		if self.headerInstallSubdirTemp:
 			self.headerInstallSubdir = resolvePath( self.headerInstallSubdirTemp, self )
@@ -829,9 +829,6 @@ class projectSettings( object ):
 			self.headerInstallSubdir = oldWorkingDir
 
 		self.excludeDirs.append( self.csbuildDir )
-
-		# Restore the old working directory.
-		os.chdir( oldWorkingDir )
 
 
 	def RunFileDiscovery( self ):
@@ -1453,7 +1450,8 @@ class projectSettings( object ):
 			f = open( headerFile )
 		with f:
 			for line in f:
-				if line[0] != '#':
+				line = line.strip()
+				if not line or line[0] != '#':
 					continue
 
 				RMatch = re.search( r"#\s*include\s*[<\"](.*?)[\">]", line )

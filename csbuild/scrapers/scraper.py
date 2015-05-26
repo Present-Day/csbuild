@@ -1,6 +1,6 @@
 import struct
 
-from . import BYTE, SHORT, LONG
+from . import BYTE, SHORT, LONG, LONGLONG
 
 class Scraper(object):
 	def __init__(self):
@@ -31,16 +31,28 @@ class Scraper(object):
 		self._file.write(struct.pack("H", data))
 
 	def ReadLong(self):
-		return struct.unpack("l", self._file.read(LONG))[0]
+		return struct.unpack("i", self._file.read(LONG))[0]
 
 	def WriteLong(self, data):
-		self._file.write(struct.pack("l", data))
+		self._file.write(struct.pack("i", data))
 
 	def ReadUnsignedLong(self):
-		return struct.unpack("L", self._file.read(LONG))[0]
+		return struct.unpack("I", self._file.read(LONG))[0]
 
 	def WriteUnsignedLong(self, data):
-		self._file.write(struct.pack("L", data))
+		self._file.write(struct.pack("I", data))
+
+	def ReadLongLong(self):
+		return struct.unpack("q", self._file.read(LONGLONG))[0]
+
+	def WriteLongLong(self, data):
+		self._file.write(struct.pack("q", data))
+
+	def ReadUnsignedLongLong(self):
+		return struct.unpack("Q", self._file.read(LONGLONG))[0]
+
+	def WriteUnsignedLongLong(self, data):
+		self._file.write(struct.pack("Q", data))
 
 	def ReadBytes(self, numBytes):
 		return self._file.read(numBytes)

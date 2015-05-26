@@ -1557,6 +1557,16 @@ def _build( ):
 	global _building
 	_building = True
 
+	for project in _shared_globals.sortedProjects:
+		for chunk in project.chunks:
+			if project.activeToolchain.Compiler().SupportsDummyObjects():
+				objs = []
+				for source in chunk:
+					obj = _utils.GetSourceObjPath(project, source)
+					if not os.access(obj, os.F_OK):
+						objs.append(obj)
+				project.activeToolchain.Compiler().MakeDummyObjects(objs)
+
 	linker_threads_blocked = _shared_globals.max_linker_threads - 1
 	for i in range( linker_threads_blocked ):
 		_shared_globals.link_semaphore.acquire(True)
@@ -1907,28 +1917,39 @@ def _performLink(project, objs):
 
 	if not objs:
 		for chunk in project.chunks:
+			hasChunk = False
 			if not project.unity:
-				obj = _utils.GetChunkedObjPath(project, chunk)
+				chunkObj = _utils.GetChunkedObjPath(project, chunk)
 			else:
-				obj = _utils.GetUnityChunkObjPath(project)
-			if project.useChunks and not _shared_globals.disable_chunks and os.access(obj , os.F_OK):
-				objs.append( obj )
-			else:
+				chunkObj = _utils.GetUnityChunkObjPath(project)
+			if project.useChunks and not _shared_globals.disable_chunks and os.access(chunkObj , os.F_OK):
+				objs.append( chunkObj )
+				hasChunk = True
+
+			if not hasChunk or project.activeToolchain.Compiler().SupportsObjectScraping():
+				objsToScrape = []
 				if type( chunk ) == list:
 					for source in chunk:
 						obj = _utils.GetSourceObjPath(project, source)
 						if os.access(obj , os.F_OK):
 							objs.append( obj )
-						else:
+							if source in project._finalChunkSet:
+								objsToScrape.append( obj )
+						elif not hasChunk or project.activeToolchain.Compiler().SupportsDummyObjects():
 							log.LOG_ERROR( "Could not find {} for linking. Something went wrong here.".format(obj) )
 							return _LinkStatus.Fail
 				else:
 					obj = _utils.GetSourceObjPath(project, chunk)
 					if os.access(obj , os.F_OK):
 						objs.append( obj )
-					else:
+						if source in project._finalChunkSet:
+							objsToScrape.append( obj )
+					elif not hasChunk or project.activeToolchain.Compiler().SupportsDummyObjects():
 						log.LOG_ERROR( "Could not find {} for linking. Something went wrong here.".format(obj) )
 						return _LinkStatus.Fail
+
+				if hasChunk and objsToScrape:
+					project.activeToolchain.Compiler().GetObjectScraper().RemoveSharedSymbols(objsToScrape, chunkObj)
 
 	if not objs:
 		return _LinkStatus.UpToDate
@@ -1990,26 +2011,29 @@ def _performLink(project, objs):
 		proj = _shared_globals.projects[dep]
 		if proj.type == ProjectType.StaticLibrary and project.linkMode == StaticLinkMode.LinkIntermediateObjects:
 			for chunk in proj.chunks:
+				hasChunk = False
 				if not proj.unity:
-					obj = _utils.GetChunkedObjPath(proj, chunk)
+					chunkObj = _utils.GetChunkedObjPath(proj, chunk)
 				else:
-					obj = _utils.GetUnityChunkObjPath(proj)
-				if proj.useChunks and not _shared_globals.disable_chunks and os.access(obj , os.F_OK):
-					objs.append( obj )
-				else:
+					chunkObj = _utils.GetUnityChunkObjPath(proj)
+				if proj.useChunks and not _shared_globals.disable_chunks and os.access(chunkObj , os.F_OK):
+					objs.append( chunkObj )
+					hasChunk = True
+
+				if not hasChunk or proj.activeToolchain.Compiler().SupportsObjectScraping():
 					if type( chunk ) == list:
 						for source in chunk:
 							obj = _utils.GetSourceObjPath(proj, source)
 							if os.access(obj , os.F_OK):
 								objs.append( obj )
-							else:
+							elif not hasChunk or proj.activeToolchain.Compiler().SupportsDummyObjects():
 								log.LOG_ERROR( "Could not find {} for linking. Something went wrong here.".format(obj) )
 								return _LinkStatus.Fail
 					else:
 						obj = _utils.GetSourceObjPath(proj, chunk)
 						if os.access(obj , os.F_OK):
 							objs.append( obj )
-						else:
+						elif not hasChunk or proj.activeToolchain.Compiler().SupportsDummyObjects():
 							log.LOG_ERROR( "Could not find {} for linking. Something went wrong here.".format(obj) )
 							return _LinkStatus.Fail
 			objs += proj.extraObjs
@@ -2862,6 +2886,25 @@ def _run( ):
 
 	parser.parse_args(args.remainder)
 
+	validArchList = set()
+
+	if args.ao:
+		_shared_globals.selectedToolchains = set( ) # Reset the selected toolchains.
+		for chain in _shared_globals.alltoolchains:
+			validArchList |= set(_shared_globals.alltoolchains[chain.lower()]().GetValidArchitectures())
+	elif args.toolchain:
+		_shared_globals.selectedToolchains = set( ) # Reset the selected toolchains.
+		for chain in args.toolchain:
+			if chain.lower() not in _shared_globals.alltoolchains:
+				log.LOG_ERROR( "Unknown toolchain: {}".format( chain ) )
+				return
+			validArchList |= set(_shared_globals.alltoolchains[chain.lower()]().GetValidArchitectures())
+	else:
+		if platform.system( ) == "Windows":
+			validArchList |= set(_shared_globals.alltoolchains["msvc"]().GetValidArchitectures())
+		else:
+			validArchList |= set(_shared_globals.alltoolchains["gcc"]().GetValidArchitectures())
+
 	def BuildWithToolchain( chain ):
 
 		def BuildWithTarget( target ):
@@ -3000,7 +3043,6 @@ def _run( ):
 
 				project.activeToolchain = project.toolchains[project.activeToolchainName]
 
-				validArchList = set(project.activeToolchain.GetValidArchitectures())
 				cmdLineGlobalArchList = args.architecture
 				cmdLineToolchainArchList = args.__dict__[_shared_globals.allToolchainArchStrings[project.activeToolchainName][0].replace("-", "_")]
 				cmdLineArchList = set()
@@ -3008,10 +3050,6 @@ def _run( ):
 					cmdLineArchList.update(cmdLineGlobalArchList)
 				if cmdLineToolchainArchList:
 					cmdLineArchList.update(cmdLineToolchainArchList)
-				if project.supportedArchitectures:
-					validArchList &= project.supportedArchitectures
-				if not validArchList:
-					log.LOG_ERROR("Project {} does not support any architectures supported by toolchain {}".format(project.name, project.activeToolchainName))
 				if cmdLineArchList:
 					for arch in cmdLineArchList:
 						if arch not in validArchList:
