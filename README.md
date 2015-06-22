@@ -39,3 +39,5 @@ Even more powerful, however, are the GUI tools included with CSBuild (gui requir
 CSBuild is also cross-platform compatible (comes stock with toolchains to build using msvc, gcc, clang, or the android NDK, and provides easy and straight-forward methods of extending that support to additional toolchains, and has been tested to function on windows, mac, and linux, though it currently does not have support for frameworks on mac), and capable of generating project files that you can open with your favorite IDE, which will then execute csbuild to maintain optimal build speed. (Currently, CSBuild comes stock with generators for Visual Studio, SlickEdit, and QtCreator; Eclipse, XCode, NetBeans, and other additional IDEs will be added over time. As with toolchains, CSBuild also provides methods to extend the types of projects it can generate.)
 
 For an example CSBuild makefile, check out https://github.com/Present-Day/Sprawl/blob/master/make.py
+
+Documentation is available at api.csbuild.org
