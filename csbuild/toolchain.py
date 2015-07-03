@@ -88,6 +88,8 @@ class SettingsOverrider( object ):
 				ret._settingsOverrides[kvp[0]] = dict( kvp[1] )
 			elif isinstance( kvp[1], set ):
 				ret._settingsOverrides[kvp[0]] = set( kvp[1] )
+			elif isinstance( kvp[1], _utils.OrderedSet ):
+				ret._settingsOverrides[kvp[0]] = _utils.OrderedSet( kvp[1] )
 			elif isinstance( kvp[1], csbuild.projectSettings.projectSettings.UserData ):
 				ret._settingsOverrides[kvp[0]] = kvp[1].copy()
 			else:
@@ -121,10 +123,7 @@ class SettingsOverrider( object ):
 		:param s: The desired subdirectory; i.e., if you specify this as "myLib", the headers will be
 		installed under *{prefix*}/include/myLib.
 		"""
-		s = _utils.FixupRelativePath( s )
-		s = _utils.PathWorkingDirPair( s )
-		self._settingsOverrides["headerInstallSubdirTemp"] = s
-		self._settingsOverrides["tempsDirty"] = True
+		self._settingsOverrides["headerInstallSubdir"] = s
 
 
 	def AddExcludeDirectories( self, *args ):
@@ -184,9 +183,9 @@ class SettingsOverrider( object ):
 		:param args: The list of libraries to link in.
 		"""
 		if "libraries" not in self._settingsOverrides:
-			self._settingsOverrides["libraries"] = set()
+			self._settingsOverrides["libraries"] = _utils.OrderedSet()
 
-		self._settingsOverrides["libraries"] |= set( args )
+		self._settingsOverrides["libraries"] |= _utils.OrderedSet( args )
 
 
 	def AddStaticLibraries( self, *args ):
@@ -197,9 +196,9 @@ class SettingsOverrider( object ):
 		:param args: The list of libraries to link in.
 		"""
 		if "staticLibraries" not in self._settingsOverrides:
-			self._settingsOverrides["staticLibraries"] = set()
+			self._settingsOverrides["staticLibraries"] = _utils.OrderedSet()
 
-		self._settingsOverrides["staticLibraries"] |= set( args )
+		self._settingsOverrides["staticLibraries"] |= _utils.OrderedSet( args )
 
 
 	def AddSharedLibraries( self, *args ):
@@ -210,9 +209,9 @@ class SettingsOverrider( object ):
 		:param args: The list of libraries to link in.
 		"""
 		if "sharedLibraries" not in self._settingsOverrides:
-			self._settingsOverrides["sharedLibraries"] = set()
+			self._settingsOverrides["sharedLibraries"] = _utils.OrderedSet()
 
-		self._settingsOverrides["sharedLibraries"] |= set( args )
+		self._settingsOverrides["sharedLibraries"] |= _utils.OrderedSet( args )
 
 
 	def AddFrameworks( self, *args ):
@@ -225,9 +224,9 @@ class SettingsOverrider( object ):
 		:param args: The list of frameworks to link in.
 		"""
 		if "frameworks" not in self._settingsOverrides:
-			self._settingsOverrides["frameworks"] = set()
+			self._settingsOverrides["frameworks"] = _utils.OrderedSet()
 
-		self._settingsOverrides["frameworks"] |= set( args )
+		self._settingsOverrides["frameworks"] |= _utils.OrderedSet( args )
 
 
 	def AddIncludeDirectories( self, *args ):
@@ -305,9 +304,9 @@ class SettingsOverrider( object ):
 		:type args: And arbitrary number of strings.
 		"""
 		if "storyboardFiles" not in self._settingsOverrides:
-			self._settingsOverrides["storyboardFiles"] = set()
+			self._settingsOverrides["storyboardFiles"] = _utils.OrderedSet()
 
-		self._settingsOverrides["storyboardFiles"] |= set( args )
+		self._settingsOverrides["storyboardFiles"] |= _utils.OrderedSet( args )
 
 
 	def AddAppleInterfaceFiles( self, *args ):
@@ -319,9 +318,9 @@ class SettingsOverrider( object ):
 		:type args: And arbitrary number of strings.
 		"""
 		if "interfaceFiles" not in self._settingsOverrides:
-			self._settingsOverrides["interfaceFiles"] = set()
+			self._settingsOverrides["interfaceFiles"] = _utils.OrderedSet()
 
-		self._settingsOverrides["interfaceFiles"] |= set( args )
+		self._settingsOverrides["interfaceFiles"] |= _utils.OrderedSet( args )
 
 
 	def AddAppleAssetCatalogs( self, *args ):
@@ -333,29 +332,29 @@ class SettingsOverrider( object ):
 		:type args: And arbitrary number of strings.
 		"""
 		if "assetCatalogs" not in self._settingsOverrides:
-			self._settingsOverrides["assetCatalogs"] = set()
+			self._settingsOverrides["assetCatalogs"] = _utils.OrderedSet()
 
-		self._settingsOverrides["assetCatalogs"] |= set( args )
+		self._settingsOverrides["assetCatalogs"] |= _utils.OrderedSet( args )
 
 
 	def ClearLibraries( self ):
 		"""Clears the list of libraries"""
-		self._settingsOverrides["libraries"] = set()
+		self._settingsOverrides["libraries"] = _utils.OrderedSet()
 
 
 	def ClearStaticLibraries( self ):
 		"""Clears the list of libraries"""
-		self._settingsOverrides["staticLibraries"] = set()
+		self._settingsOverrides["staticLibraries"] = _utils.OrderedSet()
 
 
 	def ClearSharedLibraries( self ):
 		"""Clears the list of libraries"""
-		self._settingsOverrides["sharedLibraries"] = set()
+		self._settingsOverrides["sharedLibraries"] = _utils.OrderedSet()
 
 
 	def ClearFrameworks( self ):
 		"""Clears the list of framworks"""
-		self._settingsOverrides["frameworks"] = set()
+		self._settingsOverrides["frameworks"] = _utils.OrderedSet()
 
 
 	def ClearIncludeDirectories( self ):
@@ -378,17 +377,17 @@ class SettingsOverrider( object ):
 
 	def ClearAppleStoryboardFiles(self ):
 		"""Clears the list of storyboard files."""
-		self._settingsOverrides["storyboardFiles"] = set()
+		self._settingsOverrides["storyboardFiles"] = _utils.OrderedSet()
 
 
 	def ClearAppleInterfaceFiles(self ):
 		"""Clears the list of interface files."""
-		self._settingsOverrides["interfaceFiles"] = set()
+		self._settingsOverrides["interfaceFiles"] = _utils.OrderedSet()
 
 
 	def ClearAppleAssetCatalogs(self ):
 		"""Clears the list of asset catalogs."""
-		self._settingsOverrides["assetCatalogs"] = set()
+		self._settingsOverrides["assetCatalogs"] = _utils.OrderedSet()
 
 
 	def SetOptimizationLevel( self, i ):
@@ -983,7 +982,7 @@ class SettingsOverrider( object ):
 		if "chunkMutexes" not in self._settingsOverrides:
 			self._settingsOverrides["chunkMutexes"] = {}
 		patterns = [pattern] + list(additionalPatterns)
-		mutexFiles = set()
+		mutexFiles = _utils.OrderedSet()
 		for patternToMatch in patterns:
 			for filename in glob.glob(patternToMatch):
 				mutexFiles.add(os.path.abspath(filename))
@@ -993,7 +992,7 @@ class SettingsOverrider( object ):
 				if file1 == file2:
 					continue
 				if file1 not in self._settingsOverrides["chunkMutexes"]:
-					self._settingsOverrides["chunkMutexes"][file1] = set( [file2] )
+					self._settingsOverrides["chunkMutexes"][file1] = _utils.OrderedSet( [file2] )
 				else:
 					self._settingsOverrides["chunkMutexes"][file1].add(file2)
 
@@ -1007,7 +1006,7 @@ class SettingsOverrider( object ):
 		"""
 
 		if "chunkExcludes" not in self._settingsOverrides:
-			self._settingsOverrides["chunkExcludes"] = set()
+			self._settingsOverrides["chunkExcludes"] = _utils.OrderedSet()
 
 		for pattern in list(files):
 			for filename in glob.glob(pattern):
@@ -1071,7 +1070,7 @@ class SettingsOverrider( object ):
 		--all-architectures from building everything supported by the toolchain, if the project
 		is not set up to support all of the toolchain's architectures.
 		"""
-		self._settingsOverrides["supportedArchitectures"] = set(architectures)
+		self._settingsOverrides["supportedArchitectures"] = _utils.OrderedSet(architectures)
 
 class toolBase( SettingsOverrider ):
 	def __init__(self, shared):
@@ -1517,16 +1516,16 @@ class toolchain( object ):
 
 
 	def GetValidArchitectures( self ):
-		validArchs = set()
+		validArchs = _utils.OrderedSet()
 		first = True
 		for tool in self.tools.values():
 			if hasattr(tool, "GetValidArchitectures"):
 				archsThisTool = tool.GetValidArchitectures()
 				if first:
-					validArchs = set(archsThisTool)
+					validArchs = _utils.OrderedSet(archsThisTool)
 					first = False
 				else:
-					validArchs &= set(archsThisTool)
+					validArchs &= _utils.OrderedSet(archsThisTool)
 		return list(validArchs)
 
 
@@ -1542,13 +1541,13 @@ class toolchain( object ):
 			self.activeTool = None
 
 	def GetGlobalPreMakeSteps(self):
-		ret = set()
+		ret = _utils.OrderedSet()
 		for tool in self.tools.values():
 			ret.add(tool.__class__.globalPreMakeStep)
 		return ret
 
 	def GetGlobalPostMakeSteps(self):
-		ret = set()
+		ret = _utils.OrderedSet()
 		for tool in self.tools.values():
 			ret.add(tool.__class__.globalPostMakeStep)
 		return ret

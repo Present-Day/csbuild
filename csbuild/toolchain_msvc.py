@@ -86,6 +86,11 @@ class MsvcBase( object ):
 		self.shared._platform_arch = ""
 		self.shared._build_64_bit = False
 
+		
+	@staticmethod
+	def AdditionalArgs( parser ):
+		parser.add_argument("--msvc-version", help="Version of msvc to use", choices=["2010", "2012", "2013"])
+
 
 	def _copyTo(self, other):
 		other.shared._project_settings = self.shared._project_settings
@@ -134,6 +139,14 @@ class MsvcBase( object ):
 
 
 	def _setupForProject( self, project ):
+		ver = csbuild.GetOption("msvc_version")
+		if ver == "2010":
+			self.shared.msvc_version = 100
+		elif ver == "2012":
+			self.shared.msvc_version = 110
+		elif ver == "2013":
+			self.shared.msvc_version = 120
+			
 		platform_architectures = {
 			"amd64": X64,
 			"x86_64": X64,

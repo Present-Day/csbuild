@@ -1,4 +1,5 @@
 from . import scraper
+from .. import log
 
 from . import BYTE, SHORT, LONG, LONGLONG
 
@@ -170,6 +171,7 @@ class ELFScraper(scraper.Scraper):
 						oneChar = self.ReadChar()
 					
 					if name in self._scrapeLocations:
+						log.LOG_INFO("Scraping symbol {}".format(name))
 						self.SeekToPosition(startpos + LONG)
 						
 						if header.cls == ElfClass.c32:

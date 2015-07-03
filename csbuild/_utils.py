@@ -30,6 +30,7 @@ import datetime
 import glob
 import traceback
 import platform
+import collections
 if sys.version_info >= (3,0):
 	import io
 	StringIO = io.StringIO
@@ -41,6 +42,102 @@ import csbuild
 from . import log
 from . import _shared_globals
 
+class OrderedSet(object):
+	def __init__(self, iterable=None):
+		self.map = collections.OrderedDict()
+		if iterable is not None:
+			self.map.update( [ ( x, None ) for x in iterable ] )
+	
+	def __len__(self):
+		return len(self.map)
+
+	def __contains__(self, key):
+		return key in self.map
+
+	def union(self, other):
+		ret = OrderedSet(self.map.keys())
+		ret.update( other )
+		return ret
+
+	def intersection(self, other):
+		ret = OrderedSet(self.map.keys())
+		ret.intersection_update( other )
+		return ret
+
+	def difference(self, other):
+		ret = OrderedSet(self.map.keys())
+		ret.difference_update( other )
+		return ret
+
+	def symmetric_difference(self, other):
+		ret = OrderedSet(self.map.keys())
+		ret.symmetric_difference_update( other )
+		return ret
+
+	def __and__(self, other):
+		return self.union(other)
+
+	def __or__(self, other):
+		return self.intersection(other)
+
+	def __sub__(self, other):
+		return self.difference(other)
+
+	def __xor__(self, other):
+		return self.symmetric_difference(other)
+		
+	def __iter__(self):
+		for key in self.map.keys():
+			yield key
+
+	def __reversed__(self):
+		for key in reversed(self.map.keys()):
+			yield key
+
+	def __repr__(self):
+		return "OrderedSet({})".format(self.map.keys())
+
+	def update(self, iterable):
+		for key in self.map.keys():
+			if key not in iterable:
+				del self.map[key]
+
+	def intersection_update(self, iterable):
+		self.map.update( [ ( x, None ) for x in iterable ] )
+
+	def difference_update(self, iterable):
+		for key in iterable:
+			if key in self.map:
+				del self.map[key]
+
+	def symmetric_difference_update(self, iterable):
+		for key in iterable:
+			if key in self.map:
+				del self.map[key]
+			else:
+				self.map[key] = None
+
+	def add(self, key):
+		self.map[key] = None
+
+	def remove(self, key):
+		del self.map[key]
+
+	def discard(self, key):
+		try:
+			del self.map[key]
+		except:
+			pass
+
+	def pop(self):
+		key = self.map.keys()[0]
+		val = self.map[key]
+		del self.map[key]
+		return val
+
+	def clear(self):
+		self.map = collections.OrderedDict()
+	
 
 def remove_comments( text ):
 	def replacer( match ):
@@ -801,19 +898,18 @@ def ChunkedBuild( ):
 					#The next time any of these files changes, only that section of the chunk will get built.
 					#This keeps large builds fast through the chunked build, without sacrificing the speed of smaller
 					#incremental builds (except on the first build after the chunk)
-					os.remove( obj )
 					if owningProject.activeToolchain.Compiler().SupportsObjectScraping():
 						add_chunk = sources_in_this_chunk
 					else:
+						os.remove( obj )
 						add_chunk = chunk
-					if project.useChunks and not _shared_globals.disable_chunks:
-						if owningProject.activeToolchain.Compiler().SupportsObjectScraping():
+						if project.useChunks and not _shared_globals.disable_chunks:
 							log.LOG_WARN_NOPUSH(
 								"Breaking chunk ({0}) into individual files to improve future iteration turnaround.".format(
 									chunk ) )
 
-						for filename in chunk:
-							owningProject.splitChunks[filename] = chunkname
+							for filename in chunk:
+								owningProject.splitChunks[filename] = chunkname
 				else:
 					add_chunk = sources_in_this_chunk
 					if project.useChunks and not _shared_globals.disable_chunks:

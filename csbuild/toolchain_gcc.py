@@ -28,10 +28,12 @@ import subprocess
 import re
 import sys
 import platform
+
+import csbuild
 from . import _shared_globals
 from . import toolchain
-import csbuild
 from . import log
+from . import _utils
 from .scrapers import ELF
 
 class gccBase( object ):
@@ -228,7 +230,7 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		toolchain.compilerBase.__init__( self, shared )
 		gccBase.__init__( self )
 
-		self.warnFlags = set()
+		self.warnFlags = _utils.OrderedSet()
 		self.cppStandard = ""
 		self.cStandard = ""
 
@@ -239,7 +241,7 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 	def copy( self, shared ):
 		ret = toolchain.compilerBase.copy( self, shared )
 		gccBase._copyTo( self, ret )
-		ret.warnFlags = set( self.warnFlags )
+		ret.warnFlags = _utils.OrderedSet( self.warnFlags )
 		ret.cppStandard = self.cppStandard
 		ret.cStandard = self.cStandard
 		return ret
@@ -296,7 +298,7 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 	def _getBaseCommand( self, compiler, project, isCpp ):
 		exitcodes = ""
 		if "clang" not in compiler:
-			exitcodes = "-pass-exit-codes"
+			exitcodes = "-pass-exit-codes "
 		else:
 			self.shared.isClang = True
 
@@ -393,12 +395,12 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		:param args: List of flags
 		:type args: an arbitrary number of strings
 		"""
-		self.warnFlags |= set( args )
+		self.warnFlags |= _utils.OrderedSet( args )
 
 
 	def ClearWarnFlags( self ):
 		"""Clears the list of warning flags"""
-		self.warnFlags = set()
+		self.warnFlags = _utils.OrderedSet()
 
 
 	def SetCppStandard( self, s ):
@@ -499,7 +501,7 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 		"""Returns a string containing all of the passed libraries, formatted to be passed to gcc/g++."""
 		ret = ""
 		for lib in libraries:
-			ret += "-static {}".format( self._getLibraryArg(lib) )
+			ret += " {}".format( self._getLibraryArg(lib) )
 		return ret
 
 
@@ -507,7 +509,7 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 		"""Returns a string containing all of the passed libraries, formatted to be passed to gcc/g++."""
 		ret = ""
 		for lib in libraries:
-			ret += "-shared {}".format( self._getLibraryArg(lib) )
+			ret += " {}".format( self._getLibraryArg(lib) )
 		return ret
 
 
@@ -600,10 +602,10 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 				print("{} -o /dev/null --verbose {} {} -l{}".format(
 					self._ld,
 					self._getLibraryDirs( libraryDirs, False ),
-					"-static" if force_static else "-shared" if force_shared else "",
+					"-Bstatic" if force_static else "-Bdynamic" if force_shared else "",
 					library ))
 			cmd = [self._ld, "-o", "/dev/null", "--verbose",
-				   "-static" if force_static else "-shared" if force_shared else "", "-l{}".format( library )]
+				   "-Bstatic" if force_static else "-Bdynamic" if force_shared else "", "-l{}".format( library )]
 			cmd += shlex.split( self._getLibraryDirs( libraryDirs, False ), posix=(platform.system() != "Windows") )
 			out = subprocess.check_output( cmd, stderr = subprocess.STDOUT )
 		except subprocess.CalledProcessError as e:
@@ -630,10 +632,10 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 						print("{} -o /dev/null --verbose {} {} -l:{}".format(
 							self._ld,
 							self._getLibraryDirs( libraryDirs, False ),
-							"-static" if force_static else "-shared" if force_shared else "",
+							"-Bstatic" if force_static else "-Bdynamic" if force_shared else "",
 							library ))
 					cmd = [self._ld, "-o", "/dev/null", "--verbose",
-						   "-static" if force_static else "-shared" if force_shared else "", "-l{}".format( library )]
+						   "-Bstatic" if force_static else "-Bdynamic" if force_shared else "", "-l{}".format( library )]
 					cmd += shlex.split( self._getLibraryDirs( libraryDirs, False ), posix=(platform.system() != "Windows") )
 					out = subprocess.check_output( cmd, stderr = subprocess.STDOUT )
 				except subprocess.CalledProcessError as e:

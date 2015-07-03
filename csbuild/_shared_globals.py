@@ -239,8 +239,9 @@ cacheDirectory = None
 
 forceProgressBar = ""
 
-globalPreMakeSteps = set()
-globalPostMakeSteps = set()
+#Initialized in __init__.py::_run() to avoid a circular dependency
+globalPreMakeSteps = None
+globalPostMakeSteps = None
 
 class dummy_block( object ):
 	"""Some versions of python have a bug in threading where a dummy thread will try to use a value that it deleted.

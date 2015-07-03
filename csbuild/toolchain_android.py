@@ -172,34 +172,15 @@ class AndroidBase( object ):
 		return project.outputArchitecture
 
 	def _setSysRootDir(self, project):
-		toolchainsDir = os.path.join(self.shared._ndkHome, "toolchains")
-		arch = self._getSimplifiedArch(project)
+		self.shared._sysRootDir = os.path.join(
+			self.shared._ndkHome,
+			"platforms",
+			"android-{}".format(self.shared._targetSdkVersion),
+			"arch-{}".format(self._getSimplifiedArch(project)),
+		)
+		return
 
-		dirs = glob.glob(os.path.join(toolchainsDir, "{}*".format(arch)))
-
-		bestCompilerVersion = ""
-
-		for dirname in dirs:
-			prebuilt = os.path.join(toolchainsDir, dirname, "prebuilt")
-			if not os.access(prebuilt, os.F_OK):
-				continue
-
-			if dirname > bestCompilerVersion:
-				bestCompilerVersion = dirname
-
-		if not bestCompilerVersion:
-			log.LOG_ERROR("Couldn't find compiler for architecture {}.".format(project.outputArchitecture))
-			csbuild.Exit(1)
-
-		if platform.system() == "Windows":
-			platformName = "windows"
-		else:
-			platformName = "linux"
-
-		sysRootDir = os.path.join(toolchainsDir, bestCompilerVersion, "prebuilt", platformName)
-		dirs = list(glob.glob("{}*".format(sysRootDir)))
-		self.shared._sysRootDir = dirs[0]
-
+		
 	def _getCommands(self, project, cmd1, cmd2, searchInLlvmPath = False):
 		toolchainsDir = os.path.join(self.shared._ndkHome, "toolchains")
 		arch = self._getSimplifiedArch(project)
@@ -301,6 +282,8 @@ class AndroidCompiler(AndroidBase, toolchain_gcc.GccCompiler):
 			project.type = csbuild.ProjectType.SharedLibrary
 			if not project.outputName.startswith("lib"):
 				project.outputName = "lib{}".format(project.outputName)
+		elif project.type == csbuild.ProjectType.SharedLibrary:
+			project.type = csbuild.ProjectType.StaticLibrary
 
 	def _getSystemDirectories(self, project, isCpp):
 		ret = ""
@@ -467,50 +450,53 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 		ret = ""
 		if project.hasCppFiles:
 			if self.shared._stlVersion == "GNU":
-				ret += "-L\"{}\" ".format(os.path.join(
+				ret += "\"-l:{}\" ".format(os.path.join(
 					self.shared._ndkHome,
 					"sources",
 					"cxx-stl",
 					"gnu-libstdc++",
 					"4.8",
 					"libs",
-					project.outputArchitecture)
+					project.outputArchitecture,
+					"libgnustl_static.a" if project.useStaticRuntime else "libgnustl_shared.so")
 				)
-				#TODO: Differentiate between the static and shared runtime for libstdc++.
-				if project.useStaticRuntime:
-					ret += "-lstdc++ "
-				else:
-					ret += "-lstdc++ "
 			elif self.shared._stlVersion == "stlport":
-				ret += "-L\"{}\" ".format(os.path.join(
+				ret += "\"-l:{}\" ".format(os.path.join(
 					self.shared._ndkHome,
 					"sources",
 					"cxx-stl",
 					"stlport",
 					"libs",
-					project.outputArchitecture)
+					project.outputArchitecture,
+					"libstlport_static.a" if project.useStaticRuntime else "libstlport_shared.so")
 				)
-				if project.useStaticRuntime:
-					ret += "-lstlport_static "
-				else:
-					ret += "-lstlport_shared "
 			elif self.shared._stlVersion == "libc++":
-				ret += "-L\"{}\" ".format(os.path.join(
+				ret += "\"-l:{}\" ".format(os.path.join(
 					self.shared._ndkHome,
 					"sources",
 					"cxx-stl",
 					"llvm-libc++",
 					"libs",
-					project.outputArchitecture)
+					project.outputArchitecture,
+					"libc++_static.a" if project.useStaticRuntime else "libc++_shared.so")
 				)
-				if project.useStaticRuntime:
-					ret += "-lc++_static "
-				else:
-					ret += "-lc++_shared "
 
-		ret += "--sysroot \"{}\"".format(self.shared._sysRootDir)
+		ret += '"-lc" "-lm" "-llog" "-lgcc" "-landroid" '
+		ret += "--sysroot \"{}\" ".format(self.shared._sysRootDir)
+		ret += "-Wl,-rpath-link=\"{}/usr/lib\" ".format(self.shared._sysRootDir)
 		return ret
 
+
+	def _getLibraryArg(self, lib):
+		for depend in self._project_settings.reconciledLinkDepends:
+			dependProj = _shared_globals.projects[depend]
+			if dependProj.type == csbuild.ProjectType.Application:
+				continue
+			dependLibName = dependProj.outputName
+			splitName = os.path.splitext(dependLibName)[0]
+			if splitName == lib or splitName == "lib{}".format( lib ):
+				return '\"-l:{}\" '.format( dependLibName )
+		return "\"-l:{}\" ".format( self._actual_library_names[lib] )
 
 
 	def GetLinkCommand( self, project, outputFile, objList ):
@@ -554,9 +540,10 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 			else:
 				sharedFlag = ""
 
-			cmds = "\"{}\" {}-o{} {} {} {}{}{} {} {}-g{} -O{} {} {} {} {} -L\"{}\"".format(
+			cmds = "\"{}\" -Wl,--no-undefined -fuse-ld=bfd -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now {}-Wl,-soname,{} -o{} {} {} {}{}{} {} {}-g{} -O{} {} {} {} {} -L\"{}\"".format(
 				cmd,
 				"-pg " if project.profile else "",
+				os.path.basename(outputFile),
 				outputFile,
 				"@{}".format(linkFile),
 				"-Wl,--no-as-needed -Wl,--start-group" if not self.strictOrdering else "",
@@ -583,7 +570,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 		nullOut = os.path.join(project.csbuildDir, "null")
 		try:
 			cmd = [self._ld, "-o", nullOut, "--verbose",
-				   "-static" if force_static else "-shared" if force_shared else "", "-l{}".format( library ),
+				   "-Bstatic" if force_static else "-Bdynamic" if force_shared else "", "-l{}".format( library ),
 				   "-L", os.path.join( self.shared._ndkHome, "platforms", "android-{}".format(self.shared._targetSdkVersion), "arch-{}".format(self._getSimplifiedArch(project)), "usr", "lib")]
 			cmd += shlex.split( self._getLibraryDirs( libraryDirs, False ), posix=(platform.system() != "Windows") )
 
@@ -614,7 +601,7 @@ class AndroidLinker(AndroidBase, toolchain_gcc.GccLinker):
 			elif not success:
 				try:
 					cmd = [self._ld, "-o", nullOut, "--verbose",
-						   "-static" if force_static else "-shared" if force_shared else "", "-l:{}".format( library ),
+						   "-Bstatic" if force_static else "-Bdynamic" if force_shared else "", "-l:{}".format( library ),
 						   "-L", os.path.join( self.shared._ndkHome, "platforms", "android-{}".format(self.shared._targetSdkVersion), "arch-{}".format(self._getSimplifiedArch(project)), "usr", "lib")]
 					cmd += shlex.split( self._getLibraryDirs( libraryDirs, False ), posix=(platform.system() != "Windows") )
 
@@ -657,6 +644,11 @@ class APKBuilder(AndroidBase, toolchain.toolBase):
 	def __init__(self, shared):
 		toolchain.toolBase.__init__(self, shared)
 		AndroidBase.__init__(self)
+
+	def copy(self, shared):
+		ret = toolchain.toolBase.copy(self, shared)
+		AndroidBase._copyTo(self, ret)
+		return ret
 
 	def postBuildStep(self, project):
 		log.LOG_BUILD("Generating APK for {} ({} {}/{})".format(project.outputName, project.targetName, project.outputArchitecture, project.activeToolchainName))

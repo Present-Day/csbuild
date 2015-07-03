@@ -1,7 +1,9 @@
 from . import scraper
 import struct
+import time
 
 from . import BYTE, SHORT, LONG, LONGLONG
+from .. import log
 
 class SymbolClass:
 	STATIC = 2
@@ -171,6 +173,7 @@ class COFFScraper(scraper.Scraper):
 		self.SeekToPosition(self._symPtr)
 
 		i = 0
+		scrapedASymbol = False
 		numSyms = self._numSyms
 		while i < numSyms:
 			name, ptrData, value, section, symType, symbolClass, numAux = self._readSymbol()
@@ -185,6 +188,8 @@ class COFFScraper(scraper.Scraper):
 			elif symbolClass == SymbolClass.STATIC and section is not Section.UNDEFINED and section not in self._comdatSections and ( symType == SymbolType.FUNCTION or section in self._dataSections ):
 				name = self._resolveSymbolName(name, ptrData)
 				if name in self._symsToScrape:
+					log.LOG_INFO("Scraping symbol {}".format(name))
+					scrapedASymbol = True
 					pos = self.GetPosition()
 					if self._type == FileType.XCOFF:
 						self.SeekToPosition(pos - 12)
@@ -200,5 +205,14 @@ class COFFScraper(scraper.Scraper):
 
 			self._skipSymbols(numAux)
 			i += numAux + 1
+
+		if scrapedASymbol:
+			#Update timestamp so incremental link re-parses this object
+			if self._type == FileType.COFF:
+				self.SeekToPosition(SHORT + SHORT)
+			else:
+				self.SeekToPosition(LONG + LONG)
+
+			self.WriteLong(int(time.time()))
 
 		self.Close()

@@ -256,11 +256,11 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 			libFileStatic = "{}.a".format( lib_file_path )
 			libFileDynamic = "{}.dylib".format( lib_file_path )
 			# Check for a static lib.
-			if os.access(libFileStatic , os.F_OK):
+			if os.access(libFileStatic , os.F_OK) and not force_shared:
 				self._actual_library_names.update( { library : libFileStatic } )
 				return libFileStatic
 			# Check for a dynamic lib.
-			if os.access(libFileDynamic , os.F_OK):
+			if os.access(libFileDynamic , os.F_OK) and not force_static:
 				self._actual_library_names.update( { library : libFileDynamic } )
 				return libFileDynamic
 
@@ -272,11 +272,11 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 			libFileStatic = "{}.a".format( lib_file_path )
 			libFileDynamic = "{}.dylib".format( lib_file_path )
 			# Check for a static lib.
-			if os.access(libFileStatic , os.F_OK):
+			if os.access(libFileStatic , os.F_OK) and not force_shared:
 				self._actual_library_names.update( { library : libFileStatic } )
 				return libFileStatic
 			# Check for a dynamic lib.
-			if os.access(libFileDynamic , os.F_OK):
+			if os.access(libFileDynamic , os.F_OK) and not force_static:
 				self._actual_library_names.update( { library : libFileDynamic } )
 				return libFileDynamic
 

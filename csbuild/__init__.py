@@ -163,10 +163,7 @@ def SetHeaderInstallSubdirectory( s ):
 	:param s: The desired subdirectory; i.e., if you specify this as "myLib", the headers will be
 	installed under *{prefix*}/include/myLib.
 	"""
-	s = _utils.FixupRelativePath( s )
-	s = _utils.PathWorkingDirPair( s )
-	projectSettings.currentProject.SetValue( "headerInstallSubdirTemp", s)
-	projectSettings.currentProject.SetValue( "tempsDirty", True )
+	projectSettings.currentProject.SetValue( "headerInstallSubdir", s)
 
 
 def AddExcludeDirectories( *args ):
@@ -219,7 +216,7 @@ def AddLibraries( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of libraries to link in.
 	"""
-	projectSettings.currentProject.UnionSet("libraries", set( args ))
+	projectSettings.currentProject.UnionSet("libraries", _utils.OrderedSet( args ))
 
 
 def AddStaticLibraries( *args ):
@@ -229,7 +226,7 @@ def AddStaticLibraries( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of libraries to link in.
 	"""
-	projectSettings.currentProject.UnionSet("staticLibraries", set( args ))
+	projectSettings.currentProject.UnionSet("staticLibraries", _utils.OrderedSet( args ))
 
 
 def AddSharedLibraries( *args ):
@@ -239,7 +236,7 @@ def AddSharedLibraries( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of libraries to link in.
 	"""
-	projectSettings.currentProject.UnionSet("sharedLibraries", set( args ))
+	projectSettings.currentProject.UnionSet("sharedLibraries", _utils.OrderedSet( args ))
 
 
 def AddFrameworks( *args ):
@@ -249,7 +246,7 @@ def AddFrameworks( *args ):
 	:type args: an arbitrary number of strings
 	:param args: The list of libraries to link in.
 	"""
-	projectSettings.currentProject.UnionSet("frameworks", set( args ))
+	projectSettings.currentProject.UnionSet("frameworks", _utils.OrderedSet( args ))
 
 
 def AddIncludeDirectories( *args ):
@@ -317,7 +314,7 @@ def AddAppleStoryboardFiles( *args ):
 	:param args: List of storyboard files.
 	:type args: And arbitrary number of strings.
 	"""
-	projectSettings.currentProject.UnionSet( "storyboardFiles", set( args ) )
+	projectSettings.currentProject.UnionSet( "storyboardFiles", _utils.OrderedSet( args ) )
 
 
 def AddAppleInterfaceFiles( *args ):
@@ -328,7 +325,7 @@ def AddAppleInterfaceFiles( *args ):
 	:param args: List of interface files.
 	:type args: And arbitrary number of strings.
 	"""
-	projectSettings.currentProject.UnionSet( "interfaceFiles", set( args ) )
+	projectSettings.currentProject.UnionSet( "interfaceFiles", _utils.OrderedSet( args ) )
 
 
 def AddAppleAssetCatalogs( *args ):
@@ -339,27 +336,27 @@ def AddAppleAssetCatalogs( *args ):
 	:param args: List of asset catalogs.
 	:type args: And arbitrary number of strings.
 	"""
-	projectSettings.currentProject.UnionSet( "assetCatalogs", set( args ) )
+	projectSettings.currentProject.UnionSet( "assetCatalogs", _utils.OrderedSet( args ) )
 
 
 def ClearLibraries( ):
 	"""Clears the list of libraries"""
-	projectSettings.currentProject.SetValue("libraries", set())
+	projectSettings.currentProject.SetValue("libraries", _utils.OrderedSet())
 
 
 def ClearStaticLibraries( ):
 	"""Clears the list of statically-linked libraries"""
-	projectSettings.currentProject.SetValue("staticLibraries", set())
+	projectSettings.currentProject.SetValue("staticLibraries", _utils.OrderedSet())
 
 
 def ClearSharedibraries( ):
 	"""Clears the list of dynamically-linked libraries"""
-	projectSettings.currentProject.SetValue("sharedLibraries", set())
+	projectSettings.currentProject.SetValue("sharedLibraries", _utils.OrderedSet())
 
 
 def ClearFrameworks():
 	"""Clears the list of frameworks."""
-	projectSettings.currentProject.SetValue( "frameworks", set() )
+	projectSettings.currentProject.SetValue( "frameworks", _utils.OrderedSet() )
 
 
 def ClearIncludeDirectories( ):
@@ -381,15 +378,15 @@ def ClearFrameworkDirectories():
 
 
 def ClearAppleStoryboardFiles():
-	projectSettings.currentProject.SetValue( "storyboardFiles", set() )
+	projectSettings.currentProject.SetValue( "storyboardFiles", _utils.OrderedSet() )
 
 
 def ClearAppleInterfaceFiles():
-	projectSettings.currentProject.SetValue( "interfaceFiles", set() )
+	projectSettings.currentProject.SetValue( "interfaceFiles", _utils.OrderedSet() )
 
 
 def ClearAppleAssetCatalogs():
-	projectSettings.currentProject.SetValue( "assetCatalogs", set() )
+	projectSettings.currentProject.SetValue( "assetCatalogs", _utils.OrderedSet() )
 
 
 def SetOptimizationLevel( i ):
@@ -970,7 +967,7 @@ def DoNotChunkTogether(pattern, *additionalPatterns):
 	:param additionalPatterns: Additional patterns to compile the list of mutually exclusive files with
 	"""
 	patterns = [pattern] + list(additionalPatterns)
-	mutexFiles = set()
+	mutexFiles = _utils.OrderedSet()
 	for patternToMatch in patterns:
 		for filename in glob.glob(patternToMatch):
 			mutexFiles.add(os.path.abspath(filename))
@@ -980,7 +977,7 @@ def DoNotChunkTogether(pattern, *additionalPatterns):
 			if file1 == file2:
 				continue
 			if file1 not in projectSettings.currentProject.chunkMutexes:
-				projectSettings.currentProject.chunkMutexes[file1] = { file2 }
+				projectSettings.currentProject.chunkMutexes[file1] = _utils.OrderedSet({ file2 })
 			else:
 				projectSettings.currentProject.chunkMutexes[file1].add(file2)
 
@@ -1056,7 +1053,7 @@ def SetSupportedArchitectures(*architectures):
 	--all-architectures from building everything supported by the toolchain, if the project
 	is not set up to support all of the toolchain's architectures.
 	"""
-	projectSettings.currentProject.SetValue("supportedArchitectures", set(architectures))
+	projectSettings.currentProject.SetValue("supportedArchitectures", _utils.OrderedSet(architectures))
 
 
 def SetSupportedToolchains(*toolchains):
@@ -1065,7 +1062,7 @@ def SetSupportedToolchains(*toolchains):
 	--all-toolchains from building everything supported by csbuild, if the project
 	is not set up to support all of the toolchains.
 	"""
-	projectSettings.currentProject.SetValue("supportedToolchains", set(toolchains))
+	projectSettings.currentProject.SetValue("supportedToolchains", _utils.OrderedSet(toolchains))
 
 
 def RegisterToolchain( name, compiler, linker, **customTools ):
@@ -2260,28 +2257,32 @@ def _clean( silent = False ):
 def _installHeaders( ):
 	log.LOG_INSTALL("Installing headers...")
 
+	installed_headers = set()
 	for project in _shared_globals.sortedProjects:
+
 		os.chdir( project.workingDirectory )
 		#install headers
 		subdir = project.headerInstallSubdir
 		if not subdir:
 			subdir = _utils.GetBaseName( project.outputName )
 		if project.installHeaders:
-			install_dir = os.path.join( _shared_globals.install_incdir, subdir )
+			incdir = _utils.ResolveProjectMacros(_shared_globals.install_incdir, project)
+			install_dir = os.path.join( incdir, subdir )
 			if not os.access(install_dir , os.F_OK):
 				os.makedirs( install_dir )
 			headers = []
 			cHeaders = []
 			project.get_files( headers = headers, cHeaders = cHeaders )
-			for header in headers:
+			for header in (headers + cHeaders):
 				this_header_dir = os.path.dirname( os.path.join( install_dir, os.path.relpath( header, project.workingDirectory ) ) )
+				this_header = os.path.join( this_header_dir, header )
+				if this_header in installed_headers:
+					continue
+				installed_headers.add(this_header)
 				if not os.access(this_header_dir , os.F_OK):
 					os.makedirs( this_header_dir )
 				log.LOG_INSTALL( "Installing {0} to {1}...".format( header, this_header_dir ) )
 				shutil.copy( header, this_header_dir )
-			for header in cHeaders:
-				log.LOG_INSTALL( "Installing {0} to {1}...".format( header, install_dir ) )
-				shutil.copy( header, install_dir )
 			install_something = True
 
 def _installOutput( ):
@@ -2295,7 +2296,7 @@ def _installOutput( ):
 		if project.installOutput:
 			#install output file
 			if os.access(output , os.F_OK):
-				outputDir = _shared_globals.install_libdir
+				outputDir = _utils.ResolveProjectMacros(_shared_globals.install_libdir, project)
 				if not os.access(outputDir , os.F_OK):
 					os.makedirs( outputDir )
 				log.LOG_INSTALL( "Installing {0} to {1}...".format( output, outputDir ) )
@@ -2368,10 +2369,20 @@ def SetupDebugTarget( ):
 
 	AddDefines("_DEBUG")
 
+
 	if not projectSettings.currentProject._outputDir_set:
-		projectSettings.currentProject.outputDir = "{project.activeToolchainName}-{project.outputArchitecture}-{project.targetName}"
+		s = _utils.FixupRelativePath( "{project.activeToolchainName}-{project.outputArchitecture}-{project.targetName}" )
+		s = _utils.PathWorkingDirPair( s )
+		projectSettings.currentProject.outputDirTemp = s
+
+	projectSettings.currentProject.outputDir = os.path.normpath( os.path.join( projectSettings.currentProject.outputDirTemp.workingDir, _utils.ResolveProjectMacros( projectSettings.currentProject.outputDirTemp.path, projectSettings.currentProject ) ) )
+
 	if not projectSettings.currentProject._objDir_set:
-		projectSettings.currentProject.objDir = os.path.join(projectSettings.currentProject.outputDir, "obj")
+		s = _utils.FixupRelativePath( os.path.join(projectSettings.currentProject.outputDir, "obj") )
+		s = _utils.PathWorkingDirPair( s )
+		projectSettings.currentProject.objDirTemp = s
+		projectSettings.currentProject.objDir = os.path.normpath( os.path.join( s.workingDir, _utils.ResolveProjectMacros( s.path, projectSettings.currentProject ) ) )
+
 	if not projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime_set:
 		projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime = True
 
@@ -2387,9 +2398,18 @@ def SetupReleaseTarget( ):
 	AddDefines("NDEBUG")
 
 	if not projectSettings.currentProject._outputDir_set:
-		projectSettings.currentProject.outputDir = "{project.activeToolchainName}-{project.outputArchitecture}-{project.targetName}"
+		s = _utils.FixupRelativePath( "{project.activeToolchainName}-{project.outputArchitecture}-{project.targetName}" )
+		s = _utils.PathWorkingDirPair( s )
+		projectSettings.currentProject.outputDirTemp = s
+
+	projectSettings.currentProject.outputDir = os.path.normpath( os.path.join( projectSettings.currentProject.outputDirTemp.workingDir, _utils.ResolveProjectMacros( projectSettings.currentProject.outputDirTemp.path, projectSettings.currentProject ) ) )
+
 	if not projectSettings.currentProject._objDir_set:
-		projectSettings.currentProject.objDir = os.path.join(projectSettings.currentProject.outputDir, "obj")
+		s = _utils.FixupRelativePath( os.path.join(projectSettings.currentProject.outputDir, "obj") )
+		s = _utils.PathWorkingDirPair( s )
+		projectSettings.currentProject.objDirTemp = s
+		projectSettings.currentProject.objDir = os.path.normpath( os.path.join( s.workingDir, _utils.ResolveProjectMacros( s.path, projectSettings.currentProject ) ) )
+
 	if not projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime_set:
 		projectSettings.currentProject.toolchains["msvc"].shared.debug_runtime = False
 
@@ -2558,6 +2578,10 @@ mainFileDir = ""
 def _run( ):
 
 	_setupdefaults( )
+
+	#Initialized here to avoid a circular dependency
+	_shared_globals.globalPreMakeSteps = _utils.OrderedSet()
+	_shared_globals.globalPostMakeSteps = _utils.OrderedSet()
 
 	global args
 	args = _dummy( )
@@ -2854,8 +2878,15 @@ def _run( ):
 	if args.incdir:
 		_shared_globals.install_incdir = args.incdir
 
-	_shared_globals.install_libdir = os.path.abspath(_shared_globals.install_libdir.format(prefix=_shared_globals.install_prefix))
-	_shared_globals.install_incdir = os.path.abspath(_shared_globals.install_incdir.format(prefix=_shared_globals.install_prefix))
+	#This allows a first pass to pick up prefix, while keeping project macros for a later pass.
+	class DummyProj(object):
+		def __getattr__(self, name):
+			return "{{project.{}}}".format(name)
+
+	proj = DummyProj()
+
+	_shared_globals.install_libdir = os.path.abspath(_shared_globals.install_libdir.format(prefix=_shared_globals.install_prefix, project=proj))
+	_shared_globals.install_incdir = os.path.abspath(_shared_globals.install_incdir.format(prefix=_shared_globals.install_prefix, project=proj))
 
 	if args.jobs:
 		_shared_globals.max_threads = args.jobs
@@ -3055,9 +3086,16 @@ def _run( ):
 						if arch not in validArchList:
 							log.LOG_ERROR("Toolchain {} does not support architecture {}".format(project.activeToolchainName, arch))
 							Exit(1)
-						BuildWithArchitecture(project, arch)
+						architectures = set(project.activeToolchain.GetValidArchitectures())
+						if project.supportedArchitectures:
+							architectures &= project.supportedArchitectures
+						if arch in architectures:
+							BuildWithArchitecture(project, arch)
 				elif args.aa:
-					for arch in validArchList:
+					architectures = set(project.activeToolchain.GetValidArchitectures())
+					if project.supportedArchitectures:
+						architectures &= project.supportedArchitectures
+					for arch in architectures:
 						BuildWithArchitecture(project, arch)
 				else:
 					BuildWithArchitecture(project, project.activeToolchain.Compiler().GetDefaultArchitecture())
