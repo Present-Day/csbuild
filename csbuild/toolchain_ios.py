@@ -23,6 +23,7 @@ Contains a plugin class for building iOS projects.
 """
 
 import csbuild
+import os
 import subprocess
 import sys
 
@@ -35,6 +36,8 @@ DEFAULT_DEVICE_SDK_DIR = None
 DEFAULT_SIMULATOR_SDK_DIR = None
 DEFAULT_DEVICE_SDK_VERSION = None
 DEFAULT_SIMULATOR_SDK_VERSION = None
+DEFAULT_XCODE_ACTIVE_DEV_DIR = None
+DEFAULT_XCODE_TOOLCHAIN_DIR = None
 
 
 class iOSArchitecture( object ):
@@ -52,18 +55,23 @@ class iOSBase( object ):
 			global DEFAULT_SIMULATOR_SDK_DIR
 			global DEFAULT_DEVICE_SDK_VERSION
 			global DEFAULT_SIMULATOR_SDK_VERSION
+			global DEFAULT_XCODE_ACTIVE_DEV_DIR
+			global DEFAULT_XCODE_TOOLCHAIN_DIR
 
 			try:
 				DEFAULT_DEVICE_SDK_DIR = subprocess.check_output(["xcrun", "--sdk", "iphoneos", "--show-sdk-path"])
 				DEFAULT_SIMULATOR_SDK_DIR = subprocess.check_output(["xcrun", "--sdk", "iphonesimulator", "--show-sdk-path"])
+				DEFAULT_XCODE_ACTIVE_DEV_DIR = subprocess.check_output( ["xcode-select", "-p"] )
 			except:
 				DEFAULT_DEVICE_SDK_DIR = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
 				DEFAULT_SIMULATOR_SDK_DIR = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"
+				DEFAULT_XCODE_ACTIVE_DEV_DIR = "/Applications/Xcode.app/Contents/Developer"
 
 				# In Python3, these will need to be bytes rather than strings for the decoding below.
 				if sys.version_info >= (3, 0):
 					DEFAULT_DEVICE_SDK_DIR = DEFAULT_DEVICE_SDK_DIR.encode("utf-8")
 					DEFAULT_SIMULATOR_SDK_DIR = DEFAULT_SIMULATOR_SDK_DIR.encode("utf-8")
+					DEFAULT_XCODE_ACTIVE_DEV_DIR = DEFAULT_XCODE_ACTIVE_DEV_DIR.encode( "utf-8" )
 
 			try:
 				DEFAULT_DEVICE_SDK_VERSION = subprocess.check_output(["xcrun", "--sdk", "iphoneos", "--show-sdk-version"])
@@ -82,11 +90,14 @@ class iOSBase( object ):
 				DEFAULT_SIMULATOR_SDK_DIR = DEFAULT_SIMULATOR_SDK_DIR.decode("utf-8")
 				DEFAULT_DEVICE_SDK_VERSION = DEFAULT_DEVICE_SDK_VERSION.decode("utf-8")
 				DEFAULT_SIMULATOR_SDK_VERSION = DEFAULT_SIMULATOR_SDK_VERSION.decode("utf-8")
+				DEFAULT_XCODE_ACTIVE_DEV_DIR = DEFAULT_XCODE_ACTIVE_DEV_DIR.decode( "utf-8" )
 
 			DEFAULT_DEVICE_SDK_DIR = DEFAULT_DEVICE_SDK_DIR.strip("\n")
 			DEFAULT_SIMULATOR_SDK_DIR = DEFAULT_SIMULATOR_SDK_DIR.strip("\n")
 			DEFAULT_DEVICE_SDK_VERSION = DEFAULT_DEVICE_SDK_VERSION.strip("\n")
 			DEFAULT_SIMULATOR_SDK_VERSION = DEFAULT_SIMULATOR_SDK_VERSION.strip("\n")
+			DEFAULT_XCODE_ACTIVE_DEV_DIR = DEFAULT_XCODE_ACTIVE_DEV_DIR.strip( "\n" )
+			DEFAULT_XCODE_TOOLCHAIN_DIR = os.path.join( DEFAULT_XCODE_ACTIVE_DEV_DIR, "Toolchains", "XcodeDefault.xctoolchain" )
 
 			HAS_RUN_XCRUN = True
 
@@ -118,7 +129,7 @@ class iOSBase( object ):
 		:param version: Target device version.
 		:type version: str
 		"""
-		self.shared._deviceSdkDir = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS{}.sdk".format( version )
+		self.shared._deviceSdkDir = "{}/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS{}.sdk".format( DEFAULT_XCODE_ACTIVE_DEV_DIR, version )
 		self.shared._targetDeviceVersion = version
 
 
@@ -129,7 +140,7 @@ class iOSBase( object ):
 		:param version: Target simulator version.
 		:type version: str
 		"""
-		self.shared._simulatorSdkDir = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator{}.sdk".format( version )
+		self.shared._simulatorSdkDir = "{}/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator{}.sdk".format( DEFAULT_XCODE_ACTIVE_DEV_DIR, version )
 		self.shared._targetSimulatorVersion = version
 
 
@@ -237,3 +248,78 @@ class iOSLinker( iOSBase, toolchain_gcc_darwin.GccLinkerDarwin ):
 		else:
 			ret = originalCmd
 		return ret
+
+
+
+	def GetAppBundleRootPath( self, appBundlePath ):
+		"""
+		Get the root directory under the app bundle. All files contained in the bundles must be somewhere under the root directory.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return appBundlePath
+
+
+	def GetAppBundleExePath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where application executables are stored.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return appBundlePath
+
+
+	def GetAppBundleResourcePath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where application resources (such as images, NIBs, or localization files) are typically stored.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return appBundlePath
+
+
+	def GetAppBundleFrameworksPath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where required application frameworks are stored.  These are private frameworks required
+		for the application to work and will override frameworks installed on the running system.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return appBundlePath
+
+
+	def GetAppBundlePlugInsPath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where loadable modules are typically stored.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return appBundlePath
+
+
+	def GetAppBundleSharedSupportPath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where support files are typically stored.  These are files that supplement the application
+		in some way, but are not required for the application to run.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return appBundlePath

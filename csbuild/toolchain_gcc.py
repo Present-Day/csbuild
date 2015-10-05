@@ -279,7 +279,7 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		"""Returns a string containing all of the passed include directories, formatted to be passed to gcc/g++."""
 		ret = ""
 		for inc in includeDirs:
-			ret += "-I{} ".format( os.path.abspath( inc ) )
+			ret += '-I"{}" '.format( os.path.abspath( inc ) )
 		ret += "-I/usr/include -I/usr/local/include "
 		return ret
 
@@ -325,7 +325,7 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 			picFlag,
 			"-pg " if project.profile else "",
 			"-std={} ".format( standard ) if standard != "" else "",
-			self._getStandardLibraryArg( project ),
+			self._getStandardLibraryArg( project ) if isCpp else "",
 			self._getVisibilityArgs( project ),
 			" ".join( project.cxxCompilerFlags ) if isCpp else " ".join( project.ccCompilerFlags )
 		)
@@ -424,11 +424,11 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 
 
 	def SupportsObjectScraping(self):
-		return True
+		return False
 
 
 	def GetObjectScraper(self):
-		return ELF.ELFScraper()
+		return None #ELF.ELFScraper()
 
 
 class GccLinker( gccBase, toolchain.linkerBase ):
@@ -517,13 +517,13 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 		"""Returns a string containing all of the passed library dirs, formatted to be passed to gcc/g++."""
 		ret = ""
 		for lib in libDirs:
-			ret += "-L{} ".format( lib )
+			ret += '-L"{}" '.format( lib )
 		ret += "-L/usr/lib -L/usr/local/lib "
 		if self._include_lib64:
 			ret += "-L/usr/lib64 -L/usr/local/lib64 "
 		if forLinker:
 			for lib in libDirs:
-				ret += "-Wl,-R{} ".format( os.path.abspath( lib ) )
+				ret += '-Wl,-R"{}" '.format( os.path.abspath( lib ) )
 			ret += "-Wl,-R/usr/lib -Wl,-R/usr/local/lib "
 			if self._include_lib64:
 				ret += "-Wl,-R/usr/lib64 -Wl,-R/usr/local/lib64 "
@@ -548,7 +548,11 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 		self._setupForProject( project )
 		linkFile = os.path.join(self._project_settings.csbuildDir, "{}.cmd".format(self._project_settings.name))
 
-		data = " ".join( objList )
+		objListData = ""
+		for objFile in objList:
+			objListData += '"{}" '.format( objFile )
+
+		data = objListData
 		if sys.version_info >= (3, 0):
 			data = data.encode("utf-8")
 
@@ -562,7 +566,7 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 		os.close(fd)
 
 		if project.type == csbuild.ProjectType.StaticLibrary:
-			return "\"{}\" rcs {} {}".format( self._ar, outputFile, " ".join( objList ) )
+			return "\"{}\" rcs \"{}\" {}".format( self._ar, outputFile, objListData )
 		else:
 			if project.hasCppFiles:
 				cmd = project.cxx
@@ -571,14 +575,14 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 
 			archArg = self._getArchFlag( project )
 
-			return "\"{}\" {}{}{}{}-o{} {} {} {} {}{}{} {} {}-g{} -O{} {} {} ".format(
+			return '"{}" {}{}{}{}-o"{}" {} {} {} {}{}{} {} {}-g{} -O{} {} {} '.format(
 				cmd,
 				archArg,
 				self._getObjcAbiVersionArg(),
-				self._getStandardLibraryArg( project ),
+				self._getStandardLibraryArg( project ) if project.hasCppFiles else "",
 				"-pg " if project.profile else "",
 				outputFile,
-				"@{}".format(linkFile),
+				'@"{}"'.format(linkFile),
 				"-static-libgcc -static-libstdc++ " if project.useStaticRuntime else "",
 				"{}".format(self._getStartGroupFlags()) if not self.strictOrdering else "",
 				self._getLibraries( project.libraries ),

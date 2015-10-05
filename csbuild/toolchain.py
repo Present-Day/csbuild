@@ -884,10 +884,9 @@ class SettingsOverrider( object ):
 			self._settingsOverrides["extraFilesTemp"] = []
 		newArgs = []
 		for arg in list( args ):
-			for file in glob.glob( arg ):
-				file = _utils.FixupRelativePath( file )
-				file = _utils.PathWorkingDirPair( file )
-				newArgs.append( file )
+			arg = _utils.FixupRelativePath( arg )
+			arg = _utils.PathWorkingDirPair( arg )
+			newArgs.append( arg )
 		self._settingsOverrides["extraFilesTemp"] += newArgs
 		self._settingsOverrides["tempsDirty"] = True
 
@@ -930,10 +929,9 @@ class SettingsOverrider( object ):
 
 		newArgs = []
 		for arg in list( args ):
-			for file in glob.glob( arg ):
-				file = _utils.FixupRelativePath( file )
-				file = _utils.PathWorkingDirPair( file )
-				newArgs.append( file )
+			arg = _utils.FixupRelativePath( arg )
+			arg = _utils.PathWorkingDirPair( arg )
+			newArgs.append( arg )
 		self._settingsOverrides["extraObjsTemp"] += newArgs
 		self._settingsOverrides["tempsDirty"] = True
 
@@ -1059,9 +1057,9 @@ class SettingsOverrider( object ):
 		Set the property list for a project.  This only applies to builds on Apple platforms.
 
 		:param plistFile:
-		:type plistFile: str or class:`csbuild.plugin_plist_generator.PListGenerator`
+		:type plistFile: :class:`csbuild.plugin_plist_generator.PListGenerator`
 		"""
-		self._settingsOverrides["plistFile"] = copy.deepcopy( plistFile ) if isinstance( plistFile, plugin_plist_generator.PListGenerator ) else plistFile
+		self._settingsOverrides["plistFile"] = copy.deepcopy( plistFile )
 
 
 	def SetSupportedArchitectures(self, *architectures):
@@ -1076,6 +1074,9 @@ class toolBase( SettingsOverrider ):
 	def __init__(self, shared):
 		SettingsOverrider.__init__(self)
 		self.shared = shared
+
+	def GetEnv( self ):
+		return {}
 
 	def prePrepareBuildStep(self, project):
 		pass

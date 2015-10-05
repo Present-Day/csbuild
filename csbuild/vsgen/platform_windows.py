@@ -70,7 +70,7 @@ def _writeImportProperties( platformName, parentXmlNode, vsConfigName, isNative 
 	importNode.set( "Condition", "exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" )
 
 
-def _writeUserDebugPropertyGroup( platformName, parentXmlNode, vsConfigName ):
+def _writeUserDebugPropertyGroup( platformName, parentXmlNode, vsConfigName, projectData ):
 		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
 		workingDirNode = _addNode( propertyGroupNode, "LocalDebuggerWorkingDirectory" )
 		debuggerTypeNode = _addNode( propertyGroupNode, "LocalDebuggerDebuggerType" )
@@ -114,8 +114,8 @@ class PlatformWindowsX86( PlatformBase ):
 		_writeImportProperties( self.GetVisualStudioName(), parentXmlNode, vsConfigName, isNative )
 
 
-	def WriteUserDebugPropertyGroup( self, parentXmlNode, vsConfigName ):
-		_writeUserDebugPropertyGroup( self.GetVisualStudioName(), parentXmlNode, vsConfigName )
+	def WriteUserDebugPropertyGroup( self, parentXmlNode, vsConfigName, projectData ):
+		_writeUserDebugPropertyGroup( self.GetVisualStudioName(), parentXmlNode, vsConfigName, projectData )
 
 
 
@@ -127,7 +127,7 @@ class PlatformWindowsX64( PlatformBase ):
 	@staticmethod
 	def GetToolchainName():
 		return "msvc-x64"
-	
+
 
 	@staticmethod
 	def GetVisualStudioName():
@@ -151,5 +151,5 @@ class PlatformWindowsX64( PlatformBase ):
 		_writeImportProperties( self.GetVisualStudioName(), parentXmlNode, vsConfigName, isNative )
 
 
-	def WriteUserDebugPropertyGroup(self, parentXmlNode, vsConfigName ):
-		_writeUserDebugPropertyGroup( self.GetVisualStudioName(), parentXmlNode, vsConfigName )
+	def WriteUserDebugPropertyGroup(self, parentXmlNode, vsConfigName, projectData ):
+		_writeUserDebugPropertyGroup( self.GetVisualStudioName(), parentXmlNode, vsConfigName, projectData )

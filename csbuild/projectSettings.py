@@ -385,6 +385,9 @@ class projectSettings( object ):
 	:ivar frameworkDirsTemp: Directories to search for Apple frameworks.
 	:type frameworkDirsTemp: list[:class:`_utils.PathWorkingDir`]
 
+	:ivar autoDiscoverSourceFiles: Automatically discover source files from the working directory.
+	:type autoDiscoverSourceFiles: bool
+
 	.. note:: Toolchains can define additional variables that will show up on this class's
 		instance variable list when that toolchain is active. See toolchain documentation for
 		more details on what additional instance variables are available.
@@ -428,6 +431,8 @@ class projectSettings( object ):
 		self.srcDependsIntermediate = []
 		self.srcDependsFinal = []
 		self.func = None
+		self.prebuilt = False
+		self.shell = False
 
 		self.libraries = _utils.OrderedSet()
 		self.staticLibraries = _utils.OrderedSet()
@@ -619,6 +624,8 @@ class projectSettings( object ):
 
 		self.plugins = _utils.OrderedSet()
 
+		self.autoDiscoverSourceFiles = True
+
 		self._intermediateScopeSettings = {}
 		self._finalScopeSettings = {}
 
@@ -650,6 +657,7 @@ class projectSettings( object ):
 		self.linkOutput = ""
 		self.linkErrors = ""
 		self.parsedLinkErrors = None
+
 
 	def prepareBuild( self ):
 		wd = os.getcwd( )
@@ -739,6 +747,44 @@ class projectSettings( object ):
 		os.chdir( wd )
 
 
+	def minimalPrepareBuild( self ):
+
+		self.activeToolchain.SetActiveTool("linker")
+
+		global currentProject
+		currentProject = self
+
+		pluginClasses = self.plugins
+		self.plugins = []
+		for pluginClass in pluginClasses:
+			self.plugins.append(pluginClass())
+
+		for plugin in self.plugins:
+			_utils.CheckRunBuildStep(self, plugin.prePrepareBuildStep, "plugin pre-PrepareBuild")
+		_utils.CheckRunBuildStep(self, self.activeToolchain.prePrepareBuildStep, "toolchain pre-PrepareBuild")
+		for buildStep in self.prePrepareBuildSteps:
+			_utils.CheckRunBuildStep(self, buildStep, "project pre-PrepareBuild")
+
+		# Run the initial pass to resolve file and directory paths.
+		self.ResolveFilesAndDirectories()
+
+		self.activeToolchain.SetActiveTool("linker")
+		if self.ext is None:
+			self.ext = self.activeToolchain.Linker().GetDefaultOutputExtension( self.type )
+
+		self.outputName += self.ext
+		self.activeToolchain.SetActiveTool("compiler")
+
+		for plugin in self.plugins:
+			_utils.CheckRunBuildStep(self, plugin.postPrepareBuildStep, "plugin post-PrepareBuild")
+		_utils.CheckRunBuildStep(self, self.activeToolchain.postPrepareBuildStep, "toolchain post-PrepareBuild")
+		for buildStep in self.postPrepareBuildSteps:
+			_utils.CheckRunBuildStep(self, buildStep, "project post-PrepareBuild")
+
+		# Make sure the paths are up-to-date in case the previous build step added/changed any of them.
+		self.ResolveFilesAndDirectories()
+
+
 	def ResolveFilesAndDirectories( self ):
 		# Nothing to resolve if no files or directories have been added since the last resolve.
 		if not self.tempsDirty:
@@ -772,8 +818,12 @@ class projectSettings( object ):
 		for dep in self.reconciledLinkDepends:
 			proj = _shared_globals.projects[dep]
 			proj.activeToolchain.SetActiveTool("linker")
-			if proj.type == csbuild.ProjectType.StaticLibrary and self.linkMode == csbuild.StaticLinkMode.LinkIntermediateObjects:
-				self.libraries.remove(proj.outputName.split(".")[0])
+			if ( proj.type == csbuild.ProjectType.StaticLibrary and
+					self.linkMode == csbuild.StaticLinkMode.LinkIntermediateObjects and
+					not proj.prebuilt ):
+				projName = proj.outputName.split( "." )[0]
+				if projName in self.libraries:
+					self.libraries.remove( projName )
 				continue
 			if proj.outputDir:
 				# This project has already been prepared, use its output directory as is.
@@ -820,6 +870,29 @@ class projectSettings( object ):
 
 		self.excludeDirs.append( self.csbuildDir )
 
+		realExtraObjs = set()
+		realExtraFiles = set()
+		realExtraDirs = set()
+		realExcludeFiles = set()
+		realExcludeDirs = set()
+
+		# Glob file and directory paths.
+		for arg in self.extraObjs:
+			realExtraObjs |= set( glob.glob( arg ) )
+		for arg in self.extraFiles:
+			realExtraFiles |= set( glob.glob( arg ) )
+		for arg in self.extraDirs:
+			realExtraDirs |= set( glob.glob( arg ) )
+		for arg in self.excludeFiles:
+			realExcludeFiles |= set( glob.glob( arg ) )
+		for arg in self.excludeDirs:
+			realExcludeDirs |= set( glob.glob( arg ) )
+
+		self.extraObjs = _utils.OrderedSet( realExtraObjs )
+		self.extraFiles = sorted( realExtraFiles )
+		self.extraDirs = sorted( realExtraDirs )
+		self.excludeFiles = sorted( realExcludeFiles )
+		self.excludeDirs = sorted( realExcludeDirs )
 
 	def RunFileDiscovery( self ):
 		#Have to chdir in case this gets called from a build step.
@@ -839,6 +912,16 @@ class projectSettings( object ):
 				log.LOG_INFO("Appending extra files {}".format(self.extraFiles))
 				self.allsources += self.extraFiles
 			self.allheaders = self.cppHeaders + self.cHeaders
+
+			# Determine if this project has any C++ files.
+			if self.cppHeaders:
+				self.hasCppFiles = True
+			else:
+				for sourceFile in self.allsources:
+					_, ext = os.path.splitext(sourceFile)
+					if ext in self.cppExtensions:
+						self.hasCppFiles = True
+						break
 
 			if not self.allsources:
 				os.chdir(wd)
@@ -994,7 +1077,7 @@ class projectSettings( object ):
 	def _combineObjects(baseObj, newObj, name):
 		if newObj is None:
 			return
-		
+
 		# Libraries are a special case.
 		# Any time any project references a library, that library should be moved later in the list.
 		# Referenced libraries have to be linked after all the libraries that reference them.
@@ -1125,6 +1208,8 @@ class projectSettings( object ):
 			"srcDependsIntermediate": list( self.srcDependsIntermediate ),
 			"srcDependsFinal": list( self.srcDependsFinal ),
 			"func": self.func,
+			"prebuilt" : self.prebuilt,
+			"shell" : self.shell,
 			"libraries": _utils.OrderedSet( self.libraries ),
 			"staticLibraries": _utils.OrderedSet( self.staticLibraries ),
 			"sharedLibraries": _utils.OrderedSet( self.sharedLibraries ),
@@ -1291,6 +1376,7 @@ class projectSettings( object ):
 			"userData" : self.userData.copy(),
 			"plistFile" : copy.deepcopy( self.plistFile ) if isinstance( self.plistFile, plugin_plist_generator.PListGenerator ) else self.plistFile,
 			"plugins" : _utils.OrderedSet(self.plugins),
+			"autoDiscoverSourceFiles" : self.autoDiscoverSourceFiles,
 		}
 
 		for name in self.targets:
@@ -1340,15 +1426,9 @@ class projectSettings( object ):
 		ignore files of the relevant types.
 		"""
 
-		excludeFiles = set( )
-		excludeDirs = set( )
+		excludeFiles = set( self.excludeFiles )
+		excludeDirs = set( self.excludeDirs )
 		ambiguousHeaders = set()
-
-		for exclude in self.excludeFiles:
-			excludeFiles |= set( glob.glob( exclude ) )
-
-		for exclude in self.excludeDirs:
-			excludeDirs |= set( glob.glob( exclude ) )
 
 		for sourceDir in [ '.' ] + self.extraDirs:
 			for root, dirnames, filenames in os.walk( sourceDir ):
@@ -1368,16 +1448,15 @@ class projectSettings( object ):
 						break
 				if bFound:
 					if not absroot.startswith( self.csbuildDir ):
-						log.LOG_INFO( "Skipping dir {0}".format( root ) )
+						log.LOG_INFO( "Skipping directory {0}".format( root ) )
 					continue
 				log.LOG_INFO( "Looking in directory {0}".format( root ) )
-				if sources is not None:
+				if sources is not None and not ( sourceDir == "." and not self.autoDiscoverSourceFiles ):
 					for extension in self.cppExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
 							if path not in excludeFiles:
 								sources.append( os.path.abspath( path ) )
-								self.hasCppFiles = True
 					for extension in self.cExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
 							path = os.path.join( absroot, filename )
@@ -1392,7 +1471,6 @@ class projectSettings( object ):
 							path = os.path.join( absroot, filename )
 							if path not in excludeFiles:
 								headers.append( os.path.abspath( path ) )
-								self.hasCppFiles = True
 				if cHeaders is not None:
 					for extension in self.cHeaderExtensions:
 						for filename in fnmatch.filter( filenames, '*'+extension ):
@@ -1748,6 +1826,7 @@ class projectSettings( object ):
 			libraries_ok = True
 			for library in libraries:
 				bFound = False
+				log.LOG_INFO(str(self.reconciledLinkDepends))
 				for depend in self.reconciledLinkDepends:
 					splitname = os.path.splitext(_shared_globals.projects[depend].outputName)[0]
 					if splitname == library or splitname == "lib{}".format( library ):
@@ -1790,7 +1869,7 @@ class projectSettings( object ):
 
 		#TODO: Remove this once the source file extension management has been reworked.
 		# Objective-C/C++ files should not be chunked since they won't play nice with C++.
-		if extension == ".m" or extension == ".mm":
+		if newFileExtension == ".m" or newFileExtension == ".mm":
 			return False
 
 		if(

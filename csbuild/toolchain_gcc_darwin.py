@@ -22,26 +22,22 @@
 Contains a plugin class for interfacing with GCC/Clang on MacOSX.
 """
 
-import os
 import platform
-import tempfile
-import subprocess
 import shutil
-import csbuild
 import sys
-
-import xml.etree.ElementTree as ET
-import xml.dom.minidom as minidom
+import csbuild
 
 from . import _shared_globals
+from . import _utils
 from . import toolchain_gcc
-from . import log
 from .plugin_plist_generator import *
 
 
 HAS_RUN_XCRUN = False
 DEFAULT_OSX_SDK_DIR = None
 DEFAULT_OSX_SDK_VERSION = None
+DEFAULT_XCODE_ACTIVE_DEV_DIR = None
+DEFAULT_XCODE_TOOLCHAIN_DIR = None
 
 
 class GccDarwinBase( object ):
@@ -50,23 +46,31 @@ class GccDarwinBase( object ):
 		if not HAS_RUN_XCRUN:
 			global DEFAULT_OSX_SDK_DIR
 			global DEFAULT_OSX_SDK_VERSION
+			global DEFAULT_XCODE_ACTIVE_DEV_DIR
+			global DEFAULT_XCODE_TOOLCHAIN_DIR
 
 			# Default the target SDK version to the version of OSX we're currently running on.
 			try:
 				DEFAULT_OSX_SDK_DIR = subprocess.check_output( ["xcrun", "--sdk", "macosx", "--show-sdk-path"] )
 				DEFAULT_OSX_SDK_VERSION = subprocess.check_output( ["xcrun", "--sdk", "macosx", "--show-sdk-version"] )
+				DEFAULT_XCODE_ACTIVE_DEV_DIR = subprocess.check_output( ["xcode-select", "-p"] )
 
 				if sys.version_info >= (3, 0):
-					DEFAULT_OSX_SDK_DIR = DEFAULT_OSX_SDK_DIR.decode("utf-8")
-					DEFAULT_OSX_SDK_VERSION = DEFAULT_OSX_SDK_VERSION.decode("utf-8")
+					DEFAULT_OSX_SDK_DIR = DEFAULT_OSX_SDK_DIR.decode( "utf-8" )
+					DEFAULT_OSX_SDK_VERSION = DEFAULT_OSX_SDK_VERSION.decode( "utf-8" )
+					DEFAULT_XCODE_ACTIVE_DEV_DIR = DEFAULT_XCODE_ACTIVE_DEV_DIR.decode( "utf-8" )
 
-				DEFAULT_OSX_SDK_DIR = DEFAULT_OSX_SDK_DIR.strip("\n")
-				DEFAULT_OSX_SDK_VERSION = DEFAULT_OSX_SDK_VERSION.strip("\n")
+				DEFAULT_OSX_SDK_DIR = DEFAULT_OSX_SDK_DIR.strip( "\n" )
+				DEFAULT_OSX_SDK_VERSION = DEFAULT_OSX_SDK_VERSION.strip( "\n" )
+				DEFAULT_XCODE_ACTIVE_DEV_DIR = DEFAULT_XCODE_ACTIVE_DEV_DIR.strip( "\n" )
 			except:
 				# Otherwise, fallback to a best guess.
 				macVersion = platform.mac_ver()[0]
 				DEFAULT_OSX_SDK_VERSION = ".".join( macVersion.split( "." )[:2] )
 				DEFAULT_OSX_SDK_DIR = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX{}.sdk".format( DEFAULT_OSX_SDK_VERSION )
+				DEFAULT_XCODE_ACTIVE_DEV_DIR = "/Applications/Xcode.app/Contents/Developer"
+
+			DEFAULT_XCODE_TOOLCHAIN_DIR = os.path.join( DEFAULT_XCODE_ACTIVE_DEV_DIR, "Toolchains", "XcodeDefault.xctoolchain" )
 
 			HAS_RUN_XCRUN = True
 
@@ -87,7 +91,7 @@ class GccDarwinBase( object ):
 		:type version: str
 		"""
 		self.shared._targetMacVersion = version
-		self.shared._sysroot = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX{}.sdk".format( self.shared._targetMacVersion )
+		self.shared._sysroot = "{}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX{}.sdk".format( DEFAULT_XCODE_ACTIVE_DEV_DIR, self.shared._targetMacVersion )
 
 
 	def GetTargetMacVersion( self ):
@@ -132,7 +136,7 @@ class GccCompilerDarwin( GccDarwinBase, toolchain_gcc.GccCompiler ):
 		ret = ""
 		for inc in includeDirs:
 			ret += "-I{} ".format( os.path.abspath( inc ) )
-		ret += "-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include "
+		ret += "-I{}/usr/include ".format( DEFAULT_XCODE_TOOLCHAIN_DIR )
 		return ret
 
 
@@ -144,6 +148,7 @@ class GccCompilerDarwin( GccDarwinBase, toolchain_gcc.GccCompiler ):
 			self._getNoCommonFlag( project ),
 		)
 		return ret
+
 
 	def SupportsObjectScraping(self):
 		return False
@@ -208,13 +213,14 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 	def _getLibraryArg(self, lib):
 		for depend in self._project_settings.reconciledLinkDepends:
 			dependProj = _shared_globals.projects[depend]
-			if dependProj.type == csbuild.ProjectType.Application:
-				continue
 			dependLibName = dependProj.outputName
 			splitName = os.path.splitext(dependLibName)[0]
 			if splitName == lib or splitName == "lib{}".format( lib ):
-				return "{} ".format( os.path.join( dependProj.outputDir, dependLibName ) )
-		return "{} ".format( self._actual_library_names[lib] )
+				if dependProj.type == csbuild.ProjectType.Application or dependProj.type == csbuild.ProjectType.LoadableModule:
+					# Loadable modules and applications should not be linked into the executables. They are only dependencies so they can be copied into the app bundles.
+					return ""
+				return '"{}" '.format( os.path.join( dependProj.outputDir, dependLibName ) )
+		return '"{}" '.format( self._actual_library_names[lib] )
 
 
 	def _getLibraryDirs( self, libDirs, forLinker ):
@@ -248,35 +254,35 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 
 
 	def FindLibrary( self, project, library, libraryDirs, force_static, force_shared ):
-		self._setupForProject(project)
+		self._setupForProject( project )
 
 		for lib_dir in libraryDirs:
-			log.LOG_INFO("Looking for library {} in directory {}...".format(library, lib_dir))
+			log.LOG_INFO( "Looking for library {} in directory {}...".format( library, lib_dir ) )
 			lib_file_path = os.path.join( lib_dir, library )
 			libFileStatic = "{}.a".format( lib_file_path )
 			libFileDynamic = "{}.dylib".format( lib_file_path )
 			# Check for a static lib.
-			if os.access(libFileStatic , os.F_OK) and not force_shared:
+			if os.access( libFileStatic , os.F_OK ) and not force_shared:
 				self._actual_library_names.update( { library : libFileStatic } )
 				return libFileStatic
 			# Check for a dynamic lib.
-			if os.access(libFileDynamic , os.F_OK) and not force_static:
+			if os.access( libFileDynamic , os.F_OK ) and not force_static:
 				self._actual_library_names.update( { library : libFileDynamic } )
 				return libFileDynamic
 
 		for lib_dir in libraryDirs:
 			# Compatibility with Linux's way of adding lib- to the front of its libraries
 			libfileCompat = "lib{}".format( library )
-			log.LOG_INFO("Looking for library {} in directory {}...".format(libfileCompat, lib_dir))
+			log.LOG_INFO( "Looking for library {} in directory {}...".format( libfileCompat, lib_dir ) )
 			lib_file_path = os.path.join( lib_dir, libfileCompat )
 			libFileStatic = "{}.a".format( lib_file_path )
 			libFileDynamic = "{}.dylib".format( lib_file_path )
 			# Check for a static lib.
-			if os.access(libFileStatic , os.F_OK) and not force_shared:
+			if os.access( libFileStatic , os.F_OK ) and not force_shared:
 				self._actual_library_names.update( { library : libFileStatic } )
 				return libFileStatic
 			# Check for a dynamic lib.
-			if os.access(libFileDynamic , os.F_OK) and not force_static:
+			if os.access( libFileDynamic , os.F_OK ) and not force_static:
 				self._actual_library_names.update( { library : libFileDynamic } )
 				return libFileDynamic
 
@@ -295,162 +301,174 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 			return ".bundle"
 
 
-	def _cleanupOldAppBundle(self, project):
+	def _cleanupOldAppBundle( self, project ):
 		# Remove the temporary .app directory if it already exists.
-		if os.access(project.tempAppDir, os.F_OK):
-			shutil.rmtree(project.tempAppDir)
+		if os.access( project.tempAppDir, os.F_OK ):
+			_utils.DeleteTree( project.tempAppDir )
 
-		# Recreate the temp .app directory.
-		os.makedirs(project.tempAppDir)
+		# Recreate the temp .app directory and any necessary sub-directories underneath it.
+		# This must be a set in case any of these paths point to the same location.
+		appDirs = {
+			project.tempAppDir,
+			self.GetAppBundleRootPath( project.tempAppDir ),
+			self.GetAppBundleExePath( project.tempAppDir ),
+			self.GetAppBundleResourcePath( project.tempAppDir ),
+			self.GetAppBundleFrameworksPath( project.tempAppDir ),
+			self.GetAppBundlePlugInsPath( project.tempAppDir ),
+			self.GetAppBundleSharedSupportPath( project.tempAppDir ),
+		}
+
+		for dirPath in sorted( appDirs ):
+			os.makedirs( dirPath )
 
 
-	def _copyNewAppBundle( self, project ):
+	def _createNewAppBundle( self, project ):
 		log.LOG_BUILD( "Generating {}.app...".format( project.name ) )
 
+		inputExePath = os.path.join( project.outputDir, project.outputName )
+		outputExePath = os.path.join( self.GetAppBundleExePath( project.tempAppDir ), project.outputName )
+
+		tempAppDsymDir = "{}.dSYM".format( project.tempAppDir )
+		finalAppDsymDir = "{}.dSYM".format( project.finalAppDir )
+
 		# Move this project's just-built application file into the temp .app directory.
-		shutil.move( os.path.join( project.outputDir, project.outputName ), project.tempAppDir )
+		shutil.move( inputExePath, outputExePath )
+
+		# Copy the relevant dependencies into the app bundle.
+		for dep in project.reconciledLinkDepends:
+			depProj = _shared_globals.projects[dep]
+			if depProj.type == csbuild.ProjectType.Application or depProj.type == csbuild.ProjectType.SharedLibrary:
+				outPath = self.GetAppBundleExePath( project.tempAppDir )
+			elif depProj.type == csbuild.ProjectType.LoadableModule:
+				outPath = self.GetAppBundlePlugInsPath( project.tempAppDir )
+			else:
+				# Don't copy static libraries.
+				continue
+			libFile = os.path.join( depProj.outputDir, depProj.outputName )
+			shutil.copyfile( libFile, os.path.join( outPath, os.path.basename( libFile ) ) )
+
+		dsymCmd = [
+			"dsymutil",
+			outputExePath,
+			"-o", tempAppDsymDir,
+		]
+
+		# Run dsymutil to generate the DWARF debug symbols file.
+		fd = subprocess.Popen( dsymCmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE )
+		( output, errors ) = fd.communicate()
+
+		# Bail out if dsymutil produced any errors.
+		if fd.returncode != 0:
+			if sys.version_info >= ( 3, 0 ):
+				errors = errors.decode( "utf-8" )
+			errorList = errors.split( "\n" )
+			for error in errorList:
+				if error:
+					error = error.replace( "error: ", "" )
+					log.LOG_ERROR( error )
+			return
 
 		# If an existing .app directory exists in the project's output path, remove it.
 		if os.access( project.finalAppDir, os.F_OK ):
-			shutil.rmtree( project.finalAppDir )
+			_utils.DeleteTree( project.finalAppDir )
+
+		# Remove the existing .app.dSYM if one exists.
+		if os.access( finalAppDsymDir, os.F_OK ):
+			_utils.DeleteTree( finalAppDsymDir )
 
 		# Move the .app directory into the project's output path.
 		shutil.move( project.tempAppDir, project.finalAppDir )
+		shutil.move( tempAppDsymDir, finalAppDsymDir )
 
 
-	def _convertPlistToBinary( self, project, inputFilePath ):
-		# Run plutil to convert the XML plist file to binary.
-		fd = subprocess.Popen(
-			[
-				"plutil",
-				"-convert", "binary1",
-				"-o", "Info.plist",
-				inputFilePath
-			],
-			stderr = subprocess.STDOUT,
-			stdout = subprocess.PIPE,
-			cwd = project.tempAppDir
-		)
+	def GetAppBundleRootPath( self, appBundlePath ):
+		"""
+		Get the root directory under the app bundle. All files contained in the bundles must be somewhere under the root directory.
 
-		output, errors = fd.communicate()
-		if fd.returncode != 0:
-			log.LOG_ERROR( "Could not create binary property list for {}!\n{}".format( project.name, output ) )
-			return
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return os.path.join( appBundlePath, "Contents" )
 
 
-	def _processPlistGenerator( self, project, generator ):
-		CreateRootNode = ET.Element
-		AddNode = ET.SubElement
+	def GetAppBundleExePath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where application executables are stored.
 
-		# Add build-specific nodes to the plist generator.
-		self._addPlistNodes( project, generator )
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
 
-		def ProcessPlistNode( plistNode, parentXmlNode ):
-			if not plistNode.parent or plistNode.parent.nodeType != PListNodeType.Array:
-				keyNode = AddNode( parentXmlNode, "key" )
-				keyNode.text = plistNode.key
-
-			valueNode = None
-
-			# Determine the tag for the value node since it differs between node types.
-			if plistNode.nodeType == PListNodeType.Array:
-				valueNode = AddNode( parentXmlNode, "array" )
-			elif plistNode.nodeType == PListNodeType.Dictionary:
-				valueNode = AddNode( parentXmlNode, "dict" )
-			elif plistNode.nodeType == PListNodeType.Boolean:
-				valueNode = AddNode( parentXmlNode, "true" if plistNode.value else "false" )
-			elif plistNode.nodeType == PListNodeType.Data:
-				valueNode = AddNode( parentXmlNode, "data")
-				if sys.version_info() >= (3, 0):
-					valueNode.text = plistNode.value.decode("utf-8")
-				else:
-					valueNode.text = plistNode.value
-			elif plistNode.nodeType == PListNodeType.Date:
-				valueNode = AddNode( parentXmlNode, "date")
-				valueNode.text = plistNode.value
-			elif plistNode.nodeType == PListNodeType.Number:
-				valueNode = AddNode( parentXmlNode, "integer" )
-				valueNode.text = str( plistNode.value )
-			elif plistNode.nodeType == PListNodeType.String:
-				valueNode = AddNode( parentXmlNode, "string" )
-				valueNode.text = plistNode.value
-
-			# Save the children only if the the current node is an array or a dictionary.
-			if plistNode.nodeType == PListNodeType.Array or plistNode.nodeType == PListNodeType.Dictionary:
-				for child in sorted( plistNode.children, key=lambda x: x.key ):
-					ProcessPlistNode( child, valueNode )
-
-		rootNode = CreateRootNode( "plist", attrib={ "version": "1.0" } )
-		topLevelDict = AddNode( rootNode, "dict" )
-
-		# Recursively process each node to build the XML node tree.
-		for node in sorted( generator._rootNodes, key=lambda x: x.key ):
-			ProcessPlistNode( node, topLevelDict )
-
-		# Grab a string of the XML document we've created and save it.
-		xmlString = ET.tostring( rootNode )
-
-		# Convert to the original XML to a string on Python3.
-		if sys.version_info >= ( 3, 0 ):
-			xmlString = xmlString.decode( "utf-8" )
-
-		# Use minidom to reformat the XML since ElementTree doesn't do it for us.
-		formattedXmlString = minidom.parseString( xmlString ).toprettyxml( "\t", "\n", encoding = "utf-8" )
-		if sys.version_info >= ( 3, 0 ):
-			formattedXmlString = formattedXmlString.decode( "utf-8" )
-
-		inputLines = formattedXmlString.split( "\n" )
-		outputLines = []
-
-		# Copy each line of the XML to a list of strings.
-		for line in inputLines:
-			outputLines.append( line )
-
-		# Concatenate each string with a newline.
-		finalXmlString = "\n".join( outputLines )
-		if sys.version_info >= ( 3, 0 ):
-			finalXmlString = finalXmlString.encode( "utf-8" )
-
-		# Plists require the DOCTYPE, but neither elementtree nor minidom will add that for us.
-		# The easiest way to add it manually is to split each line of the XML into a list, then
-		# reformat it with the DOCTYPE inserted as the 2nd line in the string.
-		xmlLineList = finalXmlString.split( "\n" )
-		finalXmlString = '{}\n<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n{}'.format( xmlLineList[0], "\n".join( xmlLineList[1:] ) )
-
-		# Output the XML plist to a temporary location so we can convert it to binary in its final location.
-		# After we have the binary plist file, we can delete the original.
-		tempFileHandle, tempFilePath = tempfile.mkstemp()
-		try:
-			os.write( tempFileHandle, finalXmlString )
-			os.close( tempFileHandle )
-			self._convertPlistToBinary( project, tempFilePath )
-		finally:
-			os.unlink( tempFilePath )
+		:return: str
+		"""
+		return os.path.join( self.GetAppBundleRootPath( appBundlePath ), "MacOS" )
 
 
-	def _addPlistNodes( self, project, generator ):
-		#TODO: Add build-specific plist nodes.
-		pass
+	def GetAppBundleResourcePath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where application resources (such as images, NIBs, or localization files) are typically stored.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return os.path.join( self.GetAppBundleRootPath( appBundlePath ), "Resources" )
+
+
+	def GetAppBundleFrameworksPath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where required application frameworks are stored.  These are private frameworks required
+		for the application to work and will override frameworks installed on the running system.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return os.path.join( self.GetAppBundleRootPath( appBundlePath ), "Frameworks" )
+
+
+	def GetAppBundlePlugInsPath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where loadable modules are typically stored.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return os.path.join( self.GetAppBundleRootPath( appBundlePath ), "PlugIns" )
+
+
+	def GetAppBundleSharedSupportPath( self, appBundlePath ):
+		"""
+		Get the app bundle directory where support files are typically stored.  These are files that supplement the application
+		in some way, but are not required for the application to run.
+
+		:param appBundlePath: Path the to the .app directory.
+		:type appBundlePath: str
+
+		:return: str
+		"""
+		return os.path.join( self.GetAppBundleRootPath( appBundlePath ), "SharedSupport" )
 
 
 	def postBuildStep( self, project ):
 		if project.type != csbuild.ProjectType.Application or not project.plistFile:
 			return
 
-		if project.plistFile:
+		if project.plistFile and isinstance( project.plistFile, PListGenerator ):
 
 			project.tempAppDir = os.path.join( project.csbuildDir, project.activeToolchainName, "{}.app".format( project.name ) )
 			project.finalAppDir = os.path.join( project.outputDir, "{}.app".format( project.name ) )
 
+			# Delete the old, temporary .app and all it's contents, then re-create the directories for it.
 			self._cleanupOldAppBundle( project )
 
 			# Build the project plist.
-			log.LOG_BUILD( "Building property list for {}...".format( project.name ) )
-			if isinstance( project.plistFile, str ):
-				self._convertPlistToBinary( project, project.plistFile )
-			elif isinstance( project.plistFile, PListGenerator ):
-				self._processPlistGenerator( project, project.plistFile )
-			else:
-				log.LOG_ERROR( "Invalid type of the {} property list! (plistFile = {})".format( project.name, str( type( project.plistFile ) ) ) )
+			project.plistFile.Output( project, self.GetAppBundleRootPath( project.tempAppDir ) )
 
-			self._copyNewAppBundle( project )
+			# Create the new .app bundle.
+			self._createNewAppBundle( project )

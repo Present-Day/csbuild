@@ -47,7 +47,7 @@ class OrderedSet(object):
 		self.map = collections.OrderedDict()
 		if iterable is not None:
 			self.map.update( [ ( x, None ) for x in iterable ] )
-	
+
 	def __len__(self):
 		return len(self.map)
 
@@ -75,17 +75,17 @@ class OrderedSet(object):
 		return ret
 
 	def __and__(self, other):
-		return self.union(other)
+		return self.intersection(other)
 
 	def __or__(self, other):
-		return self.intersection(other)
+		return self.union(other)
 
 	def __sub__(self, other):
 		return self.difference(other)
 
 	def __xor__(self, other):
 		return self.symmetric_difference(other)
-		
+
 	def __iter__(self):
 		for key in self.map.keys():
 			yield key
@@ -98,12 +98,12 @@ class OrderedSet(object):
 		return "OrderedSet({})".format(self.map.keys())
 
 	def update(self, iterable):
+		self.map.update( [ ( x, None ) for x in iterable ] )
+
+	def intersection_update(self, iterable):
 		for key in self.map.keys():
 			if key not in iterable:
 				del self.map[key]
-
-	def intersection_update(self, iterable):
-		self.map.update( [ ( x, None ) for x in iterable ] )
 
 	def difference_update(self, iterable):
 		for key in iterable:
@@ -137,7 +137,7 @@ class OrderedSet(object):
 
 	def clear(self):
 		self.map = collections.OrderedDict()
-	
+
 
 def remove_comments( text ):
 	def replacer( match ):
@@ -258,19 +258,27 @@ class ThreadedBuild( threading.Thread ):
 			else:
 				project = self.project
 
+			toolchainEnv = GetToolchainEnvironment( self.project.activeToolchain.Compiler() )
+
 			if _shared_globals.profile:
 				profileIn = os.path.join( self.project.csbuildDir, "profileIn")
-				if not os.access(profileIn, os.F_OK):
-					os.makedirs(profileIn)
-				self.file = os.path.join( profileIn, "{}.{}".format(hashlib.md5(self.file).hexdigest(), self.file.rsplit(".", 1)[1]) )
+				if not os.access( profileIn, os.F_OK):
+					os.makedirs( profileIn )
+				filenameNoExt = self.file.rsplit( ".", 1 )[1]
+				if sys.version_info >= (3, 0):
+					self.file = self.file.encode( "utf-8" )
+				self.file = os.path.join( profileIn, "{}.{}".format( hashlib.md5( self.file ).hexdigest(), filenameNoExt ) )
 
-				preprocessCmd = self.project.activeToolchain.Compiler().GetPreprocessCommand( baseCommand, project, os.path.abspath( self.originalIn ))
+				preprocessCmd = self.project.activeToolchain.Compiler().GetPreprocessCommand( baseCommand, project, os.path.abspath( self.originalIn ) )
 				if _shared_globals.show_commands:
-					print(preprocessCmd)
+					print( preprocessCmd )
 
 				if platform.system() != "Windows":
-					preprocessCmd = shlex.split(preprocessCmd)
-				fd = subprocess.Popen(preprocessCmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+					preprocessCmd = shlex.split( preprocessCmd )
+				fd = subprocess.Popen( preprocessCmd, stderr = subprocess.PIPE, stdout = subprocess.PIPE, env = toolchainEnv )
+
+				with _shared_globals.spmutex:
+					_shared_globals.subprocesses[self.file] = fd
 
 				data = StringIO()
 				lastLine = 0
@@ -279,6 +287,13 @@ class ThreadedBuild( threading.Thread ):
 				highIndex = 0
 
 				op, er = fd.communicate()
+
+				with _shared_globals.spmutex:
+					del _shared_globals.subprocesses[self.file]
+					if _shared_globals.exiting:
+						#Don't bother with the rest, we're killing everything early.
+						return
+
 				if sys.version_info >= (3, 0):
 					op = op.decode("utf-8")
 					er = er.decode("utf-8")
@@ -319,7 +334,10 @@ class ThreadedBuild( threading.Thread ):
 					if platform.system() == "Windows":
 						file_mode = 438 # Octal 0666
 						fd = os.open(self.file, os.O_WRONLY | os.O_CREAT | os.O_NOINHERIT | os.O_TRUNC, file_mode)
-						os.write(fd, data.getvalue())
+						dataValue = data.getvalue()
+						if sys.version_info >= (3, 0):
+							dataValue = dataValue.encode( "utf-8" )
+						os.write(fd, dataValue)
 						os.fsync(fd)
 						os.close(fd)
 					else:
@@ -355,7 +373,11 @@ class ThreadedBuild( threading.Thread ):
 			if platform.system() != "Windows":
 				cmd = shlex.split(cmd)
 
-			fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = self.project.workingDirectory )
+			fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = self.project.workingDirectory, env = toolchainEnv )
+
+			with _shared_globals.spmutex:
+				_shared_globals.subprocesses[self.obj] = fd
+
 			running = True
 
 			times = {}
@@ -443,10 +465,17 @@ class ThreadedBuild( threading.Thread ):
 			errorThread.start()
 
 			fd.wait()
+
 			running = False
 
 			outputThread.join()
 			errorThread.join()
+
+			with _shared_globals.spmutex:
+				del _shared_globals.subprocesses[self.obj]
+				if _shared_globals.exiting:
+					#Don't bother with the rest, we're killing everything early.
+					return
 
 			with self.project.mutex:
 				self.project.times[self.originalIn] = times
@@ -458,8 +487,13 @@ class ThreadedBuild( threading.Thread ):
 
 			ret = fd.returncode
 
+			output.str = output.str.replace("\r", "")
+			errors.str = errors.str.replace("\r", "")
+
 			sys.stdout.write( output.str )
 			sys.stderr.write( errors.str )
+			sys.stdout.flush()
+			sys.stderr.flush()
 
 			with self.project.mutex:
 				stripped_errors = re.sub(ansi_escape, '', errors.str)
@@ -500,16 +534,10 @@ class ThreadedBuild( threading.Thread ):
 				_shared_globals.errorcount += errorcount
 
 			if ret:
-				if str( ret ) == str( self.project.activeToolchain.Compiler().InterruptExitCode( ) ):
+				if str( ret ) == str( self.project.activeToolchain.Compiler().InterruptExitCode( ) ) or str( ret ) == str( -self.project.activeToolchain.Compiler().InterruptExitCode( ) ):
 					_shared_globals.lock.acquire( )
-					if not _shared_globals.interrupted:
-						log.LOG_ERROR( "Keyboard interrupt received. Aborting build." )
 					_shared_globals.interrupted = True
-					log.LOG_BUILD( "Releasing lock..." )
 					_shared_globals.lock.release( )
-					log.LOG_BUILD( "Releasing semaphore..." )
-					_shared_globals.semaphore.release( )
-					log.LOG_BUILD( "Closing thread..." )
 				if not _shared_globals.interrupted:
 					log.LOG_ERROR( "Compile of {} failed!  (Return code: {})".format( self.originalIn, ret ) )
 				_shared_globals.build_success = False
@@ -518,7 +546,10 @@ class ThreadedBuild( threading.Thread ):
 				self.project.compilationFailed = True
 				self.project.fileStatus[self.originalIn] = _shared_globals.ProjectState.FAILED
 				self.project.updated = True
+				self.project.compilationCompleted += 1
 				self.project.mutex.release( )
+				_shared_globals.semaphore.release( )
+				return
 		except Exception as e:
 			#If we don't do this with ALL exceptions, any unhandled exception here will cause the semaphore to never
 			# release...
@@ -888,7 +919,7 @@ def ChunkedBuild( ):
 				project.chunksByFile.update( { outFile : chunk } )
 			elif len( sources_in_this_chunk ) > 0:
 				chunkname = GetChunkName( project.outputName, chunk )
-				
+
 				obj = GetSourceObjPath( project, chunkname, sourceIsChunkPath=project.ContainsChunk( chunkname ) )
 				if os.access(obj , os.F_OK):
 					#If the chunk object exists, the last build of these files was the full chunk.
@@ -1040,3 +1071,59 @@ class PathWorkingDirPair( object ):
 	def __lt__(self, other):
 
 		return ( self.path < other.path ) and ( self.workingDir < other.workingDir )
+
+
+def DeleteTree( pathToDelete ):
+	"""
+	Delete a path on disk recursively (removes both files and directories).
+
+	:param pathToDelete: File or directory path on disk.
+	:type pathToDelete: str
+
+	:return: None
+	"""
+	if os.path.isdir( pathToDelete ):
+		fullDirList = []
+		fullFileList = []
+
+		# Compile a list of each file and directory in the root path.
+		for root, dirList, fileList in os.walk( pathToDelete ):
+			for dirPath in dirList:
+				fullDirList.append( os.path.join( root, dirPath ) )
+			for filePath in fileList:
+				fullFileList.append( os.path.join( root, filePath ) )
+
+		# Delete each file.
+		for filePath in fullFileList:
+			os.remove( filePath )
+
+		# Delete each directory in reverse order. The list needs to be reversed because a directory can only be removed if it's empty.
+		for dirPath in reversed( fullDirList ):
+			os.rmdir( dirPath )
+
+		os.rmdir( pathToDelete )
+	else:
+		os.remove( pathToDelete )
+
+
+def GetToolchainEnvironment( tool ):
+	envCopy = os.environ.copy()
+	envCopy.update( tool.GetEnv() )
+	return envCopy
+
+
+def GetCommandLineArgumentList():
+	argList = []
+
+	# The Windows command line likes to remove any quotes around arguments, so we need to re-add them.
+	for arg in sys.argv[1:]:
+		if "=" in arg:
+			argPair = arg.split( "=", 1 )
+			if " " in argPair[1]:
+				argPair[1] = '"{}"'.format( argPair[1] )
+				arg = "=".join( argPair )
+		elif " " in arg:
+			arg = '"{}"'.format( arg )
+		argList.append( arg )
+
+	return argList

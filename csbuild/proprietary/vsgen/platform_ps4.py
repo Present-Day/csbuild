@@ -24,33 +24,30 @@ import os
 import csbuild
 import xml.etree.ElementTree as ET
 
-from .platform_base import PlatformBase
+from ...vsgen.platform_base import PlatformBase
 
 
 _addNode = ET.SubElement
 
 
-class PlatformTegraAndroid( PlatformBase ):
+class PlatformPs4( PlatformBase ):
 	def __init__( self ):
 		PlatformBase.__init__( self )
 
 
 	@staticmethod
 	def GetToolchainName():
-		return "android-armeabi-v7a"
+		return "ps4-x64"
 
 
 	@staticmethod
 	def GetVisualStudioName():
-		return "Tegra-Android"
+		return "ORBIS"
 
 
 	def WriteTopLevelInfo( self, parentXmlNode ):
-		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
-		tegraRevisionNumberNode = _addNode( propertyGroupNode, "NsightTegraProjectRevisionNumber" )
-
-		propertyGroupNode.set( "Label", "NsightTegraProject" )
-		tegraRevisionNumberNode.text = "11"
+		# Nothing special to do for PS4.
+		pass
 
 
 	def WriteProjectConfiguration( self, parentXmlNode, vsConfigName ):
@@ -75,30 +72,23 @@ class PlatformTegraAndroid( PlatformBase ):
 
 		if isNative:
 			#TODO: Add properties for native projects.
-			nativeApiNode = _addNode( propertyGroupNode, "AndroidNativeAPI" )
-			nativeApiNode.text = "UseTarget"
+			pass
 		else:
 			configTypeNode = _addNode( propertyGroupNode, "ConfigurationType" )
-			configTypeNode.text = "ExternalBuildSystem"
+			configTypeNode.text = "Makefile"
 
 
 	def WriteImportProperties( self, parentXmlNode, vsConfigName, isNative ):
-		# Nothing to do for Tegra.
-		pass
+		importGroupNode = _addNode( parentXmlNode, "ImportGroup" )
+		importGroupNode.set( "Label", "PropertySheets")
+		importGroupNode.set( "Condition", "'$(Configuration)|$(Platform)'=='{}|ORBIS'".format( vsConfigName ) )
+
+		importNode = _addNode( importGroupNode, "Import" )
+		importNode.set( "Label", "LocalAppDataPlatform" )
+		importNode.set( "Project", r"$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" )
+		importNode.set( "Condition", "exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" )
 
 
 	def WriteUserDebugPropertyGroup( self, parentXmlNode, vsConfigName, projectData ):
 		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
 		propertyGroupNode.set( "Condition", "'$(Configuration)|$(Platform)'=='{}|{}'".format( vsConfigName, self.GetVisualStudioName() ) )
-
-		outputDir = self.GetOutputDirectory( vsConfigName, projectData.name )
-		projectSettings = self.GetProjectSettings( vsConfigName, projectData.name )
-
-		if outputDir and projectSettings and projectSettings.metaType == csbuild.ProjectType.Application:
-			overrideApkPathNode = _addNode( propertyGroupNode, "OverrideAPKPath" )
-			debuggerFlavorNode = _addNode( propertyGroupNode, "DebuggerFlavor" )
-
-			outputName = "{}{}.apk".format( projectSettings.name, "-debug" if csbuild.Toolchain("android").Compiler().IsAndroidDebugBuild( projectSettings ) else "" )
-
-			overrideApkPathNode.text = os.path.join( os.path.abspath( outputDir ), outputName )
-			debuggerFlavorNode.text = "AndroidDebugger"

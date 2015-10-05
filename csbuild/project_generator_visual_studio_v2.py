@@ -34,16 +34,26 @@ from . import project_generator
 from . import projectSettings
 from . import log
 from . import _shared_globals
+from . import _utils
 
-from .vsgen.platform_windows import *
-from .vsgen.platform_android import *
+from .vsgen.platform_windows import PlatformWindowsX86, PlatformWindowsX64
+from .vsgen.platform_android import PlatformTegraAndroid
 
+try:
+	from .proprietary.vsgen.platform_ps4 import PlatformPs4
+except:
+	pass
 
-class VisualStudioVersion:
-	v2010 = 2010
-	v2012 = 2012
-	v2013 = 2013
-	All = [v2010, v2012, v2013]
+# Dictionary of MSVC version numbers to tuples of items needed for the file format.
+#   Tuple[0] = Friendly version name for logging output.
+#   Tuple[1] = File format version (e.g., "Microsoft Visual Studio Solution File, Format Version XX").
+#   Tuple[2] = Version of Visual Studio the solution belongs to (e.g., "# Visual Studio XX").
+FILE_FORMAT_VERSION_INFO = {
+	100: ("2010", "11.00", "2010"),
+	110: ("2012", "12.00", "2012"),
+	120: ("2013", "12.00", "2013"),
+	140: ("2015", "12.00", "14"),
+}
 
 
 class PlatformManager:
@@ -55,6 +65,11 @@ class PlatformManager:
 		self._makePlatformAvailable( PlatformWindowsX86 )
 		self._makePlatformAvailable( PlatformWindowsX64 )
 		self._makePlatformAvailable( PlatformTegraAndroid )
+
+		try:
+			self._makePlatformAvailable( PlatformPs4 )
+		except:
+			pass
 
 
 	@staticmethod
@@ -81,6 +96,7 @@ class PlatformManager:
 		if not name in self._availablePlatformMap:
 			log.LOG_ERROR( "Unknown vsgen platform: {}".format( name ) )
 			return
+		log.LOG_BUILD( "Using platform: {}".format( name ) )
 		platformClass = self._availablePlatformMap[name]
 		self._registeredPlatformMap.update( { name: platformClass() } )
 
@@ -98,16 +114,6 @@ class PlatformManager:
 		if not name in self._registeredPlatformMap:
 			return None
 		return self._registeredPlatformMap[name]
-
-
-def GetImpliedVisualStudioVersion():
-	msvcVersion = csbuild.Toolchain( "msvc" ).Compiler().GetMsvcVersion()
-	msvcToVisualStudioMap = {
-		100: VisualStudioVersion.v2010,
-		110: VisualStudioVersion.v2012,
-		120: VisualStudioVersion.v2013,
-	}
-	return msvcToVisualStudioMap[msvcVersion] if msvcVersion in msvcToVisualStudioMap else VisualStudioVersion.v2012
 
 
 def GenerateNewUuid( uuidList, name ):
@@ -199,12 +205,6 @@ class project_generator_visual_studio( project_generator.project_generator ):
 	def __init__( self, path, solutionName, extraArgs ):
 		project_generator.project_generator.__init__( self, path, solutionName, extraArgs )
 
-		versionNumber = csbuild.GetOption( "vs-gen-version" )
-
-		if not versionNumber:
-			versionNumber = GetImpliedVisualStudioVersion()
-			log.LOG_BUILD( "No Visual Studio version selected; defaulting to {}.".format( versionNumber ) )
-
 		platformList = set()
 
 		# Use the selected toolchains and architectures for form a list of platforms.
@@ -216,6 +216,11 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		if "android" in _shared_globals.selectedToolchains:
 			if "armeabi-v7a" in _shared_globals.allarchitectures:
 				platformList.add( PlatformTegraAndroid.GetVisualStudioName() )
+		if "ps4" in _shared_globals.selectedToolchains:
+			try:
+				platformList.add( PlatformPs4.GetVisualStudioName() )
+			except:
+				pass
 
 		# If no valid platforms were found, add a default.
 		if not platformList:
@@ -229,7 +234,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 			platformManager.RegisterPlatform( platform )
 
 		self._createNativeProject = False
-		self._visualStudioVersion = versionNumber
+		self._msvcVersion = csbuild.Toolchain("msvc").Compiler().GetMsvcVersion()
 		self._projectMap = {}
 		self._configList = []
 		self._reverseConfigMap = {} # A reverse look-up map for the configuration names.
@@ -237,6 +242,8 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		self._fullIncludePathList = set() # Should be a set starting out so duplicates are eliminated.
 		self._projectUuidList = set()
 		self._orderedProjectList = []
+
+		log.LOG_BUILD( "Generating solution for Visual Studio {}.".format( FILE_FORMAT_VERSION_INFO[self._msvcVersion][0] ) )
 
 		#TODO: Implement support for native projects.
 		if self._createNativeProject:
@@ -258,13 +265,6 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		#    help = "Generate native Visual Studio projects.",
 		#    action = "store_true",
 		#)
-		parser.add_argument(
-			"--vs-gen-version",
-			help = "Select the version of Visual Studio the generated solution will be compatible with.",
-			choices = VisualStudioVersion.All,
-			default = None,
-			type = int,
-		)
 		parser.add_argument(
 			"--vs-gen-force-overwrite-all",
 	        help = "Force the project generator to overwrite all existing files.",
@@ -317,6 +317,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 								generatorPlatform.AddOutputDirectory( configName, projectName, settings.outputDir )
 								generatorPlatform.AddIntermediateDirectory( configName, projectName, settings.objDir )
 								generatorPlatform.AddDefines( configName, projectName, settings.defines )
+								generatorPlatform.AddProjectSettings( configName, projectName, settings )
 
 							projectData.fullSourceFileList.update( set( settings.allsources ) )
 							projectData.fullHeaderFileList.update( set( settings.allheaders ) )
@@ -368,8 +369,13 @@ class project_generator_visual_studio( project_generator.project_generator ):
 				filterData = Project( subGroupName, self._projectUuidList ) # Subgroups should be treated as project filters in the solution.
 				filterData.isFilter = True
 
+				filterName = "{}.Filter".format( filterData.name )
+
+				if parentFilter_out:
+					parentFilter_out.dependencyList.add( filterName )
+
 				# Explicitly map the filter names with a different name to help avoid possible naming collisions.
-				projectMap_out["{}.Filter".format( filterData.name )] = filterData
+				projectMap_out[filterName] = filterData
 
 				# Create the group path if it doesn't exist.
 				if not os.access( groupPathFinal, os.F_OK ):
@@ -383,11 +389,19 @@ class project_generator_visual_studio( project_generator.project_generator ):
 				resolvedDependencyList = []
 
 				# Sort the dependency name list before parsing it.
-				projectData.dependencyList = sorted( projectData.dependencyList)
+				projectData.dependencyList = sorted( projectData.dependencyList )
 
 				# Resolve each project name to their associated project objects.
 				for dependentProjectName in projectData.dependencyList:
-					resolvedDependencyList.append( projectMap[dependentProjectName] )
+					isPrebuilt = False
+					# Make sure the current dependency is not a prebuilt project.
+					for projectName, project in _shared_globals.projects.items():
+						projectName = projectName.split("@")[0]
+						if dependentProjectName == projectName:
+							isPrebuilt = project.prebuilt
+							break
+					if not isPrebuilt:
+						resolvedDependencyList.append( projectMap[dependentProjectName] )
 
 				# Replace the old name list with the new resolved list.
 				projectData.dependencyList = resolvedDependencyList
@@ -418,10 +432,6 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		recurseGroups( self._projectMap, None, "", projectSettings.rootGroup )
 		resolveDependencies( self._projectMap )
 
-		# Copy the project names into a list.
-		#for projectName, projectData in self._projectMap.items():
-		#	self._orderedProjectList.append( projectName )
-
 		# Sort the list of project names.
 		self._orderedProjectList = sorted( list( self._projectMap ) )
 
@@ -445,12 +455,6 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		platformManager = PlatformManager.Get()
 		registeredPlatformList = platformManager.GetRegisteredNameList()
 
-		fileFormatVersionNumber = {
-			2010: "11.00",
-			2012: "12.00",
-			2013: "12.00",
-		}[self._visualStudioVersion]
-
 		tempRootPath = tempfile.mkdtemp()
 		finalSolutionPath = "{}.sln".format( os.path.join( self.rootpath, self.solutionname ) )
 		tempSolutionPath = "{}.sln".format( tempRootPath, self.solutionname )
@@ -464,8 +468,8 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		# Studio itself may refuse to even attempt to load the file.
 		with codecs.open( tempSolutionPath, "w", "utf-8-sig" ) as fileHandle:
 			writeLineToFile( 0, fileHandle, "" ) # Required empty line.
-			writeLineToFile( 0, fileHandle, "Microsoft Visual Studio Solution File, Format Version {}".format( fileFormatVersionNumber ) )
-			writeLineToFile( 0, fileHandle, "# Visual Studio {}".format( self._visualStudioVersion ) )
+			writeLineToFile( 0, fileHandle, "Microsoft Visual Studio Solution File, Format Version {}".format( FILE_FORMAT_VERSION_INFO[self._msvcVersion][1] ) )
+			writeLineToFile( 0, fileHandle, "# Visual Studio {}".format( FILE_FORMAT_VERSION_INFO[self._msvcVersion][2] ) )
 
 			projectFilterList = []
 
@@ -557,11 +561,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 			parentNode.append( comment )
 			return comment
 
-		platformToolsetName = {
-			2010: "vc100",
-			2012: "vc110",
-			2013: "vc120",
-		}[self._visualStudioVersion]
+		platformToolsetName = "v{}".format( self._msvcVersion )
 
 		platformManager = PlatformManager.Get()
 		registeredPlatformList = platformManager.GetRegisteredNameList()
@@ -686,13 +686,8 @@ class project_generator_visual_studio( project_generator.project_generator ):
 								rebuildCommandNode.text = '"{}" "{}" --rebuild --target={} --toolchain={} --architecture={}{} {}'.format( pythonExePath, mainMakefile, properConfigName, toolchainName, archName, projectArg, self._extraBuildArgs )
 								includePathNode.text = ";".join( self._fullIncludePathList )
 							else:
-								argList = []
-								# The Windows command line likes to remove any quotes around arguments, so we need to re-add them.
-								# And because we can't know which args need quotes, we'll just add them to all of the arguments.
-								for arg in sys.argv[1:]:
-									argPair = arg.split( "=", 2 )
-									for element in argPair:
-										argList.append( '"{}"'.format( element ) )
+								argList = _utils.GetCommandLineArgumentList()
+
 								buildCommandNode.text = '"{}" "{}" {}'.format( pythonExePath, mainMakefile, " ".join( argList ) )
 								rebuildCommandNode.text = buildCommandNode.text
 								cleanCommandNode.text = buildCommandNode.text
@@ -807,7 +802,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 					for configName in self._configList:
 						for platformName in registeredPlatformList:
 							generatorPlatform = platformManager.GetRegisteredPlatformFromVisualStudioName( platformName )
-							generatorPlatform.WriteUserDebugPropertyGroup( rootNode, configName )
+							generatorPlatform.WriteUserDebugPropertyGroup( rootNode, configName, projectData )
 
 				self._saveXmlFile( rootNode, os.path.join( projectData.outputPath, "{}.vcxproj.user".format( projectData.name ) ), True )
 

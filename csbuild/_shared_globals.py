@@ -243,6 +243,10 @@ forceProgressBar = ""
 globalPreMakeSteps = None
 globalPostMakeSteps = None
 
+subprocesses = {}
+spmutex = threading.Lock( )
+exiting = False
+
 class dummy_block( object ):
 	"""Some versions of python have a bug in threading where a dummy thread will try to use a value that it deleted.
 	To keep that from erroring on systems with those versions of python, this is a dummy object with the required

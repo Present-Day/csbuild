@@ -106,8 +106,12 @@ class project_generator_qtcreator( project_generator.project_generator ):
 				f.write( "\nQMAKE_CXXFLAGS += {}\n".format( " ".join( project.cxxCompilerFlags ) ) )
 
 			try:
-				if project.cppstandard:
-					f.write( "\nQMAKE_CXXFLAGS += -std={}\n".format( project.cppstandard ) )
+				if project.activeToolchain.Compiler().cppStandard:
+					f.write( "\nQMAKE_CXXFLAGS += -std={}\n".format( project.activeToolchain.Compiler().cppStandard ) )
+					if "11" in project.activeToolchain.Compiler().cppStandard:
+						f.write( "\nCONFIG += c++11")
+					elif "14" in project.activeToolchain.Compiler().cppStandard:
+						f.write( "\nCONFIG += c++14")
 			except:
 				pass
 
@@ -115,8 +119,8 @@ class project_generator_qtcreator( project_generator.project_generator ):
 				f.write( "\nQMAKE_CFLAGS += {}\n".format( " ".join( project.ccCompilerFlags ) ) )
 
 			try:
-				if project.cstandard:
-					f.write( "\nQMAKE_CFLAGS += -std={}\n".format( project.cstandard ) )
+				if project.activeToolchain.Compiler().cStandard:
+					f.write( "\nQMAKE_CFLAGS += -std={}\n".format( project.activeToolchain.Compiler().cStandard ) )
 			except:
 				pass
 
@@ -154,7 +158,7 @@ class project_generator_qtcreator( project_generator.project_generator ):
 		#	stat.S_IXOTH
 		#)
 
-		with open( os.path.join( projectpath, "Makefile" ), "w" ) as f:
+		with open( os.path.join(projectpath, "Makefile"), "w" ) as f:
 			projstr = " --project {}".format( project.name )
 			make_dir = os.getcwd( )
 
@@ -212,7 +216,7 @@ class project_generator_qtcreator( project_generator.project_generator ):
 			for proj in allsubprojects:
 				projstr += " --project {}".format( proj )
 
-		with open( os.path.join( grouppath, "Makefile" ), "w" ) as f:
+		with open( os.path.join(grouppath, "Makefile"), "w" ) as f:
 			make_dir = os.getcwd( )
 
 			f.write( "all:\n\t@cd {} && {} ./{}{} ${{ARGS}}\n\n".format( make_dir, sys.executable, csbuild.mainFile,
