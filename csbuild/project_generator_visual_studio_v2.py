@@ -44,6 +44,11 @@ try:
 except:
 	pass
 
+try:
+	from .proprietary.vsgen.platform_wiiu import PlatformWiiU
+except:
+	pass
+
 # Dictionary of MSVC version numbers to tuples of items needed for the file format.
 #   Tuple[0] = Friendly version name for logging output.
 #   Tuple[1] = File format version (e.g., "Microsoft Visual Studio Solution File, Format Version XX").
@@ -68,6 +73,11 @@ class PlatformManager:
 
 		try:
 			self._makePlatformAvailable( PlatformPs4 )
+		except:
+			pass
+
+		try:
+			self._makePlatformAvailable( PlatformWiiU )
 		except:
 			pass
 
@@ -221,6 +231,11 @@ class project_generator_visual_studio( project_generator.project_generator ):
 				platformList.add( PlatformPs4.GetVisualStudioName() )
 			except:
 				pass
+		if "wiiu" in _shared_globals.selectedToolchains:
+			try:
+				platformList.add( PlatformWiiU.GetVisualStudioName() )
+			except:
+				pass
 
 		# If no valid platforms were found, add a default.
 		if not platformList:
@@ -242,6 +257,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 		self._fullIncludePathList = set() # Should be a set starting out so duplicates are eliminated.
 		self._projectUuidList = set()
 		self._orderedProjectList = []
+		self._regenBatchFilePath = "{}".format( os.path.join( self.rootpath, "regenerate_solution.bat" ) )
 
 		log.LOG_BUILD( "Generating solution for Visual Studio {}.".format( FILE_FORMAT_VERSION_INFO[self._msvcVersion][0] ) )
 
@@ -279,6 +295,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 
 	def WriteProjectFiles( self ):
 		self._collectProjects()
+		self._writeRegenerateBatchFile()
 		self._writeSolutionFile()
 		self._writeVcxprojFiles()
 		self._writeVcxprojFiltersFiles()
@@ -311,7 +328,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 							toolchainArchName = "{}-{}".format( toolchainName, archName )
 							generatorPlatform = platformManager.GetPlatformFromToolchainName( toolchainArchName )
 
-							# Only configuration-specific project data if the current toolchain is associated with a registered platform.
+							# Only add configuration-specific project data if the current toolchain is associated with a registered platform.
 							if generatorPlatform:
 								generatorPlatform.AddOutputName( configName, projectName, settings.outputName )
 								generatorPlatform.AddOutputDirectory( configName, projectName, settings.outputDir )
@@ -362,7 +379,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 
 			# Next, iterate through each subgroup and handle each one recursively.
 			for subGroupName, subGroup in projectGroup.subgroups.items():
-				groupPath = os.path.join( projectOutputPath, subGroupName )
+				groupPath = os.path.join( projectOutputPath, subGroupName.replace(" ", "_") )
 
 				groupPathFinal = os.path.join( self.rootpath, groupPath )
 
@@ -445,6 +462,43 @@ class project_generator_visual_studio( project_generator.project_generator ):
 			self._fullIncludePathList.update( projectData.fullIncludePathList )
 
 		self._fullIncludePathList = sorted( self._fullIncludePathList )
+
+
+	def _writeRegenerateBatchFile( self ):
+
+		def writeLineToFile( fileHandle, stringToWrite ):
+			fileHandle.write( "{}\n".format( stringToWrite ) )
+
+		tempRootPath = tempfile.mkdtemp()
+		tempBatchFilePath = "{}".format( os.path.join( tempRootPath, "regenerate_solution.bat" ) )
+
+		pythonExePath = os.path.normcase( sys.executable )
+		mainMakefile = self._constructRelPath( os.path.join( os.getcwd(), csbuild.mainFile ), self.rootpath )
+		cmdLine = _utils.GetCommandLineString()
+
+		# Write the batch file to a temporary location.
+		with open( tempBatchFilePath, "w" ) as fileHandle:
+			writeLineToFile( fileHandle, "@echo off" )
+			writeLineToFile( fileHandle, "SETLOCAL" )
+			writeLineToFile( fileHandle, "PUSHD %~dp0" )
+			writeLineToFile( fileHandle, '"{}" "{}" {}'.format( pythonExePath, mainMakefile, cmdLine ) )
+			writeLineToFile( fileHandle, "POPD" )
+
+		# Load the temporary file and attempt to save it to its final location.
+		with open( tempBatchFilePath, "rb" ) as fileHandle:
+			fileData = fileHandle.read()
+			cachedFile = CachedFileData( self._regenBatchFilePath, fileData, False )
+			cachedFile.SaveFile()
+
+		# Remove the temporary file.
+		if os.access( tempBatchFilePath, os.F_OK ):
+			os.remove( tempBatchFilePath )
+			try:
+				# Attempt to remove the temp directory.  This will only fail if the directory already existed with files in it.
+				# In that case, just catch the exception and move on.
+				os.rmdir( tempRootPath )
+			except:
+				pass
 
 
 	def _writeSolutionFile( self ):
@@ -573,12 +627,12 @@ class project_generator_visual_studio( project_generator.project_generator ):
 				rootNode.set( "ToolsVersion", "4.0" )
 				rootNode.set( "xmlns", "http://schemas.microsoft.com/developer/msbuild/2003" )
 
-				comment = MakeComment( rootNode, "Top-level platform information" )
+				comment = MakeComment( rootNode, "Project header" )
 
 				# Write any top-level information a generator platform may require.
 				for platformName in registeredPlatformList:
 					generatorPlatform = platformManager.GetRegisteredPlatformFromVisualStudioName( platformName )
-					generatorPlatform.WriteTopLevelInfo( rootNode )
+					generatorPlatform.WriteGlobalHeader( rootNode )
 
 				comment = MakeComment( rootNode, "Project configurations" )
 
@@ -640,7 +694,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 				for configName in self._configList:
 					for platformName in registeredPlatformList:
 						generatorPlatform = platformManager.GetRegisteredPlatformFromVisualStudioName( platformName )
-						generatorPlatform.WritePropertyGroup( rootNode, configName, platformToolsetName, self._createNativeProject )
+						generatorPlatform.WriteConfigPropertyGroup( rootNode, configName, platformToolsetName, self._createNativeProject )
 
 				importNode = AddNode(rootNode, "Import")
 				importNode.set("Project", r"$(VCTargetsPath)\Microsoft.Cpp.props")
@@ -686,9 +740,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 								rebuildCommandNode.text = '"{}" "{}" --rebuild --target={} --toolchain={} --architecture={}{} {}'.format( pythonExePath, mainMakefile, properConfigName, toolchainName, archName, projectArg, self._extraBuildArgs )
 								includePathNode.text = ";".join( self._fullIncludePathList )
 							else:
-								argList = _utils.GetCommandLineArgumentList()
-
-								buildCommandNode.text = '"{}" "{}" {}'.format( pythonExePath, mainMakefile, " ".join( argList ) )
+								buildCommandNode.text = '"{}"'.format( self._regenBatchFilePath )
 								rebuildCommandNode.text = buildCommandNode.text
 								cleanCommandNode.text = buildCommandNode.text
 
@@ -708,7 +760,7 @@ class project_generator_visual_studio( project_generator.project_generator ):
 								outputNode = AddNode( propertyGroupNode, "NMakeOutput" )
 
 								if not outDir:
-									outDir = "./out"
+									outDir = "out"
 								if not intDir:
 									intDir = "int"
 								if not outputName:
@@ -719,13 +771,30 @@ class project_generator_visual_studio( project_generator.project_generator ):
 								outputNode.text = self._constructRelPath( os.path.join( outDir, outputName ), projectData.outputPath )
 							else:
 								# Gotta put this stuff somewhere for the Build All project.
-								outDirNode.text = projectData.name + "_log"
+								outDirNode.text = os.path.join(".project_logs", projectData.name)
 								intDirNode.text = "$(OutDir)"
+
+						generatorPlatform.WriteExtraPropertyGroupBuildNodes( propertyGroupNode, configName, projectData )
+
+				comment = MakeComment( rootNode, "Import targets" )
+
+				# Write the global import targets.
+				# MUST be before the "Microsoft.Cpp.targets" import!
+				for platformName in registeredPlatformList:
+					generatorPlatform = platformManager.GetRegisteredPlatformFromVisualStudioName( platformName )
+					generatorPlatform.WriteGlobalImportTargets( rootNode, self._createNativeProject )
 
 				comment = MakeComment( rootNode, "Final target import; must always be last!" )
 
 				importNode = AddNode( rootNode, "Import" )
 				importNode.set( "Project", r"$(VCTargetsPath)\Microsoft.Cpp.targets" )
+
+				comment = MakeComment( rootNode, "Project footer" )
+
+				# Write any trailing information needed by the project.
+				for platformName in registeredPlatformList:
+					generatorPlatform = platformManager.GetRegisteredPlatformFromVisualStudioName( platformName )
+					generatorPlatform.WriteGlobalFooter( rootNode )
 
 				self._saveXmlFile( rootNode, os.path.join( projectData.outputPath, "{}.vcxproj".format( projectData.name ) ) , False )
 

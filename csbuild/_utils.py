@@ -101,17 +101,17 @@ class OrderedSet(object):
 		self.map.update( [ ( x, None ) for x in iterable ] )
 
 	def intersection_update(self, iterable):
-		for key in self.map.keys():
+		for key in list(self.map.keys()):
 			if key not in iterable:
 				del self.map[key]
 
 	def difference_update(self, iterable):
-		for key in iterable:
+		for key in list(iterable):
 			if key in self.map:
 				del self.map[key]
 
 	def symmetric_difference_update(self, iterable):
-		for key in iterable:
+		for key in list(iterable):
 			if key in self.map:
 				del self.map[key]
 			else:
@@ -501,9 +501,9 @@ class ThreadedBuild( threading.Thread ):
 				self.project.compileErrors[self.originalIn] = stripped_errors
 				errorlist = self.project.activeToolchain.Compiler()._parseOutput(output.str)
 				errorlist2 = self.project.activeToolchain.Compiler()._parseOutput(stripped_errors)
-				if errorlist is None:
+				if not errorlist:
 					errorlist = errorlist2
-				elif errorlist2 is not None:
+				elif errorlist2:
 					errorlist += errorlist2
 
 				errorcount = 0
@@ -1112,18 +1112,5 @@ def GetToolchainEnvironment( tool ):
 	return envCopy
 
 
-def GetCommandLineArgumentList():
-	argList = []
-
-	# The Windows command line likes to remove any quotes around arguments, so we need to re-add them.
-	for arg in sys.argv[1:]:
-		if "=" in arg:
-			argPair = arg.split( "=", 1 )
-			if " " in argPair[1]:
-				argPair[1] = '"{}"'.format( argPair[1] )
-				arg = "=".join( argPair )
-		elif " " in arg:
-			arg = '"{}"'.format( arg )
-		argList.append( arg )
-
-	return argList
+def GetCommandLineString():
+	return subprocess.list2cmdline(sys.argv[1:])

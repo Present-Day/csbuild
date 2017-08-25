@@ -451,7 +451,7 @@ class projectSettings( object ):
 		self.defines = []
 		self.undefines = []
 		self.useHiddenVisibility = False
-		self.stdLib = "libstdc++"
+		self.stdLib = ""
 		self.cxx = ""
 		self.cc = ""
 		self.hasCppFiles = False
@@ -1853,9 +1853,7 @@ class projectSettings( object ):
 		if not libraries_ok:
 			log.LOG_ERROR( "Some dependencies are not met on your system." )
 			log.LOG_ERROR( "Check that all required libraries are installed." )
-			log.LOG_ERROR(
-				"If they are installed, ensure that the path is included in the makefile (use csbuild.LibDirs() to set "
-				"them)" )
+			log.LOG_ERROR( "If they are installed, ensure that the path is included in the makefile (use csbuild.AddLibraryDirectories() to set them)." )
 			return False
 		log.LOG_INFO( "Libraries OK!" )
 		return True

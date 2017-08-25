@@ -756,9 +756,9 @@ class MsvcLinker( MsvcBase, toolchain.linkerBase ):
 					continue
 				dependLibName = dependProj.outputName
 				splitName = os.path.splitext(dependLibName)[0]
-				if ( splitName == lib or splitName == "lib{}".format( lib ) ):
+				if splitName == lib or splitName == "lib{}".format( lib ):
 					found = True
-					argList.append( '"{}"'.format( dependLibName ) )
+					argList.append( '"{}.lib"'.format( splitName ) )
 					break
 			if not found:
 				argList.append( '"{}"'.format( self._actual_library_names[lib] ) )

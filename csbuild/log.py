@@ -47,7 +47,8 @@ def LOG_MSG( color, level, msg, quietThreshold ):
 			else:
 				print("{0}: {1}".format( level, msg ))
 			sys.stdout.flush()
-		_shared_globals.logFile.write("{0}: {1}\n".format( level, msg ))
+		if _shared_globals.logFile:
+			_shared_globals.logFile.write("{0}: {1}\n".format( level, msg ))
 
 
 def LOG_ERROR( msg ):

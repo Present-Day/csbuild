@@ -18,16 +18,20 @@ try:
 	QApplication = QtWidgets.QApplication
 	QtGui.QAbstractItemView = QtWidgets.QAbstractItemView
 	QtGui.QAction = QtWidgets.QAction
+	QtGui.QApplication = QtWidgets.QApplication
 	QtGui.QHBoxLayout = QtWidgets.QHBoxLayout
 	QtGui.QHeaderView = QtWidgets.QHeaderView
 	QtGui.QLabel = QtWidgets.QLabel
+	QtGui.QLineEdit = QtWidgets.QLineEdit
 	QtGui.QMainWindow = QtWidgets.QMainWindow
 	QtGui.QMenu = QtWidgets.QMenu
+	QtGui.QMessageBox = QtWidgets.QMessageBox
 	QtGui.QPlainTextEdit = QtWidgets.QPlainTextEdit
 	QtGui.QProgressBar = QtWidgets.QProgressBar
 	QtGui.QPushButton = QtWidgets.QPushButton
 	QtGui.QSpacerItem = QtWidgets.QSpacerItem
 	QtGui.QSizePolicy = QtWidgets.QSizePolicy
+	QtGui.QSlider = QtWidgets.QSlider
 	QtGui.QSplitter = QtWidgets.QSplitter
 	QtGui.QStatusBar = QtWidgets.QStatusBar
 	QtGui.QStyledItemDelegate = QtWidgets.QStyledItemDelegate
@@ -35,6 +39,7 @@ try:
 	QtGui.QTreeWidget = QtWidgets.QTreeWidget
 	QtGui.QTreeWidgetItem = QtWidgets.QTreeWidgetItem
 	QtGui.QTabWidget = QtWidgets.QTabWidget
+	QtGui.QToolTip = QtWidgets.QToolTip
 	QtGui.QVBoxLayout = QtWidgets.QVBoxLayout
 	QtGui.QWidget = QtWidgets.QWidget
 	log.LOG_INFO("Using Qt5")
@@ -1367,6 +1372,9 @@ class MainWindow( QMainWindow ):
 
 		self.tick = 0
 
+		self.selectedItem = None
+
+
 	def buildTreeContextMenu(self, point):
 		if not _shared_globals.profile:
 			return
@@ -1380,9 +1388,10 @@ class MainWindow( QMainWindow ):
 			return
 		if parent.parent():
 			return
+		self.selectedItem = item
 		menu = QtGui.QMenu(self)
 		action = QtGui.QAction("View profile data", self)
-		action.triggered.connect(functools.partial(self.buildTreeViewProfile, item))
+		action.triggered.connect(self.buildTreeViewProfile)
 		menu.addAction(action)
 		menu.popup(self.m_buildTree.viewport().mapToGlobal(point))
 
@@ -1399,9 +1408,10 @@ class MainWindow( QMainWindow ):
 			return
 		if parent.parent():
 			return
+		self.selectedItem = item
 		menu = QtGui.QMenu(self)
 		action = QtGui.QAction("View profile data", self)
-		action.triggered.connect(functools.partial(self.timelineViewProfile, item))
+		action.triggered.connect(self.timelineViewProfile)
 		menu.addAction(action)
 		menu.popup(self.timelineWidget.viewport().mapToGlobal(point))
 
@@ -1440,7 +1450,11 @@ class MainWindow( QMainWindow ):
 		window.show()
 
 
-	def buildTreeViewProfile(self, item, checked):
+	def buildTreeViewProfile(self):
+		if not self.selectedItem:
+			return
+
+		item = self.selectedItem
 		filename = os.path.normcase(str(item.toolTip(3)))
 
 		project = self.itemToProject[str(item.parent().text(0))]
@@ -1448,7 +1462,11 @@ class MainWindow( QMainWindow ):
 		self.launchProfileView(project, filename)
 
 
-	def timelineViewProfile(self, item, checked):
+	def timelineViewProfile(self):
+		if not self.selectedItem:
+			return
+
+		item = self.selectedItem
 		filename = os.path.normcase(str(item.toolTip(0)))
 
 		idx = self.timelineWidget.indexOfTopLevelItem(self.parent())
@@ -1468,10 +1486,10 @@ class MainWindow( QMainWindow ):
 			self.m_errorTree.setColumnWidth( 2, 200 )
 			self.m_errorTree.setColumnWidth( 3, 50 )
 			self.m_errorTree.setColumnWidth( 4, 50 )
-			self.m_pushButton.setText(u"▾ Output ▾")
+			self._setOutputButtonTextWithDownArrows()
 		else:
 			self.m_splitter.setSizes( [ 1, 0 ] )
-			self.m_pushButton.setText(u"▴ Output ▴")
+			self._setOutputButtonTextWithUpArrows()
 
 	def OpenFileForEdit(self, item, column):
 		file = str(item.toolTip(2))
@@ -1524,7 +1542,7 @@ class MainWindow( QMainWindow ):
 				self.m_ignoreButton = True
 				self.m_pushButton.setChecked(False)
 				self.m_ignoreButton = False
-			self.m_pushButton.setText(u"▴ Output ▴")
+			self._setOutputButtonTextWithUpArrows()
 		else:
 			if not self.m_pushButton.isChecked():
 				self.m_ignoreButton = True
@@ -1535,7 +1553,7 @@ class MainWindow( QMainWindow ):
 			self.m_errorTree.setColumnWidth( 2, 200 )
 			self.m_errorTree.setColumnWidth( 3, 50 )
 			self.m_errorTree.setColumnWidth( 4, 50 )
-			self.m_pushButton.setText(u"▾ Output ▾")
+			self._setOutputButtonTextWithDownArrows()
 
 
 	def SelectionChanged(self, current, previous):
@@ -2507,7 +2525,19 @@ class MainWindow( QMainWindow ):
 
 		self.m_filesCompletedLabel.setText("0/0 files compiled")
 		self.m_timeLeftLabel.setText("Est. Time Left: 0:00")
-		self.m_pushButton.setText(u"▴ Output ▴")
+		self._setOutputButtonTextWithUpArrows()
+
+	def _setOutputButtonTextWithUpArrows(self):
+		outputButtonText = "â–´ Output â–´"
+		if sys.version_info < (3,0):
+			outputButtonText = outputButtonText.decode("utf-8")
+		self.m_pushButton.setText(outputButtonText)
+
+	def _setOutputButtonTextWithDownArrows(self):
+		outputButtonText = "â–¾ Output â–¾"
+		if sys.version_info < (3,0):
+			outputButtonText = outputButtonText.decode("utf-8")
+		self.m_pushButton.setText(outputButtonText)
 
 	def onTick(self):
 		self.UpdateProjects()

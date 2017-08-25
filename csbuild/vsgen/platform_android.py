@@ -45,12 +45,19 @@ class PlatformTegraAndroid( PlatformBase ):
 		return "Tegra-Android"
 
 
-	def WriteTopLevelInfo( self, parentXmlNode ):
+	def WriteGlobalHeader( self, parentXmlNode ):
 		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
 		tegraRevisionNumberNode = _addNode( propertyGroupNode, "NsightTegraProjectRevisionNumber" )
+		upgradeWithoutPromptNode = _addNode( propertyGroupNode, "NsightTegraUpgradeOnceWithoutPrompt" )
 
 		propertyGroupNode.set( "Label", "NsightTegraProject" )
 		tegraRevisionNumberNode.text = "11"
+		upgradeWithoutPromptNode.text = "true"
+
+
+	def WriteGlobalFooter( self, parentXmlNode ):
+		# Nothing to do for Tegra.
+		pass
 
 
 	def WriteProjectConfiguration( self, parentXmlNode, vsConfigName ):
@@ -66,7 +73,7 @@ class PlatformTegraAndroid( PlatformBase ):
 		platformNode.text = platformName
 
 
-	def WritePropertyGroup( self, parentXmlNode, vsConfigName, vsPlatformToolsetName, isNative ):
+	def WriteConfigPropertyGroup( self, parentXmlNode, vsConfigName, vsPlatformToolsetName, isNative ):
 		platformName = self.GetVisualStudioName()
 
 		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
@@ -102,3 +109,13 @@ class PlatformTegraAndroid( PlatformBase ):
 
 			overrideApkPathNode.text = os.path.join( os.path.abspath( outputDir ), outputName )
 			debuggerFlavorNode.text = "AndroidDebugger"
+
+
+	def WriteExtraPropertyGroupBuildNodes( self, parentXmlNode, vsConfigName, projectData ):
+		# Nothing extra to write for Tegra.
+		pass
+
+
+	def WriteGlobalImportTargets( self, parentXmlNode, isNative ):
+		# Nothing extra to write for Tegra.
+		pass

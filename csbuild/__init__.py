@@ -94,6 +94,12 @@ class StaticLinkMode( object ):
 	LinkLibs = 0
 	LinkIntermediateObjects = 1
 
+class RunMode( object ):
+	Normal = 0
+	Help = 1
+	GenerateSolution = 2
+	Qualop = 3
+
 from . import _utils
 from . import toolchain
 from . import toolchain_msvc
@@ -112,6 +118,7 @@ from . import plugin
 
 try:
 	from .proprietary import toolchain_ps4
+	from .proprietary import toolchain_wiiu
 except:
 	pass
 
@@ -138,6 +145,8 @@ def _exitsig(sig, frame):
 signal.signal( signal.SIGINT, _exitsig )
 signal.signal( signal.SIGTERM, _exitsig )
 
+# Csbuild is in Normal run mode by default.
+_runMode = RunMode.Normal
 
 def NoBuiltInTargets( ):
 	"""
@@ -2116,6 +2125,10 @@ def _performLink(project, objs):
 			project.warnings += warningcount
 			project.parsedLinkErrors = errorlist
 
+			with _shared_globals.sgmutex:
+				_shared_globals.warningcount += warningcount
+				_shared_globals.errorcount += errorcount
+
 	if ret != 0:
 		log.LOG_ERROR( "Linking failed." )
 		return _LinkStatus.Fail
@@ -2464,6 +2477,7 @@ def _setupdefaults( ):
 	try:
 		# Attempt to register the PS4 toolchain.
 		RegisterToolchain( "ps4", toolchain_ps4.Ps4Compiler, toolchain_ps4.Ps4Linker )
+		RegisterToolchain( "wiiu", toolchain_wiiu.WiiUCompiler, toolchain_wiiu.WiiULinker )
 	except:
 		pass
 
@@ -2543,8 +2557,6 @@ ARG_NOT_SET = type( "ArgNotSetType", (), { } )( )
 
 _options = []
 
-helpMode = False
-
 
 def GetOption( option ):
 	"""
@@ -2560,7 +2572,7 @@ def GetOption( option ):
 	Handle csbuild.ARG_NOT_SET to prevent code from being unintentionally run with --help.
 	"""
 	global args
-	if not helpMode:
+	if _runMode != RunMode.Help:
 		newparser = argparse.ArgumentParser( )
 		global _options
 		for opt in _options:
@@ -2594,7 +2606,7 @@ def GetArgs( ):
 	:rtype: argparse.Namespace
 	"""
 	global args
-	if not helpMode:
+	if _runMode != RunMode.Help:
 		newparser = argparse.ArgumentParser( )
 		global _options
 		for opt in _options:
@@ -2629,6 +2641,16 @@ def GetTargetList():
 	return _shared_globals.target_list
 
 
+def GetRunMode():
+	"""
+	Get the mode csbuild is current running under.
+
+	:return: The run mode.
+	:rtype: int
+	"""
+	return _runMode
+
+
 class _dummy( object ):
 	def __setattr__( self, key, value ):
 		pass
@@ -2637,8 +2659,18 @@ class _dummy( object ):
 
 
 def _execfile( file, glob, loc ):
+	# Save the current value of __file__ and set it to the input file path.
+	oldFileVar = glob.get("__file__", None)
+	glob["__file__"] = file
+	
 	with open( file, "r" ) as f:
 		exec(compile(f.read( ), file, "exec"), glob, loc)
+		
+	# Restore the state of the __file__ variable.
+	if oldFileVar is None:
+		glob["__file__"] = oldFileVar
+	else:
+		del glob["__file__"]
 
 
 mainFile = ""
@@ -2667,8 +2699,8 @@ def _run( ):
 			mainFileDir = os.path.abspath( os.getcwd( ) )
 		scriptFiles.append(os.path.join(mainFileDir, mainFile))
 		if "-h" in sys.argv or "--help" in sys.argv:
-			global helpMode
-			helpMode = True
+			global _runMode
+			_runMode = RunMode.Help
 			_execfile( mainFile, _shared_globals.makefile_dict, _shared_globals.makefile_dict )
 			_shared_globals.sortedProjects = _utils.SortProjects( _shared_globals.tempprojects )
 
@@ -2978,6 +3010,7 @@ def _run( ):
 	_shared_globals.stopOnError = args.stop_on_error
 
 	if args.generate_solution is not None:
+		_runMode = RunMode.GenerateSolution
 		args.at = True
 		args.aa = True
 		#args.ao = True

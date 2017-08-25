@@ -18,64 +18,51 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-"""Contains the vsgen platform for PS4."""
+"""Contains the vsgen platform for WiiU."""
 
 import os
 import csbuild
 import xml.etree.ElementTree as ET
 
+from ...proprietary import toolchain_wiiu
 from ...vsgen.platform_base import PlatformBase
 
 
 _addNode = ET.SubElement
 
 
-class PlatformPs4( PlatformBase ):
+class PlatformWiiU( PlatformBase ):
 	def __init__( self ):
 		PlatformBase.__init__( self )
 
 
 	@staticmethod
 	def GetToolchainName():
-		return "ps4-x64"
+		return "wiiu-ppc"
 
 
 	@staticmethod
 	def GetVisualStudioName():
-		return "ORBIS"
+		return "Cafe"
 
 
 	def WriteGlobalHeader( self, parentXmlNode ):
-		# Nothing to do for PS4.
+		# Nothing special to do for WiiU.
 		pass
 
 
 	def WriteGlobalFooter( self, parentXmlNode ):
-		# Extension settings
-		importGroupNode = _addNode( parentXmlNode, "ImportGroup" )
-
-		importGroupNode.set( "Label", "ExtensionSettings" )
-
-		_addNode( importGroupNode, "Import" ).set( "Project", r"$(VCTargetsPath)\BuildCustomizations\OrbisWavePsslc.props" )
-		_addNode( importGroupNode, "Import" ).set( "Project", r"$(VCTargetsPath)\BuildCustomizations\SCU.props" )
-
-
-		# Extension targets
-		importGroupNode = _addNode( parentXmlNode, "ImportGroup" )
-
-		importGroupNode.set( "Label", "ExtensionTargets" )
-
-		_addNode( importGroupNode, "Import" ).set( "Project", r"$(VCTargetsPath)\BuildCustomizations\OrbisWavePsslc.targets" )
-		_addNode( importGroupNode, "Import" ).set( "Project", r"$(VCTargetsPath)\BuildCustomizations\SCU.targets" )
+		# Nothing to do for WiiU.
+		pass
 
 
 	def WriteProjectConfiguration( self, parentXmlNode, vsConfigName ):
 		platformName = self.GetVisualStudioName()
 		includeString = "{}|{}".format( vsConfigName, platformName )
 
-		projectConfigNode = _addNode( parentXmlNode, "ProjectConfiguration" )
-		configNode = _addNode( projectConfigNode, "Configuration" )
-		platformNode = _addNode( projectConfigNode, "Platform" )
+		projectConfigNode = _addNode(parentXmlNode, "ProjectConfiguration")
+		configNode = _addNode(projectConfigNode, "Configuration")
+		platformNode = _addNode(projectConfigNode, "Platform")
 
 		projectConfigNode.set( "Include", includeString )
 		configNode.text = vsConfigName
@@ -88,6 +75,14 @@ class PlatformPs4( PlatformBase ):
 		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
 		propertyGroupNode.set( "Label", "Configuration")
 		propertyGroupNode.set( "Condition", "'$(Configuration)|$(Platform)'=='{}|{}'".format( vsConfigName, platformName ) )
+
+		wiiuGlobalData = toolchain_wiiu.GlobalData.Instance
+
+		ghsRootNode = _addNode( propertyGroupNode, "GHS_ROOT" )
+		cafeRootNode = _addNode( propertyGroupNode, "CAFE_ROOT" )
+
+		ghsRootNode.text = wiiuGlobalData.ghsRoot
+		cafeRootNode.text = wiiuGlobalData.cafeRoot
 
 		if isNative:
 			#TODO: Add properties for native projects.
@@ -114,25 +109,24 @@ class PlatformPs4( PlatformBase ):
 		platformName = self.GetVisualStudioName()
 
 		propertyGroupNode = _addNode( parentXmlNode, "PropertyGroup" )
-
 		propertyGroupNode.set( "Condition", "'$(Configuration)|$(Platform)'=='{}|{}'".format( vsConfigName, platformName ) )
 
-		_addNode( propertyGroupNode, "LocalDebuggerWorkingDirectory" ).text = "$(OutDir)"
-		_addNode( propertyGroupNode, "DebuggerFlavor" ).text = "ORBISDebugger"
+		useDebugOsNode = _addNode( propertyGroupNode, "CafeDebuggerUsedDebugOS" )
+		workingDirNode = _addNode( propertyGroupNode, "CafeDebuggerWorkingDirectory" )
+		debuggerFlavorNode = _addNode( propertyGroupNode, "DebuggerFlavor" )
+
+		projectSettings = self.GetProjectSettings( vsConfigName, projectData.name )
+
+		useDebugOsNode.text = "true" if projectSettings.optLevel == csbuild.OptimizationLevel.Disabled else "false"
+		workingDirNode.text = "$(OutDir)"
+		debuggerFlavorNode.text = "CafeDebugger"
 
 
 	def WriteExtraPropertyGroupBuildNodes( self, parentXmlNode, vsConfigName, projectData ):
-		# Nothing to do for PS4.
+		#TODO: Add nodes for disc emulation paths.
 		pass
 
 
 	def WriteGlobalImportTargets( self, parentXmlNode, isNative ):
-		if isNative:
-			#TODO: Add properties for native projects.
-			pass
-		else:
-			importNode = _addNode( parentXmlNode, "Import" )
-
-			importNode.set( "Condition", r"'$(ConfigurationType)' == 'Makefile' and Exists('$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets')" )
-			importNode.set( "Project", r"$(VCTargetsPath)\Platforms\$(Platform)\SCE.Makefile.$(Platform).targets" )
-
+		# Nothing extra to write for WiiU.
+		pass

@@ -114,6 +114,19 @@ class iOSBase( object ):
 		other.shared._targetSimulatorVersin = self.shared._targetSimulatorVersion
 
 
+	@staticmethod
+	def AdditionalArgs( parser ):
+		parser.add_argument( "--ios-target-version", help="Version of iOS to build against.", type=str, default=None )
+
+
+	def _setTargetVersion( self ):
+		cmdLineVer = csbuild.GetOption( "ios_target_version" )
+
+		if cmdLineVer:
+			self.SetTargetDeviceVersion( cmdLineVer )
+			self.SetTargetSimulatorVersion( cmdLineVer )
+
+
 	def GetDefaultArchitecture( self ) :
 		return iOSArchitecture.SIMULATOR_X64
 
@@ -132,6 +145,8 @@ class iOSBase( object ):
 		self.shared._deviceSdkDir = "{}/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS{}.sdk".format( DEFAULT_XCODE_ACTIVE_DEV_DIR, version )
 		self.shared._targetDeviceVersion = version
 
+		assert os.access( self.shared._deviceSdkDir, os.F_OK ), "SDK does not exist: {}".format( self.shared._deviceSdkDir )
+
 
 	def SetTargetSimulatorVersion( self, version ):
 		"""
@@ -142,6 +157,8 @@ class iOSBase( object ):
 		"""
 		self.shared._simulatorSdkDir = "{}/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator{}.sdk".format( DEFAULT_XCODE_ACTIVE_DEV_DIR, version )
 		self.shared._targetSimulatorVersion = version
+
+		assert os.access( self.shared._simulatorSdkDir, os.F_OK ), "SDK does not exist: {}".format( self.shared._simulatorSdkDir )
 
 
 	def GetTargetDeviceVersion( self ):

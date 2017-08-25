@@ -46,6 +46,7 @@ class project_generator_slickedit(project_generator.project_generator):
 
 	def __init__(self, path, solutionName, extraArgs):
 		project_generator.project_generator.__init__(self, path, solutionName, extraArgs)
+		self._extraBuildArgs = self.extraargs.replace(",", " ")
 
 
 	# Base class methods.
@@ -124,8 +125,6 @@ class project_generator_slickedit(project_generator.project_generator):
 		# as the makefile itself, so using that directory is acceptable for project working directory.
 		mainfileDirPath = os.getcwd()
 		projectDirPath = os.path.dirname(projectFilePath)
-
-		extraArgs = self.extraargs.replace(",", " ")
 
 		rootNode = CreateRootNode(OutputType.PROJECT)
 		rootNode.set("Version", "10.0")
@@ -206,16 +205,16 @@ class project_generator_slickedit(project_generator.project_generator):
 			cleanAllNode.set("MenuCaption", "&Clean All")
 
 			commandNode = AddNode(compileProjectNode, "Exec")
-			commandNode.set("CmdLine", "{} {} {} --project={} {}".format(sys.executable, csbuild.mainfile, targetCommand, projectName, extraArgs))
+			commandNode.set("CmdLine", "{} {} {} --project={} {}".format(sys.executable, csbuild.mainfile, targetCommand, projectName, self._extraBuildArgs))
 
 			commandNode = AddNode(buildAllNode, "Exec")
-			commandNode.set("CmdLine", "{} {} {} {}".format(sys.executable, csbuild.mainfile, targetCommand, extraArgs))
+			commandNode.set("CmdLine", "{} {} {} {}".format(sys.executable, csbuild.mainfile, targetCommand, self._extraBuildArgs))
 
 			commandNode = AddNode(rebuildAllNode, "Exec")
-			commandNode.set("CmdLine", "{} {} {} --rebuild {}".format(sys.executable, csbuild.mainfile, targetCommand, extraArgs))
+			commandNode.set("CmdLine", "{} {} {} --rebuild {}".format(sys.executable, csbuild.mainfile, targetCommand, self._extraBuildArgs))
 
 			commandNode = AddNode(cleanAllNode, "Exec")
-			commandNode.set("CmdLine", "{} {} {} --clean {}".format(sys.executable, csbuild.mainfile, targetCommand, extraArgs))
+			commandNode.set("CmdLine", "{} {} {} --clean {}".format(sys.executable, csbuild.mainfile, targetCommand, self._extraBuildArgs))
 
 		# Grab a string of the XML document we've created and save it.
 		xmlString = ET.tostring(rootNode)

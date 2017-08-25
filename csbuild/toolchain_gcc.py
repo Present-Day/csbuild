@@ -56,7 +56,7 @@ class gccBase( object ):
 
 
 	def _getStandardLibraryArg( self, project ):
-		return "-stdlib={} ".format( project.stdLib )
+		return "-stdlib={} ".format( project.stdLib ) if project.stdLib else ""
 
 
 	def _getArchFlag( self, project ):
@@ -247,8 +247,11 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		return ret
 
 
-	def _getObjcAbiVersionArg( self ):
-		return "-fobjc-abi-version={} ".format( self.shared._objcAbiVersion ) if self.shared._objcAbiVersion else ""
+	def _getObjcAbiVersionArg( self, filename ):
+		if self.shared._objcAbiVersion and ( filename.endswith(".m") or filename.endswith(".mm") ):
+			return "-fobjc-abi-version={} ".format( self.shared._objcAbiVersion )
+		else:
+			return ""
 
 
 	def _getVisibilityArgs( self, project ):
@@ -314,11 +317,10 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 
 		archArg = self._getArchFlag( project )
 
-		return "\"{}\" {}{}{} -Winvalid-pch -c {}{} -O{} {}{}{}{}{} {} ".format(
+		return "\"{}\" {}{} -Winvalid-pch -c {}{} -O{} {}{}{}{}{} {} ".format(
 			compiler,
 			archArg,
 			exitcodes,
-			self._getObjcAbiVersionArg(),
 			self._getDefines( project.defines, project.undefines ),
 			"-g" if project.debugLevel != csbuild.DebugLevel.Disabled else "",
 			self._getOptFlag(project.optLevel),
@@ -331,11 +333,18 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		)
 
 
+	def _setupForProject( self, project ):
+		# Does nothing by default.
+		pass
+
+
 	def GetBaseCxxCommand( self, project ):
+		self._setupForProject( project )
 		return self._getBaseCommand( project.cxx, project, True )
 
 
 	def GetBaseCcCommand( self, project ):
+		self._setupForProject( project )
 		return self._getBaseCommand( project.cc, project, False )
 
 
@@ -343,17 +352,24 @@ class GccCompiler( gccBase, toolchain.compilerBase ):
 		inc = ""
 		if forceIncludeFile:
 			inc = "-include {0}".format( forceIncludeFile )
-		return "{} {}{}{} -o\"{}\" \"{}\"".format( baseCmd,
+		return "{} {}{}{}{} -o\"{}\" \"{}\"".format(
+			baseCmd,
 			self._getWarnings( self.warnFlags, project.noWarnings ),
-			self._getIncludeDirs( project.includeDirs ), inc, outObj,
-			inFile )
+			self._getIncludeDirs( project.includeDirs ),
+			self._getObjcAbiVersionArg( inFile ),
+			inc,
+			outObj,
+			inFile
+		)
 
 
 	def GetBaseCxxPrecompileCommand( self, project ):
+		self._setupForProject( project )
 		return self.GetBaseCxxCommand( project )
 
 
 	def GetBaseCcPrecompileCommand( self, project ):
+		self._setupForProject( project )
 		return self.GetBaseCcCommand( project )
 
 
@@ -517,7 +533,7 @@ class GccLinker( gccBase, toolchain.linkerBase ):
 		"""Returns a string containing all of the passed library dirs, formatted to be passed to gcc/g++."""
 		ret = ""
 		for lib in libDirs:
-			ret += '-L"{}" '.format( lib )
+			ret += '-L{} '.format( lib )
 		ret += "-L/usr/lib -L/usr/local/lib "
 		if self._include_lib64:
 			ret += "-L/usr/lib64 -L/usr/local/lib64 "

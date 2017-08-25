@@ -83,6 +83,18 @@ class GccDarwinBase( object ):
 		other.shared._sysroot = self.shared._sysroot
 
 
+	@staticmethod
+	def AdditionalArgs( parser ):
+		parser.add_argument( "--osx-target-version", help="Version of OSX to build against.", type=str, default=None )
+
+
+	def _setTargetVersion( self ):
+		cmdLineVer = csbuild.GetOption( "osx_target_version" )
+
+		if cmdLineVer:
+			self.SetTargetMacVersion( cmdLineVer )
+
+
 	def SetTargetMacVersion( self, version ):
 		"""
 		Set the version of MacOSX to target and the sysroot of the SDK for that version.
@@ -92,6 +104,8 @@ class GccDarwinBase( object ):
 		"""
 		self.shared._targetMacVersion = version
 		self.shared._sysroot = "{}/Platforms/MacOSX.platform/Developer/SDKs/MacOSX{}.sdk".format( DEFAULT_XCODE_ACTIVE_DEV_DIR, self.shared._targetMacVersion )
+
+		assert os.access( self.shared._sysroot, os.F_OK ), "SDK does not exist: {}".format( self.shared._sysroot )
 
 
 	def GetTargetMacVersion( self ):
@@ -124,6 +138,11 @@ class GccCompilerDarwin( GccDarwinBase, toolchain_gcc.GccCompiler ):
 		return ret
 
 
+	def _setupForProject( self, project ):
+		self._setTargetVersion()
+		toolchain_gcc.GccCompiler._setupForProject( self, project )
+
+
 	def _getNoCommonFlag( self, project ):
 		if project.type == csbuild.ProjectType.SharedLibrary or project.type == csbuild.ProjectType.LoadableModule:
 			return "-fno-common "
@@ -132,20 +151,28 @@ class GccCompilerDarwin( GccDarwinBase, toolchain_gcc.GccCompiler ):
 
 
 	def _getIncludeDirs( self, includeDirs ):
-		"""Returns a string containing all of the passed include directories, formatted to be passed to gcc/g++."""
+		"""Returns a string containing all of the passed include directories, formatted to be passed to clang."""
 		ret = ""
 		for inc in includeDirs:
 			ret += "-I{} ".format( os.path.abspath( inc ) )
-		ret += "-I{}/usr/include ".format( DEFAULT_XCODE_TOOLCHAIN_DIR )
+		return ret
+
+
+	def _getFrameworkDirs( self, frameworkDirs ):
+		"""Returns a string containing all of the passed framework directories, formatted to be passed to clang."""
+		ret = ""
+		for path in frameworkDirs:
+			ret += "-F{}".format( os.path.abspath( path ) )
 		return ret
 
 
 	def _getBaseCommand( self, compiler, project, isCpp ):
 		ret = toolchain_gcc.GccCompiler._getBaseCommand( self, compiler, project, isCpp )
-		ret = "{}{}{} -fobjc-arc ".format(
+		ret = "{}{}{} -fobjc-arc {} ".format(
 			ret,
 			self._getSysRoot(),
 			self._getNoCommonFlag( project ),
+			self._getFrameworkDirs( project.frameworkDirs ),
 		)
 		return ret
 
@@ -171,6 +198,11 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 		ret = toolchain_gcc.GccLinker.copy( self, shared )
 		GccDarwinBase._copyTo( self, ret )
 		return ret
+
+
+	def _setupForProject( self, project ):
+		self._setTargetVersion()
+		toolchain_gcc.GccLinker._setupForProject( self, project )
 
 
 	def InterruptExitCode( self ):
@@ -225,6 +257,8 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 
 	def _getLibraryDirs( self, libDirs, forLinker ):
 		# Libraries are linked with full paths on Mac, so library directories are unnecessary.
+		# If additional default library directories are required, added them to the appendedLibDirs
+		# list in FindLibrary method below.
 		return ""
 
 
@@ -256,7 +290,16 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 	def FindLibrary( self, project, library, libraryDirs, force_static, force_shared ):
 		self._setupForProject( project )
 
-		for lib_dir in libraryDirs:
+		appendedLibDirs = list(libraryDirs)
+		appendedLibDirs.extend(
+			# Add default search directories to this list, starting with the directories that have the highest search priority.
+			[
+				"/usr/local/lib",
+				"/usr/lib",
+			]
+		)
+
+		for lib_dir in appendedLibDirs:
 			log.LOG_INFO( "Looking for library {} in directory {}...".format( library, lib_dir ) )
 			lib_file_path = os.path.join( lib_dir, library )
 			libFileStatic = "{}.a".format( lib_file_path )
@@ -270,7 +313,7 @@ class GccLinkerDarwin( GccDarwinBase, toolchain_gcc.GccLinker ):
 				self._actual_library_names.update( { library : libFileDynamic } )
 				return libFileDynamic
 
-		for lib_dir in libraryDirs:
+		for lib_dir in appendedLibDirs:
 			# Compatibility with Linux's way of adding lib- to the front of its libraries
 			libfileCompat = "lib{}".format( library )
 			log.LOG_INFO( "Looking for library {} in directory {}...".format( libfileCompat, lib_dir ) )
