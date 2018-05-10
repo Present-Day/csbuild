@@ -2073,7 +2073,24 @@ def _performLink(project, objs):
 		cmd = shlex.split(cmd)
 
 	toolchainEnv = _utils.GetToolchainEnvironment( project.activeToolchain.Linker() )
-	fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = project.objDir, env = toolchainEnv )
+	maxNumRetries = 10
+	retryCount = 0
+
+	while retryCount < maxNumRetries:
+		try:
+			fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = project.objDir, env = toolchainEnv )
+		except PermissionError:
+			# Sleep for a second before trying again.
+			time.sleep(1)
+			retryCount += 1
+		except:
+			# Other exceptions will raise normally.
+			raise
+		else:
+			# Successfully launched the process.
+			break
+
+	assert retryCount < maxNumRetries, "Failed to launch process due to PermissionError"
 
 	with _shared_globals.spmutex:
 		_shared_globals.subprocesses[output] = fd
@@ -2662,10 +2679,10 @@ def _execfile( file, glob, loc ):
 	# Save the current value of __file__ and set it to the input file path.
 	oldFileVar = glob.get("__file__", None)
 	glob["__file__"] = file
-	
+
 	with open( file, "r" ) as f:
 		exec(compile(f.read( ), file, "exec"), glob, loc)
-		
+
 	# Restore the state of the __file__ variable.
 	if oldFileVar is None:
 		glob["__file__"] = oldFileVar

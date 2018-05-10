@@ -1494,31 +1494,33 @@ class projectSettings( object ):
 
 
 	def get_full_path( self, headerFile, relativeDir ):
-		if relativeDir in _shared_globals.headerPaths:
-			if headerFile in _shared_globals.headerPaths[relativeDir]:
-				return _shared_globals.headerPaths[relativeDir][headerFile]
-		else:
-			_shared_globals.headerPaths[relativeDir] = {}
+		with _utils.ChangeDirectory(relativeDir):
+			if relativeDir in _shared_globals.headerPaths:
+				if headerFile in _shared_globals.headerPaths[relativeDir]:
+					return _shared_globals.headerPaths[relativeDir][headerFile]
+			else:
+				_shared_globals.headerPaths[relativeDir] = {}
 
-		if os.access(headerFile, os.F_OK):
-			_shared_globals.headerPaths[relativeDir][headerFile] = headerFile
-			path = os.path.join(os.getcwd(), headerFile)
-			_shared_globals.headerPaths[relativeDir][headerFile] = path
-			return path
-		else:
-			if relativeDir is not None:
-				path = os.path.join( relativeDir, headerFile )
-				if os.access(path, os.F_OK):
-					return path
+			absHeaderPath = os.path.abspath(headerFile)
 
-			for incDir in self.includeDirs:
-				path = os.path.join( incDir, headerFile )
-				if os.access(path, os.F_OK):
-					_shared_globals.headerPaths[relativeDir][headerFile] = path
-					return path
+			if os.access(absHeaderPath, os.F_OK):
+				_shared_globals.headerPaths[relativeDir][headerFile] = absHeaderPath
+				return absHeaderPath
+			else:
+				if relativeDir is not None:
+					path = os.path.join( relativeDir, headerFile )
+					if os.access(path, os.F_OK):
+						return os.path.abspath(path)
 
-			_shared_globals.headerPaths[relativeDir][headerFile] = ""
-			return ""
+				for incDir in self.includeDirs:
+					path = os.path.join( incDir, headerFile )
+					if os.access(path, os.F_OK):
+						path = os.path.abspath(path)
+						_shared_globals.headerPaths[relativeDir][headerFile] = path
+						return path
+
+				_shared_globals.headerPaths[relativeDir][headerFile] = ""
+				return ""
 
 
 	def get_included_files( self, headerFile ):
@@ -1574,6 +1576,9 @@ class projectSettings( object ):
 			#Find the header in the listed includes.
 			subpath = self.get_full_path( header, os.path.dirname( headerFile ) )
 
+			if not subpath:
+				continue
+
 			if self.ignoreExternalHeaders and not subpath.startswith( self.workingDirectory ):
 				continue
 
@@ -1620,10 +1625,13 @@ class projectSettings( object ):
 		for header in headers:
 			subpath = self.get_full_path( header, os.path.dirname( headerFile ) )
 
+			if not subpath:
+				continue
+
 			if self.ignoreExternalHeaders and not subpath.startswith( self.workingDirectory ):
 				continue
 
-				#Check to see if we've already followed this header.
+			#Check to see if we've already followed this header.
 			#If we have, the list we created from it is already stored in _allheaders under this header's key.
 			if subpath in allheaders:
 				continue

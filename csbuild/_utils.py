@@ -31,6 +31,7 @@ import glob
 import traceback
 import platform
 import collections
+import contextlib
 if sys.version_info >= (3,0):
 	import io
 	StringIO = io.StringIO
@@ -373,7 +374,24 @@ class ThreadedBuild( threading.Thread ):
 			if platform.system() != "Windows":
 				cmd = shlex.split(cmd)
 
-			fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = self.project.workingDirectory, env = toolchainEnv )
+			maxNumRetries = 10
+			retryCount = 0
+
+			while retryCount < maxNumRetries:
+				try:
+					fd = subprocess.Popen( cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = self.project.workingDirectory, env = toolchainEnv )
+				except PermissionError:
+					# Sleep for a second before trying again.
+					time.sleep(1)
+					retryCount += 1
+				except:
+					# Other exceptions will raise normally.
+					raise
+				else:
+					# Successfully launched the process.
+					break
+
+			assert retryCount < maxNumRetries, "Failed to launch process due to PermissionError"
 
 			with _shared_globals.spmutex:
 				_shared_globals.subprocesses[self.obj] = fd
@@ -1114,3 +1132,24 @@ def GetToolchainEnvironment( tool ):
 
 def GetCommandLineString():
 	return subprocess.list2cmdline(sys.argv[1:])
+
+
+@contextlib.contextmanager
+def ChangeDirectory(newCwd):
+	"""
+	Use this function as a context manager to safely handle changing directories without having to manually
+	change back to the original directory.  This is safe to use in try/catch blocks.
+
+	:param newCwd: Path of the new directory to move into.
+	:type newCwd: str
+	"""
+	assert os.access(newCwd, os.F_OK), "Cannot change to a non-existent directory"
+
+	oldCwd = os.getcwd()
+
+	os.chdir(newCwd)
+
+	try:
+		yield
+	finally:
+		os.chdir(oldCwd)
